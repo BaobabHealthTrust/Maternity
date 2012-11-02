@@ -740,8 +740,7 @@ class CohortController < ActionController::Base # < ApplicationController
 
   def decompose
     @patients = Patient.find(:all, :conditions => ["patient_id IN (?)", params[:patients].split(",")]).uniq
-    
-    # raise @patients.to_yaml
+        # raise @patients.to_yaml
     render :layout => false
   end
   

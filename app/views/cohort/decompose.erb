@@ -129,6 +129,9 @@
                     <div class="headerCell">
                       Encounters
                     </div>
+                    <div class="headerCell">
+                      Admission Diagnosis
+                    </div>
                   </div>
 
                   <% @patients.each do |patient| %>
@@ -147,13 +150,27 @@
                       </div>
                       <div class="cell" style="vertical-align: top; padding: 0px;">
                         <div class="table">
-                          <div class="row">                            
-                            <div id="<%= "__" + patient.national_id rescue "" %>" 
+                          <div class="row">
+                            <div id="<%= "__" + patient.national_id rescue "" %>"
                                  style="display: block; display: table-cell; vertical-align: middle; text-align: center;">
-                              <%= patient.encounters.length %>
+                                   <%= patient.encounters.length %>
                             </div>
                           </div>
                         </div>
+                      </div>
+                      <div class="cell">
+                        <ul>
+                          <%  encounter_type = EncounterType.find_by_name("DIAGNOSIS")%>
+                          <%  encounter = Encounter.find(:last, :conditions => ['patient_id = ? AND encounter_type = ?',
+                              patient.id, encounter_type.id], :order => [:date_created], :include => [:observations]) if encounter_type%>
+
+                          <%  diagnoses = Observation.find(:all, :conditions => ['person_id = ? AND encounter_id = ?',
+                              patient.id, encounter.id]).collect{|obs|  obs.answer_string} rescue ['Not Admitted']%>
+
+                          <% diagnoses.each do |diag|%>
+                            <li> <%=diag%> </li>
+                          <%end %>
+                        </ul>
                       </div>
                     </div>
                   <% end %>
