@@ -26,7 +26,7 @@ class EncountersController < ApplicationController
       values = "coded_or_text group_id boolean coded drug datetime numeric modifier text".split(" ").map{|value_name|
         observation["value_#{value_name}"] unless observation["value_#{value_name}"].blank? rescue nil
       }.compact
-
+    
       next if values.length == 0
       observation.delete(:value_text) unless observation[:value_coded_or_text].blank?
       observation[:encounter_id]    = encounter.id
@@ -35,7 +35,8 @@ class EncountersController < ApplicationController
       # observation[:location_id]     ||= encounter.location_id
       Observation.create(observation) # rescue nil
     end
-
+    
+    
     # if encounter.type.name.eql?("REFER PATIENT OUT?")
     #  encounter.patient.current_visit.update_attributes(:end_date => Time.now.strftime("%Y-%m-%d %H:%M:%S"))
 
@@ -45,32 +46,52 @@ class EncountersController < ApplicationController
 
     @patient = Patient.find(params[:encounter][:patient_id])
 
-    if encounter.patient.current_visit.encounters.active.collect{|e|
-        e.observations.collect{|o|
-          o.answer_string if o.answer_string.to_s.upcase.include?("PATIENT DIED") ||
-            o.answer_string.to_s.upcase.include?("DISCHARGED")
-        }.compact if e.type.name.upcase.eql?("UPDATE OUTCOME")
-      }.compact.collect{|p| true if p.to_s.upcase.include?("DISCHARGED")}.compact.include?(true) == true
-      print_and_redirect("/encounters/label/?encounter_id=#{encounter.id}",
-        next_task(@patient)) and return if (encounter.type.name.upcase == \
-          "UPDATE OUTCOME")
-      # return next_task(@patient)
-      redirect_to next_task(@patient) and return
-    end
+    #collect observations from current visit into 'current_visit_obs' and encounters for current visit into encs'
+
+    #current_visit_obs = []
+    #encs = []
+    # encounter.patient.current_visit.encounters.each do |e|
+    # encs << e.type.name
+    #  e.observations.each do |o|
+    #   current_visit_obs << o.value_text.upcase if o.value_text
+    # end
+    #end
+    # check if current visit includes HOME - WAITING or ANOTHER HEALTH FACILITY so u can close the patient visit
+    # if current_visit_obs.to_s.include?("HOME - WAITING") || current_visit_obs.to_s.include?("ANOTHER HEALTH FACILITY")
+    # encounter.patient.current_visit.update_attributes(:end_date => Time.now.strftime("%Y-%m-%d %H:%M:%S"))
+    # redirect_to "/people" and return
+    #end
+
+    if encounter.patient.current_visit
+      
+      if encounter.patient.current_visit.encounters.active.collect{|e|
+          e.observations.collect{|o|
+            o.answer_string if o.answer_string.to_s.upcase.include?("PATIENT DIED") ||
+              o.answer_string.to_s.upcase.include?("DISCHARGED")
+          }.compact if e.type.name.upcase.eql?("UPDATE OUTCOME")
+        }.compact.collect{|p| true if p.to_s.upcase.include?("DISCHARGED")}.compact.include?(true) == true
+
+        encounter.patient.current_visit.update_attributes(:end_date => Time.now.strftime("%Y-%m-%d %H:%M:%S"))
+          
+        print_and_redirect("/encounters/label/?encounter_id=#{encounter.id}",
+          "/people") and return if (encounter.type.name.upcase == "UPDATE OUTCOME")
+        # return next_task(@patient)
+        redirect_to next_task(@patient) and return
+      end
     
-    if encounter.patient.current_visit.encounters.active.collect{|e|
-        e.observations.collect{|o|
-          o.answer_string if o.answer_string.to_s.upcase.include?("PATIENT DIED") || 
-            o.answer_string.to_s.upcase.include?("DISCHARGED")
-        }.compact if e.type.name.upcase.eql?("UPDATE OUTCOME")
-      }.compact.collect{|p| true if p.to_s.upcase.include?("PATIENT DIED") ||
-          p.to_s.upcase.include?("DISCHARGED")}.compact.include?(true) == true
+      if encounter.patient.current_visit.encounters.active.collect{|e|
+          e.observations.collect{|o|
+            o.answer_string if o.answer_string.to_s.upcase.include?("PATIENT DIED") ||
+              o.answer_string.to_s.upcase.include?("DISCHARGED")
+          }.compact if e.type.name.upcase.eql?("UPDATE OUTCOME")
+        }.compact.collect{|p| true if p.to_s.upcase.include?("PATIENT DIED") ||
+            p.to_s.upcase.include?("DISCHARGED")}.compact.include?(true) == true
 
-      encounter.patient.current_visit.update_attributes(:end_date => Time.now.strftime("%Y-%m-%d %H:%M:%S"))
+        encounter.patient.current_visit.update_attributes(:end_date => Time.now.strftime("%Y-%m-%d %H:%M:%S"))
 
-      redirect_to "/people" and return
+        redirect_to "/people" and return
+      end
     end
-
     if params[:next_url]
 
       if (encounter.type.name.upcase == "UPDATE OUTCOME" && encounter.to_s.upcase.include?("ADMITTED"))
@@ -141,7 +162,6 @@ class EncountersController < ApplicationController
     @last_location = @patient.encounters.find(:last).location_id rescue nil
     
     # raise @location.downcase.to_yaml
-
     redirect_to "/" and return unless @patient
     redirect_to next_task(@patient) and return unless params[:encounter_type]
     redirect_to :action => :create, 'encounter[encounter_type_name]' => params[:encounter_type].upcase, 'encounter[patient_id]' => @patient.id and return if ['registration'].include?(params[:encounter_type])

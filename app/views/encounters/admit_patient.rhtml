@@ -28,7 +28,7 @@
   <%= hidden_field_tag "encounter[provider_id]", session[:user_id] %>
 
   <%= select_tag("admit", options_for_select(["", "Yes", "No"]), 
-    {
+    { :id => "admit",
       :helpText => 'Admit to this ward',
       :tt_onLoad => "setTimeout('checkSelection()', 50)"
     })%>
@@ -37,8 +37,9 @@
     :id => "admission_section",
     :field_type => 'text',
     :helptext =>"Select admission section",
-    :condition => "($('discharge_outcome').value.toUpperCase() == 'ADMITTED')"
+    :condition => "($('admit').value.toUpperCase() == 'ADMITTED')"
   }%>
+  <%@location%>
   <%= hidden_field_tag("observations[][concept_name]",  "ADMISSION SECTION") %>
   <%= hidden_field_tag("observations[][value_coded_or_text]", @location, options)%>
   <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>

@@ -79,6 +79,7 @@ class PeopleController < ApplicationController
           found_person = Person.create_from_form(found_person_data) unless found_person_data.nil?
         end
       end
+     
       if found_person
         redirect_to :controller => :encounters, :action => :new, :patient_id => found_person.id and return
       end
