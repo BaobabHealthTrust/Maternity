@@ -1,9 +1,15 @@
-
+<%= javascript_include_tag "jquery" %>
 <script language="javascript">
   var tt_cancel_destination = "/patients/show/<%= @patient.id %>"
   var currentWeight;
   var displayText = '';
-  var apgarScore;
+  var apgarScore = 0;
+  var apgar = {"APPEARANCE": 0,
+    "PULSE" : 0,
+    "GRIMANCE": 0,
+    "ACTIVITY": 0,
+    "RESPIRATION": 0
+  };
   var maxi;
   var mini;
   function $(e) {
@@ -31,7 +37,9 @@
     }
   }  
   function showApgarScore(n){
+    
     apgarScore = parseFloat($("appearance" + n).value) + parseFloat($("pulse" + n).value) + parseFloat($("grimance" + n).value) + parseFloat($("activity" + n).value) + parseFloat($("respiration" + n).value);
+
     displayText += "<div><span class='title'>Apgar score for baby " + n + ":</span>";
     if (apgarScore >= 7){
       displayText += "<span class='normal'> [" + apgarScore.toFixed(1) + "/10] </span>" + "<span class ='recommendation'> Normal </span><br>";
@@ -41,7 +49,102 @@
       displayText += "<span class='yellow_alert'> [" + apgarScore.toFixed(1) + "/10] </span>" + " <span class='recommendation'> Fairly Low </span><br>";
     }
     displayText += "</div>";
-  }      
+  }
+  function showApgarControl(baby){
+  
+    apgarScore = 0;
+    $("clearButton").onclick = function(){
+      cells = document.getElementsByClassName("butt");
+      for( i = 0; 0 < cells.length; i++){
+        cells[i].setAttribute("selected", "false");
+        cells[i].style.backgroundColor = "rgb(220, 230, 220)";
+        apgar["APPEARANCE"] = 0; apgar["PULSE"] = 0; apgar["GRIMANCE"] = 0; apgar["ACTIVITY"] = 0; apgar["RESPIRATION"] = 0;
+
+      }
+    }
+    
+  scoreWindow = document.createElement("div");
+    scoreWindow.setAttribute("id", "selectWindow");
+
+    arr = ["Appearance", "Pulse", "Grimance", "Activity", "Respiration"]
+    arr_val = ['Blue, Pale', "Pink </br> Extreme blue", "Completely </br> pink",
+      "Absent", "Below </br>100 bpm", "Over </br>100 bpm",
+      "Flaccid", "Some Flexion </br> of Extremities", "Active motion",
+      "Absent", "Arms and legs</br> flexed", "Active movement",
+      "Absent", "Slow, </br> irregular", "Vigorous cry"];
+    val_index = 0;
+    values = [0, 1, 2]
+    var labels = document.createElement("div");
+    labels.id = "row1";
+    
+    placebo = document.createElement("div");
+    placebo.id = "placebo";
+    labels.appendChild(placebo);
+
+    for(i = 0; i < values.length; i++){
+      var lblCell = document.createElement("div");
+      lblCell.setAttribute("class", "value");
+      lblCell.innerHTML = (i == 0)? (i + " Point") : (i + " Points")
+      labels.appendChild(lblCell);
+    }
+    scoreWindow.appendChild(labels);
+   
+    for (i = 0; i < arr.length; i ++){
+      var row = document.createElement("div");
+      row.id = "apgar_row_" + i
+      row.setAttribute("class", "boardRow");
+
+      for (j = 0; j < 4; j++){
+        var control = document.createElement("div");
+        control.id = "" + i + j;
+        if (j != 0){
+          
+          control.setAttribute("class", "butt");
+          control.setAttribute("value", j-1);
+          control.setAttribute("apgar_field", arr[i]);
+          control.setAttribute("selected", "false");
+          control.setAttribute("i", i);
+          control.setAttribute("j", j);
+
+          
+          control.innerHTML = arr_val[val_index];
+          val_index ++;
+          
+          control.onclick = function(){
+            var num = __$(this.id).getAttribute("value");
+            var field = __$(this.id).getAttribute("apgar_field");
+            var key = field.toUpperCase();
+            apgar[key] = num;
+            //update row selections
+            
+            if (__$(this.id).getAttribute("selected") == "false"){
+              
+              for(k = 1; k < 4; k++){
+                 var  x =  this.getAttribute("i");
+                __$("" + x + k).setAttribute("selected", ( this.id != "" + x + k)? "false": "true");
+                
+                __$("" + x + k).style.backgroundColor = ( this.id != "" + x + k)? "rgb(220, 230, 220)" : "gray";
+              }
+            }
+            __$(field.toLowerCase()+ baby).value = apgar[key];  
+            apgarScore = parseInt(apgar['APPEARANCE']) + parseInt(apgar['PULSE'])
+              + parseInt(apgar['GRIMANCE']) + parseInt(apgar['ACTIVITY']) + parseInt(apgar['RESPIRATION']);
+            
+            $('touchscreenInput'+tstCurrentPage).value = apgarScore;
+            //disable row click
+            //gray buttons
+          };
+          
+        }else{control.innerHTML = arr[i];
+          control.setAttribute("class", "leftButt");
+        }
+        row.appendChild(control);        
+      }
+      scoreWindow.appendChild(row);    
+    }
+    $('inputFrame' + tstCurrentPage).appendChild(scoreWindow);
+  }
+
   function showWeightForAge(baby){
     $('weight_for_age').value = currentWeight;
     displayText += "<div><span class='title'>Weight for age for baby " + baby + ":</span>";
@@ -167,7 +270,60 @@
 
   .unknownButton .numericKeyboard #char, #slash, #star, #plus, #date, #minus, #comma, #percent {
     display: none;
-  } 
+  }
+  #selectWindow{
+    display: table;
+    width: 85%;
+    height:80%; 
+	border:1px solid #999999; 
+    align: center;
+	border-spacing: 8px;
+    margin-left:auto;
+    margin-right:auto;
+	border-radius: 10px;
+  }
+  .butt{
+    font-size:1.3em;
+    -moz-border-radius: 5px;
+    border-radius: 10px;
+    display:table-cell;
+    background:rgb(220, 230, 220);
+    border:1px solid #999999;
+    border-color:gray;
+    color:rgb(5, 50, 5);
+    height: auto;
+    width: auto;
+	max-width: 73px;
+	text-align: center;
+  }
+   .leftButt, .value{
+    font-size:1.5em;
+    font-weight:bold;
+    -moz-border-radius: 5px;
+    border-radius: 10px;
+    display:table-cell;
+    border:1px solid #999999;
+	color: gray;
+    height: auto;
+    width: auto;
+	text-align: center;
+	max-width: 73px;
+  }
+  .boardRow{
+    display: table-row;    
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    border-spacing: 5px;
+  }
+  #row1{
+    display: table-row;    
+     -moz-border-radius: 5px;
+    border-radius: 5px;
+	border-spacing: 5px 5px 5px 5px;
+	color: rgb(5, 50, 5);
+  }
+	
+
 </style>
 
 <form id='outcome' action="/encounters/create" method='post'>
@@ -246,8 +402,45 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
         DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
   <% if CoreService.get_global_property_value('extra_delivery_mode')%>
-    <% @delivery_mode.concat(["Forceps Delivery"]) %>
+    <% @delivery_mode.concat(["FORCEPS DELIVERY"]) %>
   <%end%>
+
+  <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% options = {
+    :id => "discharged_to_where",
+    :field_type => 'text',
+    :helptext =>"Discharged to where?",
+    :tt_onUnLoad => "if($('discharged_to_where').value.toUpperCase() == 'HOME - WAITING' || " +
+      "$('discharged_to_where').value.toUpperCase() == 'ANOTHER HEALTH FACILITY')\
+  {$('discharged_to_where_value_coded_or_text').value = $('discharged_to_where').value; \
+  $('next_url').disabled = false;} else {$('next_url').disabled = true;}"
+  }%>
+
+  <% options[:condition] = "($('discharge_outcome').value.toUpperCase() == 'DISCHARGED')" %>
+
+  <%= select_tag("discharged_to_where", options_for_select(@discharged_to_where), options)%>
+
+  <% options = {
+    :id => "health_facility",
+    :field_type => 'text',
+    :helptext =>"Which health facility",
+    :allowFreeText => true,
+    :ajaxURL => "/encounters/locations?search_string=",
+    :tt_onUnLoad => "$('discharged_to_where_value_coded_or_text').value = $('health_facility').value;"
+  }%>
+
+  <% options[:condition] = "($('discharged_to_where').value.toUpperCase() == 'ANOTHER HEALTH FACILITY')" %>
+
+  <%= select_tag("health_facility", options_for_select(@health_facility), options)%>
+<%#= text_field_tag("health_facility", nil, options)%>
+
+  <%= hidden_field_tag("observations[][concept_name]",  "DISCHARGED") %>
+  <%= hidden_field_tag("observations[][value_coded_or_text]",  "", {:id => 'discharged_to_where_value_coded_or_text'}) %>
+  <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
 
   <% options = {
     :id => "admission_section",
@@ -425,70 +618,63 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
       :tt_pageStyleClass => "unknownButton",
       :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Height (CM)" } %>
 
-    <%= touch_text_field_tag "APPEARANCE", @patient, nil,
-      {	:id => "appearance#{baby}",
-      :field_type => 'number',
-      :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Appearance",
-      :condition => (@location.downcase == "ante-natal ward" ? "false" :
-          "($('discharge_outcome').value.toUpperCase() == 'DELIVERED' && parseInt($('number_of_babies').value) > #{baby - 1}) /*|| " +
-          "($('discharge_outcome').value.toUpperCase() == 'DISCHARGED' && parseInt($('number_of_babies').value) > #{baby - 1})*/"),
-      :absoluteMin => 0,
-      :absoluteMax => 2,
+    <% options = {
+      :id => "appearance#{baby}"
+    }%>
+    <%= hidden_field_tag("observations[][concept_name]",  "APPEARANCE")%>
+    <%= hidden_field_tag("observations[][value_coded_or_text]",   nil, options)%>
+    <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
+          session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-      :validationRule => "([0-9]+(\\.[0-9])?)|Unknown$",
-      :validationMessage => "You must enter a number between 0 and 9 (for example: 54<b>.6</b>)",
-      :tt_pageStyleClass => "Numeric NumbersWithUnknownAndDecimal" } %>
+    <% options = {
+      :id => "pulse#{baby}"
+    }%>
+    <%= hidden_field_tag("observations[][concept_name]",  "PULSE")%>
+    <%= hidden_field_tag("observations[][value_coded_or_text]",   nil, options)%>
+    <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
+          session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-    <%= touch_text_field_tag "PULSE", @patient, nil,
-      {	:id => "pulse#{baby}",
-      :field_type => 'number',
-      :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Pulse",
-      :condition => (@location.downcase == "ante-natal ward" ? "false" :
-          "($('discharge_outcome').value.toUpperCase() == 'DELIVERED' && parseInt($('number_of_babies').value) > #{baby - 1}) /*|| " +
-          "($('discharge_outcome').value.toUpperCase() == 'DISCHARGED' && parseInt($('number_of_babies').value) > #{baby - 1})*/"),
-      :absoluteMin => 0,
-      :absoluteMax => 2,
+    <% options = {
+      :id => "grimance#{baby}"
+    }%>
+    <%= hidden_field_tag("observations[][concept_name]",  "GRIMANCE")%>
+    <%= hidden_field_tag("observations[][value_coded_or_text]",   nil, options)%>
+    <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
+          session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-      :validationRule => "([0-9]+(\\.[0-9])?)|Unknown$",
-      :validationMessage => "You must enter a number between 0 and 9 (for example: 54<b>.6</b>)",
-      :tt_pageStyleClass => "Numeric NumbersWithUnknownAndDecimal" } %>
+    <% options = {
+      :id => "activity#{baby}"
+    }%>
+    <%= hidden_field_tag("observations[][concept_name]",  "ACTIVITY")%>
+    <%= hidden_field_tag("observations[][value_coded_or_text]",   nil, options)%>
+    <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
+          session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-    <%= touch_text_field_tag "GRIMANCE", @patient, nil,
-      {	:id => "grimance#{baby}",
+    <% options = {
+      :id => "respiration#{baby}"
+    }%>
+    <%= hidden_field_tag("observations[][concept_name]",  "RESPIRATION")%>
+    <%= hidden_field_tag("observations[][value_coded_or_text]",   nil, options)%>
+    <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
+          session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+    <%= touch_text_field_tag  "APGAR", @patient, nil,
+      {	:id => "apgar#{baby}",
       :field_type => 'number',
-      :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Grimance",
+      :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Apgar",
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
           "($('discharge_outcome').value.toUpperCase() == 'DELIVERED' && parseInt($('number_of_babies').value) > #{baby - 1}) /*|| " +
           "($('discharge_outcome').value.toUpperCase() == 'DISCHARGED' && parseInt($('number_of_babies').value) > #{baby - 1})*/"),
       :absoluteMin => 0,
-      :absoluteMax => 2,
-      :validationRule => "([0-9]+(\\.[0-9])?)|Unknown$",
-      :validationMessage => "You must enter a number between 0 and 9 (for example: 54<b>.6</b>)",
-      :tt_pageStyleClass => "Numeric NumbersWithUnknownAndDecimal" } %>
-    <%= touch_text_field_tag "ACTIVITY", @patient, nil,
-      {	:id => "activity#{baby}",
-      :field_type => 'number',
-      :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Activity",
-      :condition => (@location.downcase == "ante-natal ward" ? "false" :
-          "($('discharge_outcome').value.toUpperCase() == 'DELIVERED' && parseInt($('number_of_babies').value) > #{baby - 1}) /*|| " +
-          "($('discharge_outcome').value.toUpperCase() == 'DISCHARGED' && parseInt($('number_of_babies').value) > #{baby - 1})*/"),
-      :absoluteMin => 0,
-      :absoluteMax => 2,
-      :validationRule => "([0-9]+(\\.[0-9])?)|Unknown$",
-      :validationMessage => "You must enter a number between 0 and 9 (for example: 54<b>.6</b>)",
-      :tt_pageStyleClass => "Numeric NumbersWithUnknownAndDecimal" } %>
-    <%= touch_text_field_tag "RESPIRATION", @patient, nil,
-      {	:id => "respiration#{baby}",
-      :field_type => 'number',
-      :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Respiration",
-      :condition => (@location.downcase == "ante-natal ward" ? "false" :
-          "($('discharge_outcome').value.toUpperCase() == 'DELIVERED' && parseInt($('number_of_babies').value) > #{baby - 1}) /*|| " +
-          "($('discharge_outcome').value.toUpperCase() == 'DISCHARGED' && parseInt($('number_of_babies').value) > #{baby - 1})*/"),
-      :absoluteMin => 0,
-      :absoluteMax => 2,
-      :validationRule => "([0-9]+(\\.[0-9])?)|Unknown$",
-      :validationMessage => "You must enter a number between 0 and 9 (for example: 54<b>.6</b>)",
-      :tt_pageStyleClass => "Numeric NumbersWithUnknownAndDecimal" } %>
+      :absoluteMax => 10,
+      :tt_onLoad => "showApgarControl(#{baby})",
+      :tt_pageStyleClass => "NoKeyboard"
+    } %>
 
 
     <% options = {
@@ -540,50 +726,13 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
         ["2<sup>o</sup>", "2 Degrees"],
         ["3<sup>o</sup>", "3 Degrees"],
         ["4<sup>o</sup>", "4 Degrees"]]), options)%>
-  <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
-  <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
-
-  <% options = {
-    :id => "discharged_to_where",
-    :field_type => 'text',
-    :helptext =>"Discharged to where?",
-    :tt_onUnLoad => "if($('discharged_to_where').value.toUpperCase() == 'HOME - WAITING' || " +
-      "$('discharged_to_where').value.toUpperCase() == 'ANOTHER HEALTH FACILITY')\
-  {$('discharged_to_where_value_coded_or_text').value = $('discharged_to_where').value; \
-  $('next_url').disabled = false;} else {$('next_url').disabled = true;}"
-  }%>
-
-  <% options[:condition] = (@location.downcase == "ante-natal ward" ?
-      "($('discharge_outcome').value.toUpperCase() == 'DISCHARGED')" : "false") %>
-
-  <%= select_tag("discharged_to_where", options_for_select(@discharged_to_where), options)%>
-
-  <% options = {
-    :id => "health_facility",
-    :field_type => 'text',
-    :helptext =>"Which health facility",
-    :allowFreeText => true,
-    :ajaxURL => "/encounters/locations?search_string=",
-    :tt_onUnLoad => "$('discharged_to_where_value_coded_or_text').value = $('health_facility').value;"
-  }%>
-
-  <% options[:condition] = (@location.downcase == "ante-natal ward" ?
-      "($('discharged_to_where').value.toUpperCase() == 'ANOTHER HEALTH FACILITY')" : "false") %>
-
-  <%= select_tag("health_facility", options_for_select(@health_facility), options)%>
-<%#= text_field_tag("health_facility", nil, options)%>
-
-  <%= hidden_field_tag("observations[][concept_name]",  "DISCHARGED") %>
-  <%= hidden_field_tag("observations[][value_coded_or_text]",  "", {:id => 'discharged_to_where_value_coded_or_text'}) %>
-  <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
-  <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
   <!-- DIAGNOSIS -->
 
 
 <%# This options hash allows us to define our options in one place %>
   <% options = {
-    :helpText       => 'Select admission diagnosis',
+    :helpText       => 'Select discharge diagnosis',
     :allowFreeText  => 'true',
     :ajaxURL        => "/encounters/diagnoses?search_string=",
     :textCase       => "upper",
