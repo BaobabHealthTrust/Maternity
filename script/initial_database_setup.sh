@@ -29,7 +29,6 @@ sudo apt-get install ruby-rmagick
 sudo gem install rqrcode -v="0.4.2"
 sudo gem install barby -v="0.5.0"
 
-
 USERNAME=`ruby -ryaml -e "puts YAML::load_file('config/database.yml')['${ENV}']['username']"`
 PASSWORD=`ruby -ryaml -e "puts YAML::load_file('config/database.yml')['${ENV}']['password']"`
 DATABASE=`ruby -ryaml -e "puts YAML::load_file('config/database.yml')['${ENV}']['database']"`

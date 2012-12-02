@@ -4,10 +4,9 @@ class ApplicationController < ActionController::Base
   helper :all
   filter_parameter_logging :password
   before_filter :login_required, :except => ['login', 'logout','demographics', 'add_update_property',
-    'observations_printable', 'cohort_print', 'birth_report_printable', 'birth_report']
+    'observations_printable', 'cohort_print', 'print_cohort', 'report', 'diagnoses_report', 'birth_report_printable', 'birth_report']
   before_filter :location_required, :except => ['login', 'logout', 'location','demographics',
-    'add_update_property', 'observations_printable', 'cohort_print', 'birth_report_printable', 'birth_report']
-
+    'add_update_property', 'observations_printable', 'diagnoses_report', 'cohort_print','report','print_cohort', 'birth_report_printable', 'birth_report']
   
   def rescue_action_in_public(exception)
     @message = exception.message

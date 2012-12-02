@@ -167,9 +167,9 @@ module ANCService
       @patient = self.patient rescue nil
     
       @obstetrics = {}
-      search_set = ["YEAR OF BIRTH", "PLACE OF BIRTH", "PREGNANCY", "LABOUR DURATION", 
-        "METHOD OF DELIVERY", "CONDITION AT BIRTH", "BIRTH WEIGHT", "ALIVE", 
-        "AGE AT DEATH", "UNITS OF AGE OF CHILD", "PROCEDURE DONE"]
+      search_set = ["YEAR OF BIRTH", "PLACE OF BIRTH", "BIRTHPLACE", "PREGNANCY", "GESTATION", "LABOUR DURATION",
+      "METHOD OF DELIVERY", "CONDITION AT BIRTH", "BIRTH WEIGHT", "ALIVE",
+      "AGE AT DEATH", "UNITS OF AGE OF CHILD", "PROCEDURE DONE"]
       current_level = 0
     
       Encounter.find(:all, :conditions => ["encounter_type = ? AND patient_id = ?", 
@@ -264,12 +264,12 @@ module ANCService
     
       (1..(@obstetrics.length + 1)).each do |pos|
       
-        @place = (@obstetrics[pos] ? (@obstetrics[pos]["PLACE OF BIRTH"] ? 
-              @obstetrics[pos]["PLACE OF BIRTH"] : "") : "").gsub(/Centre/i, 
+        @place = (@obstetrics[pos] ? (@obstetrics[pos]["BIRTHPLACE"] ?
+              @obstetrics[pos]["BIRTHPLACE"] : "") : "").gsub(/Centre/i,
           "C.").gsub(/Health/i, "H.").gsub(/Center/i, "C.")
           
-        @gest = (@obstetrics[pos] ? (@obstetrics[pos]["PREGNANCY"] ? 
-              @obstetrics[pos]["PREGNANCY"] : "") : "")
+        @gest = (@obstetrics[pos] ? (@obstetrics[pos]["GESTATION"] ?
+              @obstetrics[pos]["GESTATION"] : "") : "")
           
         @gest = (@gest.length > 5 ? truncate(@gest, 5) : @gest)
               
@@ -741,7 +741,8 @@ module ANCService
 
       @syphilis_date = syphil["SYPHILIS TEST RESULT DATE"] rescue nil
 
-      @hiv_test = syphil["HIV STATUS"].titleize rescue nil
+      @hiv_test = (syphil["HIV STATUS"].downcase == "positive" ? "=" :
+          (syphil["HIV STATUS"].downcase == "negative" ? "-" : "")) rescue nil
 
       @hiv_test_date = syphil["HIV TEST DATE"] rescue nil
 
@@ -784,7 +785,7 @@ module ANCService
       label.draw_line(25,190,115,1,0)
       label.draw_text("Height",28,76,0,2,1,1,false)
       label.draw_text("Multiple Pregnancy",28,106,0,2,1,1,false)
-      label.draw_text("WHO Clinical Stage",28,136,0,2,1,1,false)
+      label.draw_text("",28,136,0,2,1,1,false)
       label.draw_text("Lab Results",28,161,0,1,1,2,false)
       label.draw_text("Date",190,170,0,2,1,1,false)
       label.draw_text("Result",325,170,0,2,1,1,false)
@@ -812,14 +813,14 @@ module ANCService
     
       label.draw_text(@height,270,76,0,2,1,1,false)
       label.draw_text(@multiple,270,106,0,2,1,1,false)
-      label.draw_text(@who,270,136,0,2,1,1,false)
+      # label.draw_text(@who,270,136,0,2,1,1,false)
         
-      label.draw_text(@hiv_test_date,190,196,0,2,1,1,false)
-      label.draw_text(@syphilis_date,190,226,0,2,1,1,false)
-      label.draw_text(@hb1_date,190,256,0,2,1,1,false)
-      label.draw_text(@hb2_date,190,286,0,2,1,1,false)
+      label.draw_text(@hiv_test_date,188,196,0,2,1,1,false)
+      label.draw_text(@syphilis_date,188,226,0,2,1,1,false)
+      label.draw_text(@hb1_date,188,256,0,2,1,1,false)
+      label.draw_text(@hb2_date,188,286,0,2,1,1,false)
         
-      label.draw_text(@hiv_test,325,196,0,2,1,1,false)
+      label.draw_text(@hiv_test,345,196,0,2,1,1,false)
       label.draw_text(@syphilis,325,226,0,2,1,1,false)
       label.draw_text(@hb1,325,256,0,2,1,1,false)
       label.draw_text(@hb2,325,286,0,2,1,1,false)
@@ -836,60 +837,63 @@ module ANCService
     
       encounters = {}
 
-      @patient.encounters.find(:all, :conditions => ["encounter_datetime >= ? AND encounter_datetime <= ?", 
-          @current_range[0]["START"], @current_range[0]["END"]]).collect{|e|    
-        encounters[e.encounter_datetime.strftime("%d/%b/%Y")] = {"USER" => User.find(e.creator).name}      
+      @patient.encounters.find(:all, :conditions => ["encounter_datetime >= ? AND encounter_datetime <= ?",
+          @current_range[0]["START"], @current_range[0]["END"]]).collect{|e|
+        encounters[e.encounter_datetime.strftime("%d/%b/%Y")] = {"USER" => User.find(e.creator).name }
       }
 
-      @patient.encounters.find(:all, :conditions => ["encounter_datetime >= ? AND encounter_datetime <= ?", 
-          @current_range[0]["START"], @current_range[0]["END"]]).collect{|e| 
+      @patient.encounters.find(:all, :conditions => ["encounter_datetime >= ? AND encounter_datetime <= ?",
+          @current_range[0]["START"], @current_range[0]["END"]]).collect{|e|
         encounters[e.encounter_datetime.strftime("%d/%b/%Y")][e.type.name.upcase] = ({} rescue "") if !e.type.nil?
       }
 
-      @patient.encounters.find(:all, :conditions => ["encounter_datetime >= ? AND encounter_datetime <= ?", 
-          @current_range[0]["START"], @current_range[0]["END"]]).collect{|e| 
-        e.observations.each{|o| 
-          if o.to_a[0]
-            if o.to_a[0].upcase == "DIAGNOSIS" && encounters[e.encounter_datetime.strftime("%d/%b/%Y")][e.type.name.upcase][o.to_a[0].upcase]
-              encounters[e.encounter_datetime.strftime("%d/%b/%Y")][e.type.name.upcase][o.to_a[0].upcase] += "; " + o.to_a[1]
-            else
-              encounters[e.encounter_datetime.strftime("%d/%b/%Y")][e.type.name.upcase][o.to_a[0].upcase] = (o.to_a[1] rescue "") if !e.type.nil?
-              if o.to_a[0].upcase == "PLANNED DELIVERY PLACE"
-                @current_range[0]["PLANNED DELIVERY PLACE"] = o.to_a[1]
-              elsif o.to_a[0].upcase == "MOSQUITO NET"
-                @current_range[0]["MOSQUITO NET"] = o.to_a[1]
+      @patient.encounters.find(:all, :conditions => ["encounter_datetime >= ? AND encounter_datetime <= ?",
+          @current_range[0]["START"], @current_range[0]["END"]]).collect{|e|
+        if !e.type.nil?
+          e.observations.each{|o|
+            if o.to_a[0]
+              if o.to_a[0].upcase == "DIAGNOSIS" && encounters[e.encounter_datetime.strftime("%d/%b/%Y")][e.type.name.upcase][o.to_a[0].upcase]
+                encounters[e.encounter_datetime.strftime("%d/%b/%Y")][e.type.name.upcase][o.to_a[0].upcase] += "; " + o.to_a[1]
+              else
+                encounters[e.encounter_datetime.strftime("%d/%b/%Y")][e.type.name.upcase][o.to_a[0].upcase] = o.to_a[1]
+                if o.to_a[0].upcase == "PLANNED DELIVERY PLACE"
+                  @current_range[0]["PLANNED DELIVERY PLACE"] = o.to_a[1]
+                elsif o.to_a[0].upcase == "MOSQUITO NET"
+                  @current_range[0]["MOSQUITO NET"] = o.to_a[1]
+                end
               end
             end
-          end
-        }
+          }
+        end
       }
 
-      @drugs = {}; 
-      @other_drugs = {}; 
-      main_drugs = ["TTV", "SP", "Fefol", "NVP", "Albendazole", "TDF/3TC/EFV"]
+      @drugs = {};
+      @other_drugs = {};
+      main_drugs = ["TTV", "SP", "Fefol", "NVP", "Albendazole"]
     
-      @patient.encounters.find(:all, :order => "encounter_datetime DESC", 
-        :conditions => ["encounter_type = ? AND encounter_datetime >= ? AND encounter_datetime <= ?", 
-          EncounterType.find_by_name("TREATMENT").id, @current_range[0]["START"], @current_range[0]["END"]]).each{|e| 
-        @drugs[e.encounter_datetime.strftime("%d/%b/%Y")] = {} if !@drugs[e.encounter_datetime.strftime("%d/%b/%Y")]; 
-        @other_drugs[e.encounter_datetime.strftime("%d/%b/%Y")] = {} if !@other_drugs[e.encounter_datetime.strftime("%d/%b/%Y")]; 
-        e.orders.each{|o| 
-          if main_drugs.include?(o.drug_order.drug.name[0, o.drug_order.drug.name.index(" ")])          
+      @patient.encounters.find(:all, :order => "encounter_datetime DESC",
+        :conditions => ["(encounter_type = ? OR encounter_type = ?) AND encounter_datetime >= ? AND encounter_datetime <= ?",
+          EncounterType.find_by_name("TREATMENT").id, EncounterType.find_by_name("DISPENSING").id,
+          @current_range[0]["START"], @current_range[0]["END"]]).each{|e|
+        @drugs[e.encounter_datetime.strftime("%d/%b/%Y")] = {} if !@drugs[e.encounter_datetime.strftime("%d/%b/%Y")];
+        @other_drugs[e.encounter_datetime.strftime("%d/%b/%Y")] = {} if !@other_drugs[e.encounter_datetime.strftime("%d/%b/%Y")];
+        e.orders.each{|o|
+          if main_drugs.include?(o.drug_order.drug.name[0, o.drug_order.drug.name.index(" ")])
             if o.drug_order.drug.name[0, o.drug_order.drug.name.index(" ")] == "NVP"
               if o.drug_order.drug.name.upcase.include?("ML")
                 @drugs[e.encounter_datetime.strftime("%d/%b/%Y")][o.drug_order.drug.name[0, o.drug_order.drug.name.index(" ")]] = o.drug_order.amount_needed
               else
                 @other_drugs[e.encounter_datetime.strftime("%d/%b/%Y")][o.drug_order.drug.name[0, o.drug_order.drug.name.index(" ")]] = o.drug_order.amount_needed
               end
-            else            
+            else
               @drugs[e.encounter_datetime.strftime("%d/%b/%Y")][o.drug_order.drug.name[0, o.drug_order.drug.name.index(" ")]] = o.drug_order.amount_needed
-            end          
+            end
           else
             @other_drugs[e.encounter_datetime.strftime("%d/%b/%Y")][o.drug_order.drug.name[0, o.drug_order.drug.name.index(" ")]] = o.drug_order.amount_needed
           end
-        }      
+        }
       }
-    
+
       label = ZebraPrinter::StandardLabel.new
 
       label.draw_line(20,25,800,2,0)
@@ -917,7 +921,7 @@ module ANCService
       label.draw_text("FeFo",664,140,0,2,1,1,false)
       label.draw_text("(tabs)",655,158,0,2,1,1,false)
       label.draw_text("Albe.",740,140,0,2,1,1,false)
-      label.draw_text("(mg)",740,156,0,2,1,1,false)
+      label.draw_text("(tabs)",740,156,0,2,1,1,false)
       label.draw_text("Age",35,158,0,2,1,1,false)
       label.draw_text("Height",99,158,0,2,1,1,false)
       label.draw_text("Pres.",178,158,0,2,1,1,false)
@@ -934,27 +938,39 @@ module ANCService
     
       @i = 0
 
-      encounters.sort.each do |encounter|
+      out = []
+
+      encounters.each{|v,k|
+        out << [k["ANC VISIT TYPE"]["REASON FOR VISIT"].squish.to_i, v] rescue []
+      }
+      out = out.sort.compact
+
+      # raise out.to_yaml
+
+      out.each do |key, element|
+
+        encounter = encounters[element]
+
         @i = @i + 1
       
-        if encounter[0] == target_date.to_date.strftime("%d/%b/%Y")
-          visit = encounters[encounter[0]]["ANC VISIT TYPE"]["REASON FOR VISIT"].to_i
+        if element == target_date.to_date.strftime("%d/%b/%Y")
+          visit = encounters[element]["ANC VISIT TYPE"]["REASON FOR VISIT"].to_i
         
           label.draw_text("Visit No: #{visit}",250,33,0,1,1,2,false)
-          label.draw_text("Visit Date: #{encounter[0]}",450,33,0,1,1,2,false)
+          label.draw_text("Visit Date: #{element}",450,33,0,1,1,2,false)
         
-          gest = (((encounter[0].to_date - @current_range[0]["START"].to_date).to_i / 7) <= 0 ? "?" : 
-              (((encounter[0].to_date - @current_range[0]["START"].to_date).to_i / 7) - 1).to_s + "wks") rescue ""
+          gest = (((element.to_date - @current_range[0]["START"].to_date).to_i / 7) <= 0 ? "?" :
+              (((element.to_date - @current_range[0]["START"].to_date).to_i / 7) - 1).to_s + "wks") rescue ""
             
           label.draw_text(gest,29,200,0,2,1,1,false)
         
-          fund = (encounters[encounter[0]]["OBSERVATIONS"]["FUNDUS"].to_i <= 0 ? "?" : 
-              encounters[encounter[0]]["OBSERVATIONS"]["FUNDUS"].to_i.to_s + "(wks)") rescue ""
+          fund = (encounters[element]["OBSERVATIONS"]["FUNDUS"].to_i <= 0 ? "?" :
+              encounters[element]["OBSERVATIONS"]["FUNDUS"].to_i.to_s + "(wks)") rescue ""
             
           label.draw_text(fund,99,200,0,2,1,1,false)
         
-          posi = encounters[encounter[0]]["OBSERVATIONS"]["POSITION"] rescue ""
-          pres = encounters[encounter[0]]["OBSERVATIONS"]["PRESENTATION"] rescue ""
+          posi = encounters[element]["OBSERVATIONS"]["POSITION"] rescue ""
+          pres = encounters[element]["OBSERVATIONS"]["PRESENTATION"] rescue ""
         
           posipres = paragraphate(posi.to_s + pres.to_s,5, 5)
         
@@ -962,8 +978,8 @@ module ANCService
             label.draw_text(posipres[u],178,(200 + (13 * u)),0,2,1,1,false)
           }
         
-          fet = (encounters[encounter[0]]["OBSERVATIONS"]["FETAL HEART BEAT"].humanize == "Unknown" ? "?" :
-              encounters[encounter[0]]["OBSERVATIONS"]["FETAL HEART BEAT"].humanize).gsub(/Fetal\smovement\sfelt\s\(fmf\)/i,"FMF") rescue ""
+          fet = (encounters[element]["OBSERVATIONS"]["FETAL HEART BEAT"].humanize == "Unknown" ? "?" :
+              encounters[element]["OBSERVATIONS"]["FETAL HEART BEAT"].humanize).gsub(/Fetal\smovement\sfelt\s\(fmf\)/i,"FMF") rescue ""
         
           fet = paragraphate(fet, 5, 5)
         
@@ -971,18 +987,18 @@ module ANCService
             label.draw_text(fet[f],259,(200 + (13 * f)),0,2,1,1,false)
           }
         
-          wei = (encounters[encounter[0]]["VITALS"]["WEIGHT (KG)"].to_i <= 0 ? "?" : 
-              ((encounters[encounter[0]]["VITALS"]["WEIGHT (KG)"].to_s.match(/\.[1-9]/) ? 
-                  encounters[encounter[0]]["VITALS"]["WEIGHT (KG)"] : 
-                  encounters[encounter[0]]["VITALS"]["WEIGHT (KG)"].to_i))) rescue ""
+          wei = (encounters[element]["VITALS"]["WEIGHT (KG)"].to_i <= 0 ? "?" :
+              ((encounters[element]["VITALS"]["WEIGHT (KG)"].to_s.match(/\.[1-9]/) ?
+                  encounters[element]["VITALS"]["WEIGHT (KG)"] :
+                  encounters[element]["VITALS"]["WEIGHT (KG)"].to_i))) rescue ""
         
           label.draw_text(wei,339,200,0,2,1,1,false)
         
-          sbp = (encounters[encounter[0]]["VITALS"]["SYSTOLIC BLOOD PRESSURE"].to_i <= 0 ? "?" : 
-              encounters[encounter[0]]["VITALS"]["SYSTOLIC BLOOD PRESSURE"].to_i) rescue "?"
+          sbp = (encounters[element]["VITALS"]["SYSTOLIC BLOOD PRESSURE"].to_i <= 0 ? "?" :
+              encounters[element]["VITALS"]["SYSTOLIC BLOOD PRESSURE"].to_i) rescue "?"
             
-          dbp = (encounters[encounter[0]]["VITALS"]["DIASTOLIC BLOOD PRESSURE"].to_i <= 0 ? "?" : 
-              encounters[encounter[0]]["VITALS"]["DIASTOLIC BLOOD PRESSURE"].to_i) rescue "?"
+          dbp = (encounters[element]["VITALS"]["DIASTOLIC BLOOD PRESSURE"].to_i <= 0 ? "?" :
+              encounters[element]["VITALS"]["DIASTOLIC BLOOD PRESSURE"].to_i) rescue "?"
         
           bp = paragraphate(sbp.to_s + "/" + dbp.to_s, 4, 3)
         
@@ -990,7 +1006,7 @@ module ANCService
             label.draw_text(bp[u],420,(200 + (18 * u)),0,2,1,1,false)
           }
         
-          uri = encounters[encounter[0]]["LAB RESULTS"]["URINE PROTEIN"] rescue ""
+          uri = encounters[element]["LAB RESULTS"]["URINE PROTEIN"] rescue ""
         
           uri = paragraphate(uri, 5, 5)
         
@@ -998,15 +1014,15 @@ module ANCService
             label.draw_text(uri[u],498,(200 + (18 * u)),0,2,1,1,false)
           }
         
-          sp = (@drugs[encounter[0]]["SP"].to_i > 0 ? @drugs[encounter[0]]["SP"].to_i : "") rescue ""
+          sp = (@drugs[element]["SP"].to_i > 0 ? @drugs[element]["SP"].to_i : "") rescue ""
         
           label.draw_text(sp,595,200,0,2,1,1,false)
         
-          fefo = (@drugs[encounter[0]]["Fefol"].to_i > 0 ? @drugs[encounter[0]]["Fefol"].to_i : "") rescue ""
+          fefo = (@drugs[element]["Fefol"].to_i > 0 ? @drugs[element]["Fefol"].to_i : "") rescue ""
         
           label.draw_text(fefo,664,200,0,2,1,1,false)
         
-          albe = (@drugs[encounter[0]]["Albendazole"].to_i > 0 ? @drugs[encounter[0]]["Albendazole"].to_i : "") rescue ""
+          albe = (@drugs[element]["Albendazole"].to_i > 0 ? @drugs[element]["Albendazole"].to_i : "") rescue ""
         
           label.draw_text(albe,740,200,0,2,1,1,false)
         end 
@@ -1057,30 +1073,31 @@ module ANCService
 
       @drugs = {}; 
       @other_drugs = {}; 
-      main_drugs = ["TTV", "SP", "Fefol", "NVP", "Albendazole", "TDF/3TC/EFV"]
+      main_drugs = ["TTV", "SP", "Fefol", "NVP", "Albendazole"]
     
-      @patient.encounters.find(:all, :order => "encounter_datetime DESC", 
-        :conditions => ["encounter_type = ? AND encounter_datetime >= ? AND encounter_datetime <= ?", 
-          EncounterType.find_by_name("TREATMENT").id, @current_range[0]["START"], @current_range[0]["END"]]).each{|e| 
-        @drugs[e.encounter_datetime.strftime("%d/%b/%Y")] = {} if !@drugs[e.encounter_datetime.strftime("%d/%b/%Y")]; 
-        @other_drugs[e.encounter_datetime.strftime("%d/%b/%Y")] = {} if !@other_drugs[e.encounter_datetime.strftime("%d/%b/%Y")]; 
-        e.orders.each{|o| 
-          if main_drugs.include?(o.drug_order.drug.name[0, o.drug_order.drug.name.index(" ")])          
+      @patient.encounters.find(:all, :order => "encounter_datetime DESC",
+        :conditions => ["(encounter_type = ? OR encounter_type = ?) AND encounter_datetime >= ? AND encounter_datetime <= ?",
+          EncounterType.find_by_name("TREATMENT").id, EncounterType.find_by_name("DISPENSING").id,
+          @current_range[0]["START"], @current_range[0]["END"]]).each{|e|
+        @drugs[e.encounter_datetime.strftime("%d/%b/%Y")] = {} if !@drugs[e.encounter_datetime.strftime("%d/%b/%Y")];
+        @other_drugs[e.encounter_datetime.strftime("%d/%b/%Y")] = {} if !@other_drugs[e.encounter_datetime.strftime("%d/%b/%Y")];
+        e.orders.each{|o|
+          if main_drugs.include?(o.drug_order.drug.name[0, o.drug_order.drug.name.index(" ")])
             if o.drug_order.drug.name[0, o.drug_order.drug.name.index(" ")] == "NVP"
               if o.drug_order.drug.name.upcase.include?("ML")
                 @drugs[e.encounter_datetime.strftime("%d/%b/%Y")][o.drug_order.drug.name[0, o.drug_order.drug.name.index(" ")]] = o.drug_order.amount_needed
               else
                 @other_drugs[e.encounter_datetime.strftime("%d/%b/%Y")][o.drug_order.drug.name[0, o.drug_order.drug.name.index(" ")]] = o.drug_order.amount_needed
               end
-            else            
+            else
               @drugs[e.encounter_datetime.strftime("%d/%b/%Y")][o.drug_order.drug.name[0, o.drug_order.drug.name.index(" ")]] = o.drug_order.amount_needed
-            end          
+            end
           else
             @other_drugs[e.encounter_datetime.strftime("%d/%b/%Y")][o.drug_order.drug.name[0, o.drug_order.drug.name.index(" ")]] = o.drug_order.amount_needed
           end
-        }      
+        }
       }
-    
+
       label = ZebraPrinter::StandardLabel.new
 
       label.draw_line(20,25,800,2,0)
@@ -1100,9 +1117,9 @@ module ANCService
       label.draw_line(706,130,2,175,0)
       label.draw_text("Planned Delivery Place: #{@current_range[0]["PLANNED DELIVERY PLACE"] rescue ""}",28,66,0,2,1,1,false)
       label.draw_text("Bed Net Given: #{@current_range[0]["MOSQUITO NET"] rescue ""}",28,99,0,2,1,1,false)
-      label.draw_text("TDF",28,138,0,2,1,1,false)
-      label.draw_text("3TC",28,156,0,2,1,1,false)
-      label.draw_text("EFV",28,174,0,2,1,1,false)
+      label.draw_text("",28,138,0,2,1,1,false)
+      label.draw_text("TTV",28,156,0,2,1,1,false)
+      label.draw_text("",28,174,0,2,1,1,false)
       label.draw_text("NVP",78,140,0,2,1,1,false)
       label.draw_text("Baby",77,158,0,1,1,1,false)
       label.draw_text("(ml)",77,176,0,1,1,1,false)
@@ -1118,28 +1135,39 @@ module ANCService
 
       @i = 0
 
-      encounters.sort.each do |encounter|
+      out = []
+
+      encounters.each{|v,k|
+        out << [k["ANC VISIT TYPE"]["REASON FOR VISIT"].squish.to_i, v] rescue []
+      }
+      out = out.sort.compact
+
+      # raise out.to_yaml
+
+      out.each do |key, element|
+
+        encounter = encounters[element]
         @i = @i + 1
       
-        if encounter[0] == target_date.to_date.strftime("%d/%b/%Y")
+        if element == target_date.to_date.strftime("%d/%b/%Y")
         
-          tdf = (@drugs[encounter[0]]["TDF/3TC/EFV"].to_i > 0 ? @drugs[encounter[0]]["TDF/3TC/EFV"].to_i : "") rescue ""
+          ttv = (@drugs[element]["TTV"] > 0 ? 1 : "") rescue ""
           
-          label.draw_text(tdf,28,200,0,2,1,1,false)
+          label.draw_text(ttv,28,200,0,2,1,1,false)
         
-          nvp = (@drugs[encounter[0]]["NVP"].to_i > 0 ? @drugs[encounter[0]]["NVP"].to_i : "") rescue ""
+          nvp = (@drugs[element]["NVP"].to_i > 0 ? @drugs[element]["NVP"].to_i : "") rescue ""
           
           label.draw_text(nvp,77,200,0,2,1,1,false)
       
-          cpt = (encounters[encounter[0]]["LAB RESULTS"]["TAKING CO-TRIMOXAZOLE PREVENTIVE THERAPY"].upcase == "YES" ? "Y" : "N") rescue ""
+          cpt = (encounters[element]["LAB RESULTS"]["TAKING CO-TRIMOXAZOLE PREVENTIVE THERAPY"].upcase == "YES" ? "Y" : "N") rescue ""
         
           label.draw_text(cpt,124,200,0,2,1,1,false)
         
-          art = (encounters[encounter[0]]["LAB RESULTS"]["ON ART"].upcase == "YES" ? "Y" : "N") rescue ""
+          art = (encounters[element]["LAB RESULTS"]["ON ART"].upcase == "YES" ? "Y" : "N") rescue ""
         
           label.draw_text(art,164,200,0,2,1,1,false)
         
-          sign = encounters[encounter[0]]["OBSERVATIONS"]["DIAGNOSIS"].humanize rescue ""
+          sign = encounters[element]["OBSERVATIONS"]["DIAGNOSIS"].humanize rescue ""
         
           sign = paragraphate(sign.to_s, 13, 5)
         
@@ -1147,10 +1175,10 @@ module ANCService
             label.draw_text(sign[m],198,(200 + (18 * m)),0,2,1,1,false)
           }
         
-          med = encounters[encounter[0]]["UPDATE OUTCOME"]["OUTCOME"].humanize + "; " rescue ""
-          oth = (@other_drugs[encounter[0]].collect{|d, v| 
+          med = encounters[element]["UPDATE OUTCOME"]["OUTCOME"].humanize + "; " rescue ""
+          oth = (@other_drugs[element].collect{|d, v|
               "#{d}: #{ (v.to_s.match(/\.[1-9]/) ? v : v.to_i) }"
-            }.join("; ")) if @other_drugs[encounter[0]].length > 0 rescue ""
+            }.join("; ")) if @other_drugs[element].length > 0 rescue ""
           
           med = paragraphate(med.to_s + oth.to_s, 17, 5)
         
@@ -1158,7 +1186,7 @@ module ANCService
             label.draw_text(med[m],370,(200 + (18 * m)),0,2,1,1,false)
           }
         
-          nex = encounters[encounter[0]]["APPOINTMENT"]["APPOINTMENT DATE"] rescue []
+          nex = encounters[element]["APPOINTMENT"]["APPOINTMENT DATE"] rescue []
         
           if nex != []
             date = nex.to_date
@@ -1172,8 +1200,14 @@ module ANCService
             label.draw_text(nex[m],610,(200 + (18 * m)),0,2,1,1,false)
           }
         
-          use = encounters[encounter[0]]["USER"] rescue ""
+          use = (encounters[element]["USER"].split(" ") rescue []).collect{|n| n[0,1].upcase + "."}.join("")  rescue ""
           
+          # use = paragraphate(use.to_s, 5, 5)
+
+          # (0..(use.length)).each{|m|
+          #   label.draw_text(use[m],710,(200 + (18 * m)),0,2,1,1,false)
+          # }
+
           label.draw_text(use,710,200,0,2,1,1,false)
         
         end
@@ -1719,7 +1753,10 @@ module ANCService
       id.patient.person
     } unless identifier.blank? rescue nil
     return people unless people.blank?
+    
     create_from_dde_server = CoreService.get_global_property_value('create.from.dde.server').to_s == "true" rescue false
+    create_from_remote = CoreService.get_global_property_value('create.from.remote').to_s == "true" rescue false
+
     if create_from_dde_server
       dde_server = CoreService.get_global_property_value("dde_server_ip").to_s rescue ""
       dde_server_username = CoreService.get_global_property_value("dde_server_username").to_s rescue ""
@@ -1752,11 +1789,7 @@ module ANCService
           "names"=>{"family_name"=>p["person"]["family_name"],
             "given_name"=>p["person"]["given_name"],
             "middle_name"=>""},
-          "birth_year"=>birthdate_year},
-        "filter_district"=>"Chitipa",
-        "filter"=>{"region"=>"Northern Region",
-          "t_a"=>""},
-        "relation"=>""
+          "birth_year"=>birthdate_year}
       }
 
       return [self.create_from_form(passed["person"])]
@@ -1801,6 +1834,7 @@ module ANCService
 
       return [self.create_from_form(results)]
     end
+
     return people
   end
 
@@ -1811,14 +1845,14 @@ module ANCService
 		patient_params = params["patient"]
 		params_to_process = params.reject{|key,value| key.match(/addresses|patient|names|relation|cell_phone_number|home_phone_number|office_phone_number|agrees_to_be_visited_for_TB_therapy|agrees_phone_text_for_TB_therapy/) }
 		birthday_params = params_to_process.reject{|key,value| key.match(/gender/) }
-		person_params = params_to_process.reject{|key,value| key.match(/birth_|age_estimate|occupation|identifiers|citizenship|race/) }
+		person_params = params_to_process.reject{|key,value| key.match(/birth_|age_estimate|occupation|identifiers|race|citizenship/) }
 
 		if person_params["gender"].to_s == "Female"
       person_params["gender"] = 'F'
 		elsif person_params["gender"].to_s == "Male"
       person_params["gender"] = 'M'
 		end
-
+		
 		person = Person.create(person_params)
 
 		unless birthday_params.empty?

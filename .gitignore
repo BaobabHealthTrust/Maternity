@@ -4,6 +4,7 @@
 *.yml
 config/database.yml
 config/settings.yml
+config/application.yml
 notes
 doc
 development.sql
@@ -14,4 +15,4 @@ mockups
 nbproject
 vendor/plugins/barcode-generator/
 public/images/patient_id.png
-
+*.lock

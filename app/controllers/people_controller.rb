@@ -253,8 +253,8 @@ class PeopleController < ApplicationController
   
   end
 
+
   def create
-    
     person = ANCService.create_patient_from_dde(params) if create_from_dde_server
 
     if !person.blank?
@@ -281,11 +281,12 @@ class PeopleController < ApplicationController
       end
     else
       remote_person = ANCService.create_remote(params) if create_from_remote
-      person = Person.create_from_form(remote_person) if create_from_remote
 
-      person = Person.create_from_form(params[:person]) if !create_from_remote
+      person = Person.create_from_form(remote_person) if create_from_remote
       
-      if params[:next_url]
+      person = Person.create_from_form(params[:person]) if !create_from_remote
+
+     if params[:next_url]
         if (params[:cat].downcase rescue "") == "mother"
           print_and_redirect("/patients/national_id_label/?patient_id=#{person.patient.id}",
             params[:next_url] + "?patient_id=#{ person.patient.id }") and return
