@@ -1708,7 +1708,7 @@ module ANCService
         "identifier"=>"#{new_params["addresses"]["county_district"]}"}
     }
 
-    demographic_servers = JSON.parse(CoreService.get_global_property_value('demographic_server_ips_and_local_port')) # rescue []
+    demographic_servers = JSON.parse(CoreService.get_global_property_value('demographic_server_ips_and_local_port')) #  rescue []
 
     result = demographic_servers.map{|demographic_server, local_port|
 
@@ -2068,7 +2068,8 @@ module ANCService
 		names_params = params["person"]["names"] rescue []
 		patient_params = params["person"]["patient"] rescue []
     birthday_params = params["person"] rescue []
-		params_to_process = params.reject{|key,value|
+
+      params_to_process = params.reject{|key,value|
       key.match(/identifiers|addresses|patient|names|relation|cell_phone_number|home_phone_number|office_phone_number|agrees_to_be_visited_for_TB_therapy|agrees_phone_text_for_TB_therapy/)
     }
 		birthday_params = params_to_process["person"].reject{|key,value| key.match(/gender/) }
@@ -2263,5 +2264,4 @@ module ANCService
       "identifier_type" => identifier_type.patient_identifier_type_id) unless national_id.blank?
     return person
   end
-
 end

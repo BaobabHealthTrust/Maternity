@@ -1,5 +1,6 @@
 production:
- create.from.dde.server: false
+ create.from.dde.server: true
+ create.from.remote: false
  link.to.anc: false
  birth_registration_url: http://localhost:3007/people/import_baby
  current_facility: Bwaila Maternity Wing
@@ -8,9 +9,19 @@ production:
  dde_server_ip: localhost:3001
  dde_server_password: admin
  dde_server_username: admin
- 
+ remote_servers.parent: localhost:3000
+ remote_bart.username: admin
+ remote_bart.password: test
+ remote_bart.location: 721
+ remote_machine.account_name: localhost
+ application.include_delivery_mode: yes
+ application.include_baby_weight_and_apgar: yes
+ hdu_pog_theater_wards: false
+ #demographic_server_ips_and_local_ports: {"localhost":"4000"}
+
 development:
- create.from.dde.server: false
+ create.from.dde.server: true
+ create.from.remote: false
  link.to.anc: false
  birth_registration_url: http://localhost:3007/people/import_baby
  current_facility: Bwaila Maternity Wing
@@ -19,10 +30,29 @@ development:
  dde_server_ip: localhost:3001
  dde_server_password: admin
  dde_server_username: admin
- 
-test: &TEST
+ remote_servers.parent: localhost:3000
+ remote_bart.username: admin
+ remote_bart.password: test
+ remote_bart.location: 721
+ remote_machine.account_name: localhost
+ application.include_delivery_mode: yes
+ application.include_baby_weight_and_apgar: yes
+ hdu_pog_theater_wards: false
+ #demographic_server_ips_and_local_ports: {"localhost":"4000"}
+
+test: &TEST 
+ create.from.remote: false
  create_from_remote: no
  use.user.selected.activities: yes
+ remote_servers.parent: localhost:3000
+ remote_bart.username: admin
+ remote_bart.password: test
+ remote_bart.location: 721
+ remote_machine.account_name: localhost 
+ application.include_delivery_mode: yes
+ application.include_baby_weight_and_apgar: yes
+ hdu_pog_theater_wards: false
 
 cucumber:
   <<: *TEST
+

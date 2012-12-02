@@ -5,6 +5,7 @@ require 'barby/outputter/rmagick_outputter'
 class EncountersController < ApplicationController
 
   def create    
+
     if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME"
       delivered = params["observations"].collect{|o| o if !o["value_coded_or_text"].nil? and o["value_coded_or_text"].upcase == "DELIVERED"}.compact.length
 
@@ -22,7 +23,7 @@ class EncountersController < ApplicationController
       end
     end
     
-    params[:encounter][:encounter_datetime] = (params[:encounter][:encounter_datetime].to_date.strftime("%Y-%m-%d ") + 
+	params[:encounter][:encounter_datetime] = (params[:encounter][:encounter_datetime].to_date.strftime("%Y-%m-%d ") + 
         Time.now.strftime("%H:%M")) rescue Time.now()
     
     encounter = Encounter.new(params[:encounter])
@@ -115,6 +116,7 @@ class EncountersController < ApplicationController
     @new_hiv_status = params[:new_hiv_status]
     @admission_wards = [' '] + GlobalProperty.find_by_property('facility.login_wards').property_value.split(',') rescue []
     @patient = Patient.find(params[:patient_id] || session[:patient_id]) 
+
     @diagnosis_type = params[:diagnosis_type]
     @facility = (GlobalProperty.find_by_property("facility.name").property_value rescue "") # || (Location.find(session[:facility]).name rescue "")    
 
@@ -792,6 +794,5 @@ class EncountersController < ApplicationController
     else
       redirect_to "/people/index"
     end
-  end
-
+  end  
 end
