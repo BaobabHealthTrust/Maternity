@@ -10,6 +10,7 @@
     "ACTIVITY": 0,
     "RESPIRATION": 0
   };
+	
   var maxi;
   var mini;
   function $(e) {
@@ -57,13 +58,12 @@
       cells = document.getElementsByClassName("butt");
       for( i = 0; 0 < cells.length; i++){
         cells[i].setAttribute("selected", "false");
-        cells[i].style.backgroundColor = "rgb(220, 230, 220)";
+        cells[i].style.background = "url('/images/btn_blue.png'";
         apgar["APPEARANCE"] = 0; apgar["PULSE"] = 0; apgar["GRIMANCE"] = 0; apgar["ACTIVITY"] = 0; apgar["RESPIRATION"] = 0;
-
-      }
+	  }
     }
     
-  scoreWindow = document.createElement("div");
+  	scoreWindow = document.createElement("div");
     scoreWindow.setAttribute("id", "selectWindow");
 
     arr = ["Appearance", "Pulse", "Grimance", "Activity", "Respiration"]
@@ -72,6 +72,7 @@
       "Flaccid", "Some Flexion </br> of Extremities", "Active motion",
       "Absent", "Arms and legs</br> flexed", "Active movement",
       "Absent", "Slow, </br> irregular", "Vigorous cry"];
+
     val_index = 0;
     values = [0, 1, 2]
     var labels = document.createElement("div");
@@ -84,7 +85,7 @@
     for(i = 0; i < values.length; i++){
       var lblCell = document.createElement("div");
       lblCell.setAttribute("class", "value");
-      lblCell.innerHTML = (i == 0)? (i + " Point") : (i + " Points")
+      lblCell.innerHTML = (i == 2)? (i + " Points") : (i + " Point")
       labels.appendChild(lblCell);
     }
     scoreWindow.appendChild(labels);
@@ -123,7 +124,7 @@
                  var x = this.getAttribute("i");
                 __$("" + x + k).setAttribute("selected", ( this.id != "" + x + k)? "false": "true");
                 
-                __$("" + x + k).style.backgroundColor = ( this.id != "" + x + k)? "rgb(220, 230, 220)" : "gray";
+                __$("" + x + k).style.background = ( this.id != "" + x + k)? "url('/images/btn_blue.png')" : "url('/images/click_btn.png')";
               }
             }
             __$(field.toLowerCase()+ baby).value = apgar[key];
@@ -275,40 +276,45 @@
     display: table;
     width: 85%;
     height:80%;
-border:1px solid #999999;
+	border:1px solid #999999;
     align: center;
-border-spacing: 8px;
+	border-spacing: 8px;
     margin-left:auto;
     margin-right:auto;
-border-radius: 10px;
+	border-radius: 10px;
+    background: white;
   }
   .butt{
-    font-size:1.3em;
-    -moz-border-radius: 5px;
+	font-family: sans-serif;
+    font-size:1.1em;
+	-moz-border-radius: 5px;
     border-radius: 10px;
     display:table-cell;
-    background:rgb(220, 230, 220);
-    border:1px solid #999999;
+    background: url('/images/btn_blue.png');
+	border:1px solid #999999;
     border-color:gray;
-    color:rgb(5, 50, 5);
-    height: auto;
+	color: white;
+	vertical-align: middle;
+	height: auto;
     width: auto;
-max-width: 73px;
-text-align: center;
+	max-width: 73px;
+	text-align: center;
   }
    .leftButt, .value{
-    font-size:1.5em;
-    font-weight:bold;
-    -moz-border-radius: 5px;
-    border-radius: 10px;
+    font-size:1.3em;
+    border-radius: 2px;
+	font-weight: bold;
+	background: white;
     display:table-cell;
     border:1px solid #999999;
-color: gray;
-    height: auto;
+	height: auto;
+	color: rgb(5, 30, 5);
     width: auto;
-text-align: center;
-max-width: 73px;
-  }
+	vertical-align: middle;
+	text-align: center;
+	max-width: 73px;
+   }
+  
   .boardRow{
     display: table-row;
     -moz-border-radius: 5px;
@@ -319,8 +325,7 @@ max-width: 73px;
     display: table-row;
      -moz-border-radius: 5px;
     border-radius: 5px;
-border-spacing: 5px 5px 5px 5px;
-color: rgb(5, 50, 5);
+	border-spacing: 5px 5px 5px 5px;	
   }
 
 
