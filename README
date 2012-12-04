@@ -3,14 +3,15 @@ Instructions for running the application
 =================================
    when running on an already existing database 
 
- 1. update concepts in database
+ 1. update concepts in database, ----only concepts!!
  2. run script/activate_triggers.sql to activate triggers so you can view report figures
  3. run the sql script in db/migrate/create_site_wards.sql 
 
 ================================
-   when running on a new database
 
- 1. Check that you are using the latest concepts
+    when running on a new database
+	check that db/migrate/concepts17 has latest concepts
+
+ 1. run mysql -u root -p database < db/migrate/concepts17.sql
+ 2. run mysql -u root -p database < db/relationship_type.sql
  2. run script/initial_database_setup.sh your_environment your_site
-
-
