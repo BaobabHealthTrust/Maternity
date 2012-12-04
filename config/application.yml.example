@@ -17,6 +17,7 @@ production:
  application.include_delivery_mode: yes
  application.include_baby_weight_and_apgar: yes
  hdu_pog_theater_wards: false
+ show_apgar: true
  #demographic_server_ips_and_local_ports: {"localhost":"4000"}
 
 development:
@@ -38,6 +39,7 @@ development:
  application.include_delivery_mode: yes
  application.include_baby_weight_and_apgar: yes
  hdu_pog_theater_wards: false
+ show_apgar: true
  #demographic_server_ips_and_local_ports: {"localhost":"4000"}
 
 test: &TEST 
@@ -52,6 +54,7 @@ test: &TEST
  application.include_delivery_mode: yes
  application.include_baby_weight_and_apgar: yes
  hdu_pog_theater_wards: false
+ show_apgar: true
 
 cucumber:
   <<: *TEST
