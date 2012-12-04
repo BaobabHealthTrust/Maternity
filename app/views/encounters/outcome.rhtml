@@ -625,7 +625,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true;}"
       :validationMessage => "You must enter numbers only (for example 157)",
       :tt_pageStyleClass => "unknownButton",
       :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Height (CM)" } %>
-
+  <% if CoreService.get_global_property_value("show_apgar")%>
     <% options = {
       :id => "appearance#{baby}"
     }%>
@@ -684,7 +684,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true;}"
       :tt_pageStyleClass => "NoKeyboard"
     } %>
 
-
+<%end%>
     <% options = {
       :id => "delivery_mode#{baby}",
       :field_type => 'text',
