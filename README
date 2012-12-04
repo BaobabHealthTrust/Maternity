@@ -10,7 +10,7 @@ Instructions for running the application
 ================================
 
     when running on a new database
-	check that db/migrate/concepts17 has latest concepts
+	check that db/migrate/concepts has latest concepts
 
  1. run mysql -u root -p database < db/migrate/concepts.sql
  2. run mysql -u root -p database < db/relationship_type.sql
