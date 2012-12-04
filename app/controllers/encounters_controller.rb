@@ -69,11 +69,13 @@ class EncountersController < ApplicationController
             o.answer_string.to_s.upcase.include?("DISCHARGED")
         }.compact if e.type.name.upcase.eql?("UPDATE OUTCOME")
       }.compact.collect{|p| true if p.to_s.upcase.include?("DISCHARGED")}.compact.include?(true) == true
+
+		 encounter.patient.current_visit.update_attributes(:end_date => Time.now.strftime("%Y-%m-%d %H:%M:%S"))
+
       print_and_redirect("/encounters/label/?encounter_id=#{encounter.id}",
-        next_task(@patient)) and return if (encounter.type.name.upcase == \
-          "UPDATE OUTCOME")
-      # return next_task(@patient)
-      redirect_to next_task(@patient) and return
+          "/people") and return if (encounter.type.name.upcase == "UPDATE OUTCOME")
+        # return next_task(@patient)
+        redirect_to next_task(@patient) and return
     end
     
     if encounter.patient.current_visit.encounters.active.collect{|e|

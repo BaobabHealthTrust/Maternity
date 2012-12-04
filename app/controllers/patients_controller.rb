@@ -6,7 +6,7 @@ class PatientsController < ApplicationController
   def show
     # raise link_to_anc.to_yaml
     @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil 
-
+    last_visit = Visit.find(:last, :conditions => ["patient_id = ?", @patient.id])
     @maternity_patient = ANCService::ANC.new(@patient)
 
     if link_to_anc
@@ -20,10 +20,13 @@ class PatientsController < ApplicationController
     end
     
     @last_location = @patient.encounters.find(:last).location_id rescue nil
+        @last_visit_closed = !last_visit.end_date.nil?
     
-    if session[:location_id] != @last_location && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : true)
+    if ((session[:location_id] != @last_location)  || @last_visit_closed) && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : true)
+      params[:skip_check] = false
       redirect_to "/encounters/new/admit_patient?patient_id=#{@patient.id}" and return
     end
+
 
     #find the user priviledges
     @super_user = false
