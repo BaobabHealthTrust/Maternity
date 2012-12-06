@@ -295,20 +295,29 @@ class Person < ActiveRecord::Base
       params = params['person']
     end
     
-    address_params = params["addresses"]
+    	address_params = params["addresses"]
 		names_params = params["names"]
 		patient_params = params["patient"]
+
+		params["attributes"]["occupation"] = "Business" unless params["attributes"]["occupation"]
+		params["attributes"]["cell_phone_number"] = "" unless params["attributes"]["cell_phone_number"]
+		
 		params_to_process = params.reject{|key,value| key.match(/addresses|patient|names|relation|cell_phone_number|home_phone_number|office_phone_number|agrees_to_be_visited_for_TB_therapy|agrees_phone_text_for_TB_therapy/) }
+		
+		
 		birthday_params = params_to_process.reject{|key,value| key.match(/gender/) }
 		person_params = params_to_process.reject{|key,value| key.match(/birth_|age_estimate|occupation|identifiers|citizenship|race/) }
 
 		if person_params["gender"].to_s == "Female"
-      person_params["gender"] = 'F'
+        	person_params["gender"] = 'F'
 		elsif person_params["gender"].to_s == "Male"
-      person_params["gender"] = 'M'
+        	person_params["gender"] = 'M'
 		end
 
-		person = Person.create(person_params)
+     	person_params["attributes"].delete("occupation")
+     	person_params["attributes"].delete("cell_phone_number")
+
+      	person = Person.create(person_params)
 
 		unless birthday_params.empty?
 		  if birthday_params["birth_year"] == "Unknown"
@@ -397,39 +406,38 @@ class Person < ActiveRecord::Base
   # use the autossh tunnels setup in environment.rb to query the demographics servers
   # then pull down the demographics
   def self.find_remote(known_demographics)
+     create_from_remote = CoreService.get_global_property_value("create.from.remote")
+	  if create_from_remote
+	  servers = CoreService.get_global_property_value("remote_servers.parent")
+      server_address_and_port = servers.to_s.split(':')
 
-    # known_demographics.merge!({"_method"=>"put"}) #This is probably necessary when querrying a mateme demographics server
-    # Some strange parsing to get the params formatted right for mechanize
-    demographics_params = CGI.unescape(known_demographics.to_param).split('&').map{|elem| elem.split('=')}
+      server_address = server_address_and_port.first
+      server_port = server_address_and_port.second
 
-    # Could probably define this in environment.rb and reuse to improve speed if necessary
-    mechanize_browser = WWW::Mechanize.new
+      login = CoreService.get_global_property_value("remote_bart.username").split(/,/) rescue ""
+      password = CoreService.get_global_property_value("remote_bart.password").split(/,/) rescue ""
+      location = CoreService.get_global_property_value("remote_bart.location").split(/,/) rescue nil
+      machine = CoreService.get_global_property_value("remote_machine.account_name").split(/,/) rescue ''
 
-    demographic_servers = JSON.parse(GlobalProperty.find_by_property("demographic_server_ips_and_local_port").property_value) rescue []
-
-    result = demographic_servers.map{|demographic_server, local_port|
-
-      begin
-        # Note: we don't use the demographic_server because it is port forwarded to localhost
-        output = mechanize_browser.post("http://localhost:#{local_port}/people/remote_demographics", demographics_params).body
-
-      rescue Timeout::Error
-        return 'timeout'
-      rescue
-        return 'creationfailed'
-      end
-
+      uri = "http://#{server_address}:#{server_port}/people/remote_demographics"
       
-      output if output and output.match(/person/)
+      p = JSON.parse(RestClient.post(uri, known_demographics)).first # rescue nil
+            return [] if p.blank?
 
-      # TODO need better logic here to select the best result or merge them
-      # Currently returning the longest result - assuming that it has the most information
-      # Can't return multiple results because there will be redundant data from sites
-    }.sort{|a,b|b.length <=> a.length}.first
+      results = p.second if p.second and p.first.match /person/
 
-    result ? JSON.parse(result) : nil
+      results["occupation"] = results["attributes"]["occupation"]
+      results["cell_phone_number"] = results["attributes"]["cell_phone_number"]
+      results["home_phone_number"] =  results["attributes"]["home_phone_number"]
+      results["office_phone_number"] = results["attributes"]["office_phone_number"]
+      results["attributes"].delete("occupation")
+      results["attributes"].delete("cell_phone_number")
+      results["attributes"].delete("home_phone_number")
+      results["attributes"].delete("office_phone_number")
 
-  end
+      return [self.create_from_form(results)]
+    end
+   end
   
   def formatted_gender
 
