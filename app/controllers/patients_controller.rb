@@ -429,6 +429,8 @@ class PatientsController < ApplicationController
       "Friend",
       "Aunt",
       "Neighbour",
+	  "Mother-in-law",
+	  "Landlord/Landlady",	  
       "Other"]
     
     @relation = Observation.find(:all, :joins => [:concept, :encounter], 
