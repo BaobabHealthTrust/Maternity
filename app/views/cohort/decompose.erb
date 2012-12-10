@@ -165,7 +165,7 @@
                               patient.id, encounter_type.id], :order => [:date_created], :include => [:observations]) if encounter_type%>
 
                           <%  diagnoses = Observation.find(:all, :conditions => ['person_id = ? AND encounter_id = ?',
-                              patient.id, encounter.id]).collect{|obs|  obs.answer_string} rescue ['Not Admitted']%>
+                              patient.id, encounter.id]).collect{|obs|  obs.answer_string} rescue ['none']%>
 
                           <% diagnoses.each do |diag|%>
                             <li> <%=diag%> </li>
