@@ -298,12 +298,8 @@ class Person < ActiveRecord::Base
     	address_params = params["addresses"]
 		names_params = params["names"]
 		patient_params = params["patient"]
-
-		params["attributes"]["occupation"] = "Business" unless params["attributes"]["occupation"]
-		params["attributes"]["cell_phone_number"] = "" unless params["attributes"]["cell_phone_number"]
 		
 		params_to_process = params.reject{|key,value| key.match(/addresses|patient|names|relation|cell_phone_number|home_phone_number|office_phone_number|agrees_to_be_visited_for_TB_therapy|agrees_phone_text_for_TB_therapy/) }
-		
 		
 		birthday_params = params_to_process.reject{|key,value| key.match(/gender/) }
 		person_params = params_to_process.reject{|key,value| key.match(/birth_|age_estimate|occupation|identifiers|citizenship|race/) }
@@ -314,8 +310,8 @@ class Person < ActiveRecord::Base
         	person_params["gender"] = 'M'
 		end
 
-     	person_params["attributes"].delete("occupation")
-     	person_params["attributes"].delete("cell_phone_number")
+     	person_params["attributes"].delete("occupation") if person_params["attributes"]
+     	person_params["attributes"].delete("cell_phone_number") if person_params["attributes"]
 
       	person = Person.create(person_params)
 
