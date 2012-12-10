@@ -10,6 +10,7 @@
     "ACTIVITY": 0,
     "RESPIRATION": 0
   };
+  displaySummary = 'false';
 	
   var maxi;
   var mini;
@@ -127,6 +128,7 @@
                 __$("" + x + k).style.background = ( this.id != "" + x + k)? "url('/images/btn_blue.png')" : "url('/images/click_btn.png')";
               }
             }
+
             __$(field.toLowerCase()+ baby).value = apgar[key];
             apgarScore = parseInt(apgar['APPEARANCE']) + parseInt(apgar['PULSE'])
               + parseInt(apgar['GRIMANCE']) + parseInt(apgar['ACTIVITY']) + parseInt(apgar['RESPIRATION']);
@@ -269,9 +271,10 @@
 
   #qwerty{ display:none; }
 
-  .unknownButton .numericKeyboard #char, #slash, #star, #plus, #date, #minus, #comma, #percent {
+  .numericKeyboard #char, #slash, #star, #plus, #date, #minus, #comma, #percent {
     display: none;
   }
+ 
   #selectWindow{
     display: table;
     width: 85%;
@@ -598,6 +601,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true;}"
       {	:id => "weight#{baby}",
       :field_type => 'number',
       :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Weight (KG)",
+	  :tt_onUnLoad => "displaySummary='true';",
       :min => number_with_precision(2.5, :precision => 1),
       :max => number_with_precision(4.5, :precision => 1),
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
@@ -612,7 +616,8 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true;}"
     <%= touch_text_field_tag "HEIGHT (CM)", @patient, nil,
       {	:id => "height#{baby}",
       :field_type => "number",
-      :tt_onLoad => "$('clearButton').style.display = 'inline';",
+      :tt_onLoad => "$('clearButton').style.display = 'inline'; $('Unknown').style.display = 'block'; ",
+      :tt_onUnLoad => "$('Unknown').style.display = 'block'; ",
       :min => number_with_precision(15, :precision => 1),
       :max => number_with_precision(60, :precision => 1),
       :absoluteMin => 0,
@@ -623,7 +628,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true;}"
           "($('discharge_outcome').value.toUpperCase() == 'DISCHARGED' && parseInt($('number_of_babies').value) > #{baby - 1})*/"),
       :validationRule => "^([0-9]+)|Unknown$",
       :validationMessage => "You must enter numbers only (for example 157)",
-      :tt_pageStyleClass => "unknownButton",
+      :tt_pageStyleClass => "unknownButton ",
       :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Height (CM)" } %>
   <% if CoreService.get_global_property_value("show_apgar")%>
     <% options = {
@@ -681,6 +686,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true;}"
       :absoluteMin => 0,
       :absoluteMax => 10,
       :tt_onLoad => "showApgarControl(#{baby})",
+	  :tt_onUnLoad => "displaySummary='true';",
       :tt_pageStyleClass => "NoKeyboard"
     } %>
 
@@ -858,6 +864,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true;}"
     :tt_onUnLoad => "$('clearButton').style.display = 'inline';",
     :helpText => "Summary",
     :optional => "true",
+	:condition => "displaySummary == 'true'",
     :tt_pageStyleClass => "NoControls" } %>
 
 <%#= hidden_field_tag "next_url", "/encounters/new/admission_diagnosis/?patient_id=#{@patient.id}", {:disabled => true} %>
