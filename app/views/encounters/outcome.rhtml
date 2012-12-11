@@ -19,6 +19,7 @@
   }
 
   function growthIndicators(){
+	 $('inputFrame'+tstCurrentPage).innerHTML = "";
     //These values pulled from the tt_onLoad bit in the third form...
     if (__$('discharge_outcome').value.toUpperCase()=='DELIVERED'){
       for (i = 1; i <= parseInt(document.getElementById("number_of_babies").value); i++){
@@ -35,7 +36,8 @@
         showApgarScore(i);
         displayText += "<br>"
       }
-      $('inputFrame'+tstCurrentPage).innerHTML = '<div id="summary">' + displayText + '</div><div id="charts" style="height:185px;margin:2px 6px 6px;padding:2px;width:380px;"></div>';
+      $('inputFrame'+tstCurrentPage).innerHTML = '<div id="summary" style="margin-bottom:4px;">' + displayText + '</div><div id="charts" style="height:185px;margin:4px 6px 6px;padding:2px;width:380px;"></div>';
+		displayText = "";
     }
   }
   function showApgarScore(n){
@@ -263,8 +265,8 @@
     margin-right:10px;
   }
 
-  .red_alert {color:black;background:red;}
-  .yellow_alert {color:black;background:yellow;}
+  .red_alert {color:black;background:red;border:5px solid white;}
+  .yellow_alert {color:black;background:yellow;border:5px solid white;}
   .normal {color:black;}
 
   #tt_page_summary .inputFrameClass { height:84%; }
@@ -368,7 +370,8 @@
   <%@delivery_mode = [""] + Concept.find_by_name("DELIVERY MODE").concept_answers.collect{|c| c.name} %>
   <%@procedure_done = [""] + Concept.find_by_name("PROCEDURE DONE").concept_answers.collect{|c| c.name}.sort %>
   <%@postpartum_type = ["", "TOTAL POSTPARTUM HYSTERECTOMY", "SUB-TOTAL POSTPARTUM HYSTERECTOMY"]%>
-  <%@discharged_to_where = [["",""], ["Home - Waiting", "Home - Waiting"],
+  <%@discharged_to_where = [["",""], ["Home", "Home"],
+	["Home - Waiting", "Home - Waiting"],
     ["Another Health Facility", "Another Health Facility"]]%>
   <%@health_facility = ["", "KCH"]%>
 
@@ -691,6 +694,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true;}"
     } %>
 
 <%end%>
+ 
     <% options = {
       :id => "delivery_mode#{baby}",
       :field_type => 'text',
@@ -732,6 +736,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true;}"
         "($('perineum').value.toUpperCase() == 'TEAR')"),
     :tt_onLoad => '__$("touchscreenInput" + tstCurrentPage).style.display = "none";'
   }%>
+
   <%= hidden_field_tag("observations[][concept_name]", "TEAR") %>
   <%= select_tag("observations[][value_coded_or_text]",
     options_for_select([
@@ -854,17 +859,14 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true;}"
 
   <% end %>
 
-
-  <%= touch_hidden_tag "WT FOR AGE", @patient, nil, {:id => 'weight_for_age'} %>
-
-
+ <%= touch_hidden_tag "WT FOR AGE", @patient, nil, {:id => 'weight_for_age'} %>
 
   <%= text_field_tag :showSummary, nil,
     {	:tt_onLoad => "$('clearButton').style.display = 'none';growthIndicators()",
     :tt_onUnLoad => "$('clearButton').style.display = 'inline';",
     :helpText => "Summary",
-    :optional => "true",
 	:condition => "displaySummary == 'true'",
+    :optional => "true",
     :tt_pageStyleClass => "NoControls" } %>
 
 <%#= hidden_field_tag "next_url", "/encounters/new/admission_diagnosis/?patient_id=#{@patient.id}", {:disabled => true} %>
