@@ -440,6 +440,8 @@ class PatientsController < ApplicationController
         EncounterType.find_by_name("SOCIAL HISTORY").id]).collect{|o| o.value_text}
     
     @relation = relation + @relation
+	@relation = @relation.collect{|rel| rel.gsub('-', ' ').gsub('_', ' ').squish.titleize}.uniq
+
     religions = ["Jehovahs Witness",  
       "Roman Catholic", 
       "Presbyterian (C.C.A.P.)",
