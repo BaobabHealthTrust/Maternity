@@ -184,7 +184,7 @@ class Encounter < ActiveRecord::Base
         label.font_vertical_multiplier = 1
         label.left_margin = 300
         label.draw_multi_text("ADMITTED ON: #{self.admission_date}")
-        label.draw_multi_text("DISCHARGED ON: #{Time.now.strftime("%d %b %Y %H:%M")}", :font_reverse => false)
+        label.draw_multi_text("DISCHARGED ON: #{self.discharge_date}", :font_reverse => false)
         label.draw_multi_text("NAME: #{self.patient.name}")
         label.draw_multi_text("DIAGNOSES: #{self.discharge_summary[0].titleize}", :font_reverse => false)
         label.draw_multi_text("MANAGEMENT: #{self.discharge_summary[1].titleize}", :font_reverse => false)
@@ -205,12 +205,9 @@ class Encounter < ActiveRecord::Base
 
   def admission_date
     patient_id = self.patient.id
-
-    Observation.find(:last, :conditions => ["person_id = ? AND value_coded = ? AND voided = 0 AND encounter_id IN (?)", patient_id,
-        ConceptName.find_by_name("ADMITTED").concept_id, Encounter.find(:all,
+    Encounter.find(:last,
           :conditions => ["patient_id = ? AND encounter_type = ? AND voided = 0", patient_id,
-            EncounterType.find_by_name("UPDATE OUTCOME").encounter_type_id]).collect{|e| 
-          e.encounter_id}]).obs_datetime.strftime("%d %b %Y %H:%M") rescue "Unknown"
+            EncounterType.find_by_name("ADMIT PATIENT").encounter_type_id]).encounter_datetime.strftime("%d %b %Y %H:%M") rescue "Unknown"
 
   end
 
@@ -259,5 +256,12 @@ class Encounter < ActiveRecord::Base
       return rows.inject({}) {|result, row| result[encounter_types_hash[row['encounter_type']]] = row['number']; result }
     end
   end
+ def discharge_date
+	 Observation.find(:last, :conditions => ["person_id = ? AND value_coded = ? AND voided = 0 AND encounter_id IN (?)", patient_id,
+        ConceptName.find_by_name("DISCHARGED").concept_id, Encounter.find(:all,
+          :conditions => ["patient_id = ? AND encounter_type = ? AND voided = 0", patient_id,
+            EncounterType.find_by_name("UPDATE OUTCOME").encounter_type_id]).collect{|e| 
+          e.encounter_id}]).obs_datetime.strftime("%d %b %Y %H:%M") rescue "Unknown"
+ end
 
 end
