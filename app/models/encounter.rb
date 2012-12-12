@@ -207,7 +207,8 @@ class Encounter < ActiveRecord::Base
     patient_id = self.patient.id
     Encounter.find(:last,
           :conditions => ["patient_id = ? AND encounter_type = ? AND voided = 0", patient_id,
-            EncounterType.find_by_name("ADMIT PATIENT").encounter_type_id]).encounter_datetime.strftime("%d %b %Y %H:%M") rescue "Unknown"
+            EncounterType.find_by_name("ADMIT PATIENT").encounter_type_id],
+		  :order => "date_created").encounter_datetime.strftime("%d %b %Y %H:%M") rescue "Unknown"
 
   end
 
