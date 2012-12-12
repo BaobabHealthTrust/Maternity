@@ -1,6 +1,9 @@
 
-<script>
+<script type="text/javascript" language="javascript">
+  <!--
+  tt_cancel_show = "/encounters/new/<%= (params[:ret] ? params[:ret] : "observations") %>/?patient_id=<%=  @patient.id %>"
   var tt_cancel_destination = "/encounters/new/<%= (params[:ret] ? params[:ret] : "observations") %>/?patient_id=<%=  @patient.id %>"
+  //-->
 </script>
 <form id='medical_history' action="/encounters/create" method='post'>
   <% default={
@@ -84,4 +87,6 @@
   <%= select_tag("observations[][value_coded_or_text]", options_for_select(@select_options),options) %>
   <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
   <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <%= hidden_field_tag "next_url", "/encounters/new/#{ (params[:ret] ? params[:ret] : "observations") }/?patient_id=#{@patient.id}" %>
 </form>
