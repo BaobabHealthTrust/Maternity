@@ -23,6 +23,7 @@ class PeopleController < ApplicationController
     session[:datetime] = nil if session[:datetime].to_date == Date.today rescue nil
     @show_set_date = true unless session[:datetime].blank? 
 
+
     @facility = Location.find(session[:facility]).name rescue ""
 
     @location = Location.find(session[:location_id]).name rescue ""
@@ -98,6 +99,7 @@ class PeopleController < ApplicationController
 
   # Landmark containing the string given in params[:value]
   def landmark
+
     landmarks = PersonAddress.find(:all, :select => "DISTINCT address1" , :conditions => ["city_village = (?) AND address1 LIKE (?)", "#{params[:filter_value]}", "#{params[:search_string]}%"])
     landmarks = landmarks.map do |v|
       "<li value='#{v.address1}'>#{v.address1}</li>"
@@ -139,6 +141,7 @@ class PeopleController < ApplicationController
 
           # raise found_person_data.to_yaml
           
+
           found_person = Person.create_from_form(found_person_data) unless found_person_data.nil?
         end
       end
@@ -156,11 +159,8 @@ class PeopleController < ApplicationController
 
           redirect_to "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{found_person.id
             }&cat=#{params[:cat]}" and return
-
 				else
-
           redirect_to :controller => :encounters, :action => :new, :patient_id => found_person.id and return
-
         end
       end
     end
@@ -252,8 +252,6 @@ class PeopleController < ApplicationController
     end
   
   end
-
-
   def create
     person = ANCService.create_patient_from_dde(params) if create_from_dde_server
 

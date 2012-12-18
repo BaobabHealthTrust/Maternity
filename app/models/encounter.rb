@@ -11,8 +11,7 @@ class Encounter < ActiveRecord::Base
   belongs_to :type, :class_name => "EncounterType", :foreign_key => :encounter_type
   belongs_to :provider, :class_name => "User", :foreign_key => :provider_id
   belongs_to :patient
-  belongs_to :visit
-
+ 
   def before_save    
     self.provider = User.current_user if self.provider.blank?
     # TODO, this needs to account for current visit, which needs to account for possible retrospective entry
@@ -104,21 +103,7 @@ class Encounter < ActiveRecord::Base
       encounters_by_type[encounter.type.name] += 1
     }
     encounters_by_type
-  end
-
-  def after_save
-    current_visit = self.patient.current_visit
-    if (current_visit.nil? or current_visit.end_date != nil )
-      visit = Visit.new({:patient_id => self.patient_id, :start_date => self.encounter_datetime})
-      visit.save
-      current_visit = visit if visit.save
-
-    end
-   
-    visit_encounter = VisitEncounter.new({:visit_id => current_visit.visit_id, :encounter_id => self.encounter_id})
-    visit_encounter.save
-
-  end
+  end 
 
   def to_print
     if name == 'TREATMENT'

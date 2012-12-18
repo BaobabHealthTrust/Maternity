@@ -2142,8 +2142,7 @@ module ANCService
     else
       national_id = params["person"]["patient"]["identifiers"]["National_id"]
     end
-
-	  person = self.create_from_form(params[:person])
+	 person = self.create_from_form(params[:person])
     identifier_type = PatientIdentifierType.find_by_name("National id") || PatientIdentifierType.find_by_name("Unknown id")
     person.patient.patient_identifiers.create("identifier" => national_id,
       "identifier_type" => identifier_type.patient_identifier_type_id) unless national_id.blank?

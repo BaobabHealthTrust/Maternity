@@ -22,10 +22,10 @@ class ApplicationController < ActionController::Base
 #test push
 
   def next_task(patient)
-    current_visit_encounters = patient.current_visit.encounters.active.find(:all, :include => [:type]).map{|e| e.type.name} rescue []
-    # Registration clerk needs to do registration if it hasn't happened yet
-    return "/encounters/new/registration?patient_id=#{patient.id}" if !current_visit_encounters.include?("REGISTRATION") || patient.current_visit.nil? || patient.current_visit.end_date != nil
-    
+    patient_encounters = patient.encounters.active.find(:all, :include => [:type]).map{|e|
+	 e.type.name.upcase if (Date.today == e.date_created)}.uniq rescue []
+	 # Registration clerk needs to do registration if it hasn't happened yet
+   # return "/encounters/new/registration?patient_id=#{patient.id}" if !patient_encounters.include?("REGISTRATION")    
     return "/patients/show/#{patient.id}" 
   end
 

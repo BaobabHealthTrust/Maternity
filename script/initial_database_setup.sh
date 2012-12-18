@@ -37,22 +37,25 @@ echo "DROP DATABASE $DATABASE;" | mysql --user=$USERNAME --password=$PASSWORD
 echo "CREATE DATABASE $DATABASE;" | mysql --user=$USERNAME --password=$PASSWORD
 
 
-mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/schema.sql
-mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/maternity.sql
-# mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/alter_global_property.sql
-mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/create_sessions.sql
-mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/create_weight_for_heights.sql
-mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/create_weight_height_for_ages.sql
-mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/concepts.sql
-mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/global_property.sql
+#mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/openmrs_1_7_2_concept_server_full_db.sql
+#mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/openmrs_metadata_1_7.sql
+mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/openmrs_1_7_2_concept_server_full_db.sql
+mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/schema_bart2_additions.sql
+mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/defaults.sql
+mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/malawi_regions.sql
+mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/mysql_functions.sql
+mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/global_property.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/create_site_printers.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/locations.sql
-mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/create_site_wards.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/change_concept_names_case_to_upper.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/create_dde_server_connection.sql
-mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/districts.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/relationship_type.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/birth_report.sql
+mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/create_site_wards.sql
+mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/national_id.sql
+mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/create_weight_for_heights.sql
+mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/create_weight_height_for_ages.sql
+mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/create_sessions.sql
 
 # echo "USE $DATABASE; ALTER TABLE concept_name ADD COLUMN concept_name_id INT(11) NULL;" | mysql -u $USERNAME --password=$PASSWORD
 # echo "USE $DATABASE; create table person_name_code (person_name_code_id int(11),

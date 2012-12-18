@@ -63,31 +63,21 @@ class EncountersController < ApplicationController
 
     @patient = Patient.find(params[:encounter][:patient_id])
 
-    if encounter.patient.current_visit.encounters.active.collect{|e|
+    died_or_discharged  = encounter.patient.encounters.active.collect{|e|
         e.observations.collect{|o|
           o.answer_string if o.answer_string.to_s.upcase.include?("PATIENT DIED") ||
             o.answer_string.to_s.upcase.include?("DISCHARGED")
         }.compact if e.type.name.upcase.eql?("UPDATE OUTCOME")
       }.compact.collect{|p| true if p.to_s.upcase.include?("DISCHARGED")}.compact.include?(true) == true
-
-		 encounter.patient.current_visit.update_attributes(:end_date => Time.now.strftime("%Y-%m-%d %H:%M:%S"))
-
+			
+			
+	if died_or_discharged
       print_and_redirect("/encounters/label/?encounter_id=#{encounter.id}",
-          "/people") and return if (encounter.type.name.upcase == "UPDATE OUTCOME")
-        # return next_task(@patient)
-        redirect_to next_task(@patient) and return
+          "/people") and return if (encounter.type.name.upcase == "UPDATE OUTCOME")    
+        redirect_to next_task(@patient) and return   
     end
-    
-    if encounter.patient.current_visit.encounters.active.collect{|e|
-        e.observations.collect{|o|
-          o.answer_string if o.answer_string.to_s.upcase.include?("PATIENT DIED") || 
-            o.answer_string.to_s.upcase.include?("DISCHARGED")
-        }.compact if e.type.name.upcase.eql?("UPDATE OUTCOME")
-      }.compact.collect{|p| true if p.to_s.upcase.include?("PATIENT DIED") ||
-          p.to_s.upcase.include?("DISCHARGED")}.compact.include?(true) == true
 
-      encounter.patient.current_visit.update_attributes(:end_date => Time.now.strftime("%Y-%m-%d %H:%M:%S"))
-
+    if died_or_discharged			
       redirect_to "/people" and return
     end
 
@@ -122,7 +112,7 @@ class EncountersController < ApplicationController
     @diagnosis_type = params[:diagnosis_type]
     @facility = (GlobalProperty.find_by_property("facility.name").property_value rescue "") # || (Location.find(session[:facility]).name rescue "")    
 
-    @encounters = @patient.current_visit.encounters.active.find(:all, :conditions => 
+    @encounters = @patient.encounters.active.find(:all, :conditions => 
         ["encounter_type = ? OR encounter_type = ? OR encounter_type = ? OR encounter_type = ? " + 
           "OR encounter_type = ? OR encounter_type = ?",
         EncounterType.find_by_name("OBSERVATIONS").encounter_type_id,
@@ -131,7 +121,7 @@ class EncountersController < ApplicationController
         EncounterType.find_by_name("CURRENT BBA DELIVERY").encounter_type_id,
         EncounterType.find_by_name("ABDOMINAL EXAMINATION").encounter_type_id,
         EncounterType.find_by_name("PHYSICAL EXAMINATION BABY").encounter_type_id]).collect{|e|        
-      e.observations.collect{|o| o.concept.name.name.upcase}
+      e.observations.collect{|o| o.concept.name.name.upcase} if (e.date_created.to_date == Date.today)
     }.join(", ") rescue ""
 
     @anc_encounters = AncConnection::Patient.find(session["patient_anc_map"][@patient.id]).encounters.current.collect{|e|

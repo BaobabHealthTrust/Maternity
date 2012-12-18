@@ -1,0 +1,15 @@
+Foremost version 1.5.7 by Jesse Kornblum, Kris Kendall, and Nick Mikus
+Audit File
+
+Foremost started at Tue Dec 18 13:28:16 2012
+Invocation: foremost -w -i /dev/[PARTITION] -o recovery 
+Output directory: /var/www/applications/maternity/recovery
+Configuration file: /etc/foremost.conf
+------------------------------------------------------------------
+File: stdin
+Start: Tue Dec 18 13:28:16 2012
+Length: Unknown
+ 
+Num	 Name (bs=512)	       Size	 File Offset	 Comment 
+
+Interrupt received at Tue Dec 18 13:30:05 2012

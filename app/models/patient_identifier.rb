@@ -1,8 +1,7 @@
 class PatientIdentifier < ActiveRecord::Base
-  include Openmrs
-
   set_table_name "patient_identifier"
-  set_primary_keys :patient_id, :identifier, :identifier_type
+  set_primary_key :patient_identifier_id
+  include Openmrs
 
   belongs_to :type, :class_name => "PatientIdentifierType", :foreign_key => :identifier_type
   belongs_to :patient, :class_name => "Patient", :foreign_key => :patient_id

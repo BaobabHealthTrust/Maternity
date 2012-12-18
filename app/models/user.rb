@@ -175,6 +175,12 @@ class User < ActiveRecord::Base
     user_roles.map{|user_role| user_role.role }.include? 'superuser'
   end  
 
+ 	def self.current
+		Thread.current[:user]
+	end
 
+	def self.current=(user)
+		Thread.current[:user] = user
+	end
 
 end

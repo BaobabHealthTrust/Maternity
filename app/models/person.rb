@@ -6,6 +6,9 @@ class Person < ActiveRecord::Base
 
   cattr_accessor :session_datetime
   attr_accessor :education_level, :religion
+  cattr_accessor :migrated_datetime
+  cattr_accessor :migrated_creator
+  cattr_accessor :migrated_location
 
   has_one :patient, :foreign_key => :patient_id, :dependent => :destroy
   has_one :birth_report, :foreign_key => :person_id, :dependent => :destroy
@@ -87,6 +90,7 @@ class Person < ActiveRecord::Base
     self.birthdate_estimated = 1
   end
 
+
   def demographics
 
 
@@ -98,6 +102,7 @@ class Person < ActiveRecord::Base
         birth_month = self.birthdate.month
       end
     else
+
       birth_month = self.birthdate.month
       birth_day = self.birthdate.day
     end
@@ -135,7 +140,6 @@ class Person < ActiveRecord::Base
 
   def self.search(params)
     people = Person.search_by_identifier(params[:identifier])
-
     return people.first.id unless people.blank? || people.size > 1
     people = Person.find(:all, :include => [{:names => [:person_name_code]}, :patient], :conditions => [
         "gender = ? AND \

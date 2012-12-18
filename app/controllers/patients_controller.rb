@@ -6,7 +6,7 @@ class PatientsController < ApplicationController
   def show
     # raise link_to_anc.to_yaml
     @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil 
-    last_visit = Visit.find(:last, :conditions => ["patient_id = ?", @patient.id])
+   # last_visit = Visit.find(:last, :conditions => ["patient_id = ?", @patient.id])
     @maternity_patient = ANCService::ANC.new(@patient)
 
     if link_to_anc
@@ -20,9 +20,9 @@ class PatientsController < ApplicationController
     end
     
     @last_location = @patient.encounters.find(:last).location_id rescue nil
-        @last_visit_closed = !last_visit.end_date.nil?
+       # @last_visit_closed = !last_visit.end_date.nil?
     
-    if ((session[:location_id] != @last_location)  || @last_visit_closed) && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : true)
+    if (session[:location_id] != @last_location) && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : true)
       params[:skip_check] = false
       redirect_to "/encounters/new/admit_patient?patient_id=#{@patient.id}" and return
     end
@@ -48,10 +48,10 @@ class PatientsController < ApplicationController
     end  
     
     outcome = @patient.current_outcome
-    @encounters = @patient.current_visit.encounters.active.find(:all) rescue []
-    @encounter_names = @patient.current_visit.encounters.active.map{|encounter| encounter.name.upcase}.uniq rescue []
+    @encounters = @patient.encounters.active.find(:all) rescue []
+    @encounter_names = @patient.encounters.active.map{|encounter| encounter.name.upcase}.uniq rescue []
 
-    @discharged = @patient.current_visit.encounters.active.find(:all, :conditions =>
+    @discharged = @patient.encounters.active.find(:all, :conditions =>
         ["encounter_type = ?", EncounterType.find_by_name("UPDATE OUTCOME").id]).collect{|e|
       e.observations.collect{|o|
         o.answer_string if o.answer_string.upcase.include?("DISCHARGED")
@@ -60,7 +60,7 @@ class PatientsController < ApplicationController
 
     @result = []
     
-    @ref = @patient.current_visit.encounters.active.find(:all, :conditions =>
+    @ref = @patient.encounters.active.find(:all, :conditions =>
         ["encounter_type = ?", EncounterType.find_by_name("REFER PATIENT OUT?").id]).collect{|e|
       e.observations.collect{|o|
         @result << [o.encounter_id, o.answer_string]
@@ -306,7 +306,7 @@ class PatientsController < ApplicationController
     @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil
     outcome = @patient.current_outcome
     @encounters = @patient.current_visit.encounters.active.find(:all) rescue []
-    @encounter_names = @patient.current_visit.encounters.active.map{|encounter| encounter.name}.uniq rescue []
+    @encounter_names = @patient.encounters.active.map{|encounter| encounter.name}.uniq rescue []
     @past_diagnosis = @patient.visit_diagnoses
     @past_treatments = @patient.visit_treatments
     session[:auto_load_forms] = false if params[:auto_load_forms] == 'false'
@@ -355,8 +355,11 @@ class PatientsController < ApplicationController
     end
     @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil
     outcome = @patient.current_outcome rescue ""
-    @encounters = @patient.current_visit.encounters.active.find(:all) rescue []
-    @encounter_names = @patient.current_visit.encounters.active.map{|encounter| encounter.name}.uniq rescue []
+
+    @encounters = @patient.encounters.find(:all, 
+      :conditions => ["DATE(encounter_datetime) = ?", (session[:datetime] ? session[:datetime].to_date : Date.today)]) rescue []
+
+    @encounter_names = @patient.encounters.active.map{|encounter| encounter.name}.uniq rescue []
 
     @past_diagnoses = @patient.previous_visits_diagnoses.collect{|o|
       o.diagnosis_string
@@ -364,7 +367,7 @@ class PatientsController < ApplicationController
       x == ""
     } rescue []
 
-    @past_treatments = @patient.visit_treatments rescue []
+    @past_treatments = @patient.visit_treatments rescue []	
     render :layout => false
   end
 
