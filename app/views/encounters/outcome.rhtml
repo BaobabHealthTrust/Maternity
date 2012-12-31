@@ -241,7 +241,7 @@
       $('nextButton').innerHTML = '<span>Finish</span>';
     else
       $('nextButton').innerHTML = '<span>Next</span>';
-    setTimeout(updateNextFinish, 500)
+    setTimeout(updateNextFinish, 500);
   }
 </script>
 
@@ -340,6 +340,15 @@
 </style>
 
 <form id='outcome' action="/encounters/create" method='post'>
+
+ <%unless @patient_program.nil?%>
+		<%= hidden_field_tag("programs[][patient_program_id]", @patient_program.id) %>
+	<% end %>
+  <%= hidden_field_tag("programs[][program_id]", Program.find_by_name('MATERNITY PROGRAM').id)%>
+  <%= hidden_field_tag("programs[][location_id]", Location.current_health_center.id) %>
+  <%= hidden_field_tag("programs[][date_enrolled]", session[:datetime] || Date.today ) %>
+  <%= hidden_field_tag("programs[][states][][state]", "") %>
+ 
 
   <%= hidden_field_tag "encounter[patient_id]", @patient.id %>
 

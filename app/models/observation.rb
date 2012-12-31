@@ -150,6 +150,6 @@ class Observation < ActiveRecord::Base
   def diagnosis_string
     "#{self.answer_concept_name.name rescue nil}#{self.value_text}".blank? ? "" : 
       ["#{self.answer_concept_name.name rescue nil}#{self.value_text}", "#{self.obs_datetime.strftime("%d %b %Y")}"]
-  end
+  end  
   
 end

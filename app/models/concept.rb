@@ -26,7 +26,7 @@ class Concept < ActiveRecord::Base
   def self.find_by_name(concept_name)
     Concept.find(:first, :joins => 'INNER JOIN concept_name on concept_name.concept_id = concept.concept_id', :conditions => ["concept.retired = 0 AND concept_name.voided = 0 AND concept_name.name =?", "#{concept_name}"])  
   end
-
+ 
   def short_name
     self.concept_names.collect{|c| c.name}.sort{|a,b| a.length <=> b.length}.first
   end
@@ -39,5 +39,16 @@ class Concept < ActiveRecord::Base
   # For a given concept of type set, retrieve the names of the concept members
   def concept_members_names
     self.concept_members.map{|concept| concept.name.name} if self.is_set?
+  end
+  def shortname
+	name = self.concept_names.typed('SHORT').first.name rescue nil
+	return name unless name.blank?
+    return self.concept_names.first.name rescue nil
+  end
+
+  def fullname
+	name = self.concept_names.typed('FULLY_SPECIFIED').first.name rescue nil
+	return name unless name.blank?
+    return self.concept_names.first.name rescue nil
   end
 end

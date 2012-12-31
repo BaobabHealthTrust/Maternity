@@ -3,10 +3,9 @@ require 'rqrcode'
 class PatientsController < ApplicationController
   before_filter :find_patient, :except => [:void]
   
-  def show
-    # raise link_to_anc.to_yaml
+  def show  
     @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil 
-   # last_visit = Visit.find(:last, :conditions => ["patient_id = ?", @patient.id])
+    # last_visit = Visit.find(:last, :conditions => ["patient_id = ?", @patient.id])
     @maternity_patient = ANCService::ANC.new(@patient)
 
     if link_to_anc
@@ -18,12 +17,20 @@ class PatientsController < ApplicationController
         session["patient_anc_map"][@patient.id] = AncConnection::PatientIdentifier.search_by_identifier(@maternity_patient.national_id).id
       end
     end
+    maternity_program = Program.find_by_name("MATERNITY PROGRAM")
+    program_state = @patient.current_state(maternity_program) rescue nil
+    if program_state
+      if program_state.terminal == 1
+        params[:check_admission] = "true"
+      end
+    end
+    if params[:skip_check] == "true"
+      params[:check_admission] = 'false'
+    end
     
-    @last_location = @patient.encounters.find(:last).location_id rescue nil
-       # @last_visit_closed = !last_visit.end_date.nil?
-    
-    if (session[:location_id] != @last_location) && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : true)
-      params[:skip_check] = false
+    if (params[:check_admission] == "true" || (session[:location_id] != @last_location) \
+          && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : false))
+      params[:skip_check] = false 
       redirect_to "/encounters/new/admit_patient?patient_id=#{@patient.id}" and return
     end
 
@@ -107,9 +114,9 @@ class PatientsController < ApplicationController
   def void    
     @encounter = Encounter.find(params[:encounter_id])
     ActiveRecord::Base.transaction do
-      @encounter.observations.each{|obs| obs.void! }    
-      @encounter.orders.each{|order| order.void! }    
-      @encounter.void!
+      @encounter.observations.each{|obs| obs.void }    
+      @encounter.orders.each{|order| order.void }    
+      @encounter.void
     end
 
     unless params[:identifier].nil?
@@ -432,8 +439,8 @@ class PatientsController < ApplicationController
       "Friend",
       "Aunt",
       "Neighbour",
-	  "Mother-in-law",
-	  "Landlord/Landlady",	  
+      "Mother-in-law",
+      "Landlord/Landlady",
       "Other"]
     
     @relation = Observation.find(:all, :joins => [:concept, :encounter], 
@@ -443,7 +450,7 @@ class PatientsController < ApplicationController
         EncounterType.find_by_name("SOCIAL HISTORY").id]).collect{|o| o.value_text}
     
     @relation = relation + @relation
-	@relation = @relation.collect{|rel| rel.gsub('-', ' ').gsub('_', ' ').squish.titleize}.uniq
+    @relation = @relation.collect{|rel| rel.gsub('-', ' ').gsub('_', ' ').squish.titleize}.uniq
 
     religions = ["Jehovahs Witness",  
       "Roman Catholic", 

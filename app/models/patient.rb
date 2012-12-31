@@ -158,7 +158,7 @@ class Patient < ActiveRecord::Base
     self.remote_art_info['person']['arv_number'] rescue nil
   end
 
-  def current_outcome
+ def current_outcome
     self.current_visit.encounters.all(:include => [:observations]).map{|encounter| 
       encounter.observations.active.all(
         :conditions => ["obs.concept_id = ?", ConceptName.find_by_name("OUTCOME").concept_id,])
@@ -476,6 +476,12 @@ class Patient < ActiveRecord::Base
       f.write barcode.to_png(:height => 100, :xdim => 2)
     end
 
+  end
+  def current_state(program)
+     patient_program = PatientProgram.find(:last, :conditions =>["patient_id = ? AND program_id = ?", self.patient_id, program.program_id]) 
+ 	 state = PatientState.find(:last, :conditions => ["patient_program_id = ?", patient_program.id],
+		:order => ["date_created"]).program_workflow_state if patient_program
+	 return state	
   end
 
 

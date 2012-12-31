@@ -37,9 +37,8 @@ echo "DROP DATABASE $DATABASE;" | mysql --user=$USERNAME --password=$PASSWORD
 echo "CREATE DATABASE $DATABASE;" | mysql --user=$USERNAME --password=$PASSWORD
 
 
-#mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/openmrs_1_7_2_concept_server_full_db.sql
-#mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/openmrs_metadata_1_7.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/openmrs_1_7_2_concept_server_full_db.sql
+mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/openmrs_metadata_1_7.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/schema_bart2_additions.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/defaults.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/malawi_regions.sql

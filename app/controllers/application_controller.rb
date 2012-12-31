@@ -19,13 +19,37 @@ class ApplicationController < ActionController::Base
     @backtrace = exception.backtrace.join("\n") unless exception.nil?
     render :file => "#{RAILS_ROOT}/app/views/errors/error.rhtml", :layout=> false, :status => 404
   end if RAILS_ENV == 'production'
-#test push
+  #test push
 
   def next_task(patient)
     patient_encounters = patient.encounters.active.find(:all, :include => [:type]).map{|e|
-	 e.type.name.upcase if (Date.today == e.date_created)}.uniq rescue []
-	 # Registration clerk needs to do registration if it hasn't happened yet
-   # return "/encounters/new/registration?patient_id=#{patient.id}" if !patient_encounters.include?("REGISTRATION")    
+      e.type.name.upcase if (Date.today == e.date_created)}.uniq rescue []
+
+    if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME"
+      params["observations"].each do |o|
+        if !o["value_coded_or_text"].nil? \
+            and ["DISCHARGED", "ABSCONDED", "PATIENT DIED"].include?(o["value_coded_or_text"].upcase)
+          return "/people"
+        end
+
+      end
+    end
+    #check current registration
+    unless session[:skip_reg]
+      already_registered = (patient.encounters.active.find(:all, :include => [:type]).map{|e|
+          e.type.name.upcase if (Date.today == e.date_created.to_date)}.uniq rescue []).include?("REGISTRATION")
+      
+      #check if registration happened some days before for admitted patients
+      last_admission_date = PatientState.find(:last, :conditions => ["patient_program_id = ?",
+          Program.find_by_name("MATERNITY PROGRAM").id],
+        :order => ["date_created"]).program_workflow_state.map{|s|
+        s.date_created if ["ADMITTED"].include?(ConceptName.find_by_concept_id(s.concept_id).name.upcase)}.last rescue Date.today if already_registered == false
+      already_registered = last_admission_date ? ((patient.encounters.active.find(:all, :include => [:type]).map{|e|
+            e.type.name.upcase if (last_admission_date.to_date <= e.date_created.to_date)}.uniq rescue []).include?("REGISTRATION"))  : (false)
+    
+      # Registration clerk needs to do registration if it hasn't happened yet
+      return "/encounters/new/registration?patient_id=#{patient.id}" if already_registered == false
+    end
     return "/patients/show/#{patient.id}" 
   end
 
@@ -52,7 +76,7 @@ class ApplicationController < ActionController::Base
 
   end
 
-   def next_admit_task(patient)
+  def next_admit_task(patient)
     
     return "/encounters/new/admit_patient?patient_id=#{patient.id}" if  session[:diagnosis_done] == false && !patient.admitted_to_ward
     return "/encounters/diagnoses_index?patient_id=#{patient.id}" if  session[:diagnosis_done] == false
@@ -61,9 +85,9 @@ class ApplicationController < ActionController::Base
 
   end
 
-   def close_visit
-     return "/people"
-   end
+  def close_visit
+    return "/people"
+  end
 
   def send_label(label_data)
     send_data(

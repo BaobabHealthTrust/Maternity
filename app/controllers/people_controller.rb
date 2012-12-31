@@ -1,6 +1,8 @@
 class PeopleController < ApplicationController
   
   def index
+    #clear skip_reg session variable for previous patient if variable exists
+    session.delete(:skip_reg)
     user =  User.find(session[:user_id])
     @password_expired = false
 
@@ -174,7 +176,7 @@ class PeopleController < ApplicationController
 
 			redirect_to :controller => :patients, :action => :show, :id => params[:person]
 		else
-			redirect_to "/patients/show/#{params[:person][:id]}" and return if (!params[:person][:id].blank? &&
+			redirect_to "/patients/show/#{params[:person][:id]}?check_admission=true" and return if (!params[:person][:id].blank? &&
           params[:person][:id] != '0') && (params[:cat] and !params[:cat].blank? and params[:cat] == "mother")
 
       redirect_to "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{params[:person][:id]
@@ -205,7 +207,7 @@ class PeopleController < ApplicationController
   end
  
   def created
-
+    params[:check_admission] = "true"
     remote_parent_server = GlobalProperty.find(:first, :conditions => {:property => "remote_servers.parent"}).property_value
     if !remote_parent_server.blank?
       found_person_data = Person.create_remote(params)
@@ -253,6 +255,7 @@ class PeopleController < ApplicationController
   
   end
   def create
+    params[:check_admission] = "true"
     person = ANCService.create_patient_from_dde(params) if create_from_dde_server
 
     if !person.blank?
@@ -283,7 +286,7 @@ class PeopleController < ApplicationController
       person = Person.create_from_form(remote_person) if create_from_remote      
       person = Person.create_from_form(params[:person]) if !create_from_remote
 
-     if params[:next_url]
+      if params[:next_url]
         if (params[:cat].downcase rescue "") == "mother"
           print_and_redirect("/patients/national_id_label/?patient_id=#{person.patient.id}",
             params[:next_url] + "?patient_id=#{ person.patient.id }") and return

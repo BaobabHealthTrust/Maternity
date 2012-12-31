@@ -4,11 +4,62 @@ require 'barby/outputter/rmagick_outputter'
 
 class EncountersController < ApplicationController
 
-  def create    
+  def create
+    @patient = Patient.find(params[:encounter][:patient_id])
+    unless session[:skip_reg] 
+      already_registered = (@patient.encounters.active.find(:all, :include => [:type]).map{|e|
+          e.type.name.upcase if (Date.today == e.date_created.to_date)}.uniq rescue []).include?("REGISTRATION")
 
+      last_admission_date = PatientState.find(:last, :conditions => ["patient_program_id = ?",
+          Program.find_by_name("MATERNITY PROGRAM").id],
+        :order => ["date_created"]).program_workflow_state.map{|s|
+        s.date_created if ["ADMITTED"].include?(ConceptName.find_by_concept_id(s.concept_id).name.upcase)}.last rescue Date.today
+
+      already_registered = last_admission_date ? ((@patient.encounters.active.find(:all, :include => [:type]).map{|e|
+            e.type.name.upcase if (last_admission_date.to_date <= e.date_created.to_date)}.uniq rescue []).include?("REGISTRATION"))  : (false)
+
+      # Registration clerk needs to do registration if it hasn't happened yet
+      redirect_to "/encounters/new/registration?patient_id=#{@patient.id}" and return if already_registered == false
+    end
+   	
+    date_enrolled = params[:programs][0]['date_enrolled'].to_time rescue nil
+    date_enrolled = session[:datetime] || Time.now() if date_enrolled.blank?    
+	
+    (params[:programs] || []).each do |program|
+      # Look up the program if the program id is set      
+      @patient_program = PatientProgram.find(program[:patient_program_id]) unless program[:patient_program_id].blank?  
+      @patient_program = PatientProgram.find(:last, :conditions => ["patient_id = ? AND program_id = ?",
+          @patient.patient_id, Program.find_by_name("MATERNITY PROGRAM").id],
+        :order => ["date_created DESC"]) if @patient_program.nil?
+      # If it wasn't set, we need to create it
+      unless (@patient_program)
+        @patient_program = @patient.patient_programs.create(
+          :program_id => program[:program_id],
+          :date_enrolled => date_enrolled)          
+      end
+      
+      unless program[:states].blank?
+        #adding program_state start date
+        program[:states][0]['start_date'] = date_enrolled
+      end
+      if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME"
+        params["observations"].each do |o|
+          if !o["value_coded_or_text"].nil? \
+              and ["DISCHARGED", "ADMITTED", "ABSCONDED", "PATIENT DIED"].include?(o["value_coded_or_text"].upcase)
+            program[:states][0][:state] = o["value_coded_or_text"]            
+          end
+
+        end
+      end
+      
+      (program[:states] || []).each {|state| 
+        @patient_program.transition(state) if !state[:state].blank?}
+    end
+	
     if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME"
-      delivered = params["observations"].collect{|o| o if !o["value_coded_or_text"].nil? and o["value_coded_or_text"].upcase == "DELIVERED"}.compact.length
-
+      delivered = params["observations"].collect{|o| o if !o["value_coded_or_text"].nil? \
+          and o["value_coded_or_text"].upcase == "DELIVERED"}.compact.length
+ 
       if delivered > 0
         babies = MaternityService.extract_live_babies(params)
 
@@ -23,7 +74,7 @@ class EncountersController < ApplicationController
       end
     end
     
-	params[:encounter][:encounter_datetime] = (params[:encounter][:encounter_datetime].to_date.strftime("%Y-%m-%d ") + 
+    params[:encounter][:encounter_datetime] = (params[:encounter][:encounter_datetime].to_date.strftime("%Y-%m-%d ") +
         Time.now.strftime("%H:%M")) rescue Time.now()
     
     encounter = Encounter.new(params[:encounter])
@@ -54,46 +105,35 @@ class EncountersController < ApplicationController
       Observation.create(observation) # rescue nil
     end
 
-    # if encounter.type.name.eql?("REFER PATIENT OUT?")
-    #  encounter.patient.current_visit.update_attributes(:end_date => Time.now.strftime("%Y-%m-%d %H:%M:%S"))
-
-    # raise encounter.to_yaml
-    
-    # elsif encounter.patient.current_visit.encounters.active.collect{|e|
-
-    @patient = Patient.find(params[:encounter][:patient_id])
-
+    if (params["encounter"]["encounter_type_name"].upcase rescue "") == "IS PATIENT REFERRED?"
+      redirect_to "/encounters/new/admit_patient?patient_id=#{@patient.id}" and return
+    end
     died_or_discharged  = encounter.patient.encounters.active.collect{|e|
-        e.observations.collect{|o|
-          o.answer_string if o.answer_string.to_s.upcase.include?("PATIENT DIED") ||
-            o.answer_string.to_s.upcase.include?("DISCHARGED")
-        }.compact if e.type.name.upcase.eql?("UPDATE OUTCOME")
-      }.compact.collect{|p| true if p.to_s.upcase.include?("DISCHARGED")}.compact.include?(true) == true
-			
-			
-	if died_or_discharged
-      print_and_redirect("/encounters/label/?encounter_id=#{encounter.id}",
-          "/people") and return if (encounter.type.name.upcase == "UPDATE OUTCOME")    
-        redirect_to next_task(@patient) and return   
-    end
-
-    if died_or_discharged			
-      redirect_to "/people" and return
-    end
+      e.observations.collect{|o|
+        o.answer_string if o.answer_string.to_s.upcase.include?("PATIENT DIED") ||
+          o.answer_string.to_s.upcase.include?("DISCHARGED")
+      }.compact if e.type.name.upcase.eql?("UPDATE OUTCOME")
+    }.compact.collect{|p| true if p.to_s.upcase.include?("DISCHARGED")}.compact.include?(true) == true
+				
+    
+    print_and_redirect("/encounters/label/?encounter_id=#{encounter.id}",
+      "/people") and return if (encounter.type.name.upcase == "UPDATE OUTCOME") if died_or_discharged
+    redirect_to next_task(@patient) and return if died_or_discharged
+   	
+    redirect_to "/people" and return  if died_or_discharged
+   
 
     if params[:next_url]
 
       if (encounter.type.name.upcase == "UPDATE OUTCOME" && encounter.to_s.upcase.include?("ADMITTED"))
-        print_and_redirect("/encounters/label/?encounter_id=#{encounter.id}", params[:next_url]) and return if (encounter.type.name.upcase == \
-            "UPDATE OUTCOME" && encounter.to_s.upcase.include?("ADMITTED"))
+        print_and_redirect("/encounters/label/?encounter_id=#{encounter.id}", params[:next_url]) and return if (encounter.type.name.upcase == "UPDATE OUTCOME" && encounter.to_s.upcase.include?("ADMITTED"))
         return
       else
         redirect_to params[:next_url] and return
       end
     else
       if (encounter.type.name.upcase == "UPDATE OUTCOME" && encounter.to_s.upcase.include?("ADMITTED"))
-        print_and_redirect("/encounters/label/?encounter_id=#{encounter.id}", next_task(@patient)) and return if (encounter.type.name.upcase == \
-            "UPDATE OUTCOME" && encounter.to_s.upcase.include?("ADMITTED"))
+        print_and_redirect("/encounters/label/?encounter_id=#{encounter.id}", next_task(@patient)) and return if (encounter.type.name.upcase == "UPDATE OUTCOME" && encounter.to_s.upcase.include?("ADMITTED"))
         return
       else
         redirect_to next_task(@patient)
@@ -103,11 +143,20 @@ class EncountersController < ApplicationController
   end
 
   def new
+	
     @facility_outcomes =  JSON.parse(GlobalProperty.find_by_property("facility.outcomes").property_value) rescue {}
     #raise @facility_outcomes.to_yaml
     @new_hiv_status = params[:new_hiv_status]
     @admission_wards = [' '] + GlobalProperty.find_by_property('facility.login_wards').property_value.split(',') rescue []
-    @patient = Patient.find(params[:patient_id] || session[:patient_id]) 
+    @patient = Patient.find(params[:patient_id] || session[:patient_id])
+    if params[:encounter_type].upcase == "REGISTRATION"
+      session[:skip_reg] = true
+    end
+
+    if ["ADMIT PATIENT", "UPDATE OUTCOME"].include?(params[:encounter_type].upcase)
+      @patient_program = PatientProgram.find(:last, :conditions => ["patient_id = ? AND program_id = ?",
+      @patient.patient_id, Program.find_by_name("MATERNITY PROGRAM").id]) rescue nil
+    end
 
     @diagnosis_type = params[:diagnosis_type]
     @facility = (GlobalProperty.find_by_property("facility.name").property_value rescue "") # || (Location.find(session[:facility]).name rescue "")    
