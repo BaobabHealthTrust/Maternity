@@ -6,6 +6,19 @@ class EncountersController < ApplicationController
 
   def create
     @patient = Patient.find(params[:encounter][:patient_id])
+    
+    #update params baby outcome date and time
+    if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME"
+    baby_date_map = params[:baby_date_map].split("!")
+    baby_date_map.reject! { |b| b.empty? }
+    count = 1   
+    params["observations"].each do |o|
+      if (o["concept_name"].upcase == "BABY OUTCOME" && (baby_date_map[count -1].split(",")[0] rescue -1) == count.to_s)
+        o[:obs_datetime] = baby_date_map[count - 1].split(",")[1]        
+        count += 1        
+      end
+    end
+    end
     unless session[:skip_reg] 
       already_registered = (@patient.encounters.active.find(:all, :include => [:type]).map{|e|
           e.type.name.upcase if (Date.today == e.date_created.to_date)}.uniq rescue []).include?("REGISTRATION")
@@ -155,7 +168,7 @@ class EncountersController < ApplicationController
 
     if ["ADMIT PATIENT", "UPDATE OUTCOME"].include?(params[:encounter_type].upcase)
       @patient_program = PatientProgram.find(:last, :conditions => ["patient_id = ? AND program_id = ?",
-      @patient.patient_id, Program.find_by_name("MATERNITY PROGRAM").id]) rescue nil
+          @patient.patient_id, Program.find_by_name("MATERNITY PROGRAM").id]) rescue nil
     end
 
     @diagnosis_type = params[:diagnosis_type]
