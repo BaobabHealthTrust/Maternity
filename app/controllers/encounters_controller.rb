@@ -4,7 +4,20 @@ require 'barby/outputter/rmagick_outputter'
 
 class EncountersController < ApplicationController
 
-  def create    
+  def create
+
+    if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME"
+
+      baby_date_map = params[:baby_date_map].split("!")
+      baby_date_map.reject! { |b| b.empty? }
+      count = 1
+      params["observations"].each do |o|
+        if (o["concept_name"].upcase == "BABY OUTCOME" && (baby_date_map[count -1].split(",")[0] rescue -1) == count.to_s)
+          o[:obs_datetime] = baby_date_map[count - 1].split(",")[1]
+          count += 1
+        end
+      end
+    end
 
     if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME"
       delivered = params["observations"].collect{|o| o if !o["value_coded_or_text"].nil? and o["value_coded_or_text"].upcase == "DELIVERED"}.compact.length
@@ -23,7 +36,7 @@ class EncountersController < ApplicationController
       end
     end
     
-	params[:encounter][:encounter_datetime] = (params[:encounter][:encounter_datetime].to_date.strftime("%Y-%m-%d ") + 
+    params[:encounter][:encounter_datetime] = (params[:encounter][:encounter_datetime].to_date.strftime("%Y-%m-%d ") +
         Time.now.strftime("%H:%M")) rescue Time.now()
     
     encounter = Encounter.new(params[:encounter])
@@ -70,12 +83,12 @@ class EncountersController < ApplicationController
         }.compact if e.type.name.upcase.eql?("UPDATE OUTCOME")
       }.compact.collect{|p| true if p.to_s.upcase.include?("DISCHARGED")}.compact.include?(true) == true
 
-		 encounter.patient.current_visit.update_attributes(:end_date => Time.now.strftime("%Y-%m-%d %H:%M:%S"))
+      encounter.patient.current_visit.update_attributes(:end_date => Time.now.strftime("%Y-%m-%d %H:%M:%S"))
 
       print_and_redirect("/encounters/label/?encounter_id=#{encounter.id}",
-          "/people") and return if (encounter.type.name.upcase == "UPDATE OUTCOME")
-        # return next_task(@patient)
-        redirect_to next_task(@patient) and return
+        "/people") and return if (encounter.type.name.upcase == "UPDATE OUTCOME")
+      # return next_task(@patient)
+      redirect_to next_task(@patient) and return
     end
     
     if encounter.patient.current_visit.encounters.active.collect{|e|
