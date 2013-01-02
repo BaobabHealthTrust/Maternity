@@ -11,6 +11,12 @@
     "ACTIVITY": 0,
     "RESPIRATION": 0
   };
+  var apgarCheck = {"APPEARANCE": "?",
+    "PULSE" : "?",
+    "GRIMANCE": "?",
+    "ACTIVITY": "?",
+    "RESPIRATION": "?"
+  };
   displaySummary = 'false';
 	
   var maxi;
@@ -56,7 +62,7 @@
     displayText += "</div>";
   }
   function showApgarControl(baby){
-  
+   $('touchscreenInput'+tstCurrentPage).value =  "";
     apgarScore = 0;
     $("clearButton").onclick = function(){
       cells = document.getElementsByClassName("butt");
@@ -64,6 +70,10 @@
         cells[i].setAttribute("selected", "false");
         cells[i].style.background = "url('/images/btn_blue.png'";
         apgar["APPEARANCE"] = 0; apgar["PULSE"] = 0; apgar["GRIMANCE"] = 0; apgar["ACTIVITY"] = 0; apgar["RESPIRATION"] = 0;
+        apgarCheck["APPEARANCE"] = "?"; apgarCheck["PULSE"] = "?"; apgarCheck["GRIMANCE"] = "?";
+        apgarCheck["ACTIVITY"] = "?"; apgarCheck["RESPIRATION"] = "?";
+        showCategory("Apgar = " + apgarCheck['APPEARANCE'] + "+" + apgarCheck['PULSE'] +"+"+ apgarCheck['GRIMANCE']
+          + "+" + apgarCheck['ACTIVITY'] + "+" + apgarCheck['RESPIRATION']);
       }
     }
     
@@ -120,6 +130,7 @@
             var field = __$(this.id).getAttribute("apgar_field");
             var key = field.toUpperCase();
             apgar[key] = num;
+            apgarCheck[key] = apgar[key];
             //update row selections
             
             if (__$(this.id).getAttribute("selected") == "false"){
@@ -135,10 +146,11 @@
             __$(field.toLowerCase()+ baby).value = apgar[key];
             apgarScore = parseInt(apgar['APPEARANCE']) + parseInt(apgar['PULSE'])
               + parseInt(apgar['GRIMANCE']) + parseInt(apgar['ACTIVITY']) + parseInt(apgar['RESPIRATION']);
-            
-            $('touchscreenInput'+tstCurrentPage).value = apgarScore;
-            //disable row click
-            //gray buttons
+            showCategory("Apgar = " + apgarCheck['APPEARANCE'] + "+" + apgarCheck['PULSE'] +"+"+ apgarCheck['GRIMANCE']
+              + "+" + apgarCheck['ACTIVITY'] + "+" + apgarCheck['RESPIRATION']);
+            if (apgarCheck["APPEARANCE"] != "?" && apgarCheck["PULSE"] != "?" && apgarCheck["GRIMANCE"] != "?" && apgarCheck["ACTIVITY"] != "?" && apgarCheck["RESPIRATION"] != "?"){
+              $('touchscreenInput'+tstCurrentPage).value = apgarScore;
+            }
           };
           
         }else{control.innerHTML = arr[i];
@@ -596,7 +608,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
       {
         :id => "baby#{baby}_outcome_date_status"
       }) %>
-   
+
 
     <% options = {
       :id => "baby_gender#{baby}",
