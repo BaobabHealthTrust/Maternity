@@ -1,5 +1,5 @@
 production:
- create.from.dde.server: false
+ create.from.dde.server: true
  create.from.remote: false
  link.to.anc: false
  birth_registration_url: http://localhost:4002/people/import_baby
@@ -21,7 +21,7 @@ production:
  #demographic_server_ips_and_local_ports: {"localhost":"4000"}
 
 development:
- create.from.dde.server: false
+ create.from.dde.server: true
  create.from.remote: false
  link.to.anc: false
  birth_registration_url: http://localhost:4002/people/import_baby

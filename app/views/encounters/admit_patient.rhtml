@@ -9,7 +9,7 @@
 
   function checkSelection(){
     if(__$("touchscreenInput" + tstCurrentPage).value == "No"){
-      document.forms[0].action = "/patients/show/<%= params[:patient_id] %>?skip_check=true"
+      document.forms[0].action = "/patients/show/<%= params[:patient_id] %>?skip_check=true&no_input=true"
     } else {
       document.forms[0].action = "/encounters/create"
     }

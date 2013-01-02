@@ -3,9 +3,9 @@ class PeopleController < ApplicationController
   def index
     #clear skip_reg session variable for previous patient if variable exists
     session.delete(:skip_reg)
+    session.delete(:check_admission)
     user =  User.find(session[:user_id])
     @password_expired = false
-
     password_expiry_date = UserProperty.find_by_property_and_user_id('password_expiry_date', user.user_id).property_value.to_date rescue nil
 
     if password_expiry_date
@@ -123,7 +123,6 @@ class PeopleController < ApplicationController
     found_person = nil
     if params[:identifier]
       local_results = ANCService.search_by_identifier(params[:identifier])
-
       # raise local_results.to_yaml
       
       if local_results.length > 1

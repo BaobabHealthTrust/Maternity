@@ -5,9 +5,10 @@ class PatientsController < ApplicationController
   
   def show  
     @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil 
-    # last_visit = Visit.find(:last, :conditions => ["patient_id = ?", @patient.id])
+   
     @maternity_patient = ANCService::ANC.new(@patient)
-
+    
+    @last_location = @patient.encounters.find(:last).location_id rescue nil
     if link_to_anc
       if session["patient_anc_map"].nil?
         session["patient_anc_map"] = {}
@@ -20,20 +21,20 @@ class PatientsController < ApplicationController
     maternity_program = Program.find_by_name("MATERNITY PROGRAM")
     program_state = @patient.current_state(maternity_program) rescue nil
     if program_state
-      if program_state.terminal == 1
+      if program_state.terminal == 1        
         params[:check_admission] = "true"
       end
     end
     if params[:skip_check] == "true"
       params[:check_admission] = 'false'
     end
-    
-    if (params[:check_admission] == "true" || (session[:location_id] != @last_location) \
-          && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : false))
-      params[:skip_check] = false 
-      redirect_to "/encounters/new/admit_patient?patient_id=#{@patient.id}" and return
+     #raise session.to_yaml
+    if !params[:no_input]
+      if !(session[:check_admission] == "false") && (params[:check_admission] == "true" || (session[:location_id] != @last_location))
+        session["check_admission"] = "false"
+        redirect_to "/encounters/new/admit_patient?patient_id=#{@patient.id}" and return
+      end
     end
-
 
     #find the user priviledges
     @super_user = false

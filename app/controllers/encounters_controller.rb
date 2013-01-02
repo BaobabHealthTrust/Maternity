@@ -6,35 +6,20 @@ class EncountersController < ApplicationController
 
   def create
     @patient = Patient.find(params[:encounter][:patient_id])
-    
+    	
     #update params baby outcome date and time
     if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME"
-    baby_date_map = params[:baby_date_map].split("!")
-    baby_date_map.reject! { |b| b.empty? }
-    count = 1   
-    params["observations"].each do |o|
-      if (o["concept_name"].upcase == "BABY OUTCOME" && (baby_date_map[count -1].split(",")[0] rescue -1) == count.to_s)
-        o[:obs_datetime] = baby_date_map[count - 1].split(",")[1]        
-        count += 1        
+      baby_date_map = params[:baby_date_map].split("!")
+      baby_date_map.reject! { |b| b.empty? }
+      count = 1
+      params["observations"].each do |o|
+        if (o["concept_name"].upcase == "BABY OUTCOME" && (baby_date_map[count -1].split(",")[0] rescue -1) == count.to_s)
+          o[:obs_datetime] = baby_date_map[count - 1].split(",")[1]
+          count += 1
+        end
       end
-    end
-    end
-    unless session[:skip_reg] 
-      already_registered = (@patient.encounters.active.find(:all, :include => [:type]).map{|e|
-          e.type.name.upcase if (Date.today == e.date_created.to_date)}.uniq rescue []).include?("REGISTRATION")
-
-      last_admission_date = PatientState.find(:last, :conditions => ["patient_program_id = ?",
-          Program.find_by_name("MATERNITY PROGRAM").id],
-        :order => ["date_created"]).program_workflow_state.map{|s|
-        s.date_created if ["ADMITTED"].include?(ConceptName.find_by_concept_id(s.concept_id).name.upcase)}.last rescue Date.today
-
-      already_registered = last_admission_date ? ((@patient.encounters.active.find(:all, :include => [:type]).map{|e|
-            e.type.name.upcase if (last_admission_date.to_date <= e.date_created.to_date)}.uniq rescue []).include?("REGISTRATION"))  : (false)
-
-      # Registration clerk needs to do registration if it hasn't happened yet
-      redirect_to "/encounters/new/registration?patient_id=#{@patient.id}" and return if already_registered == false
-    end
-   	
+    end    
+   
     date_enrolled = params[:programs][0]['date_enrolled'].to_time rescue nil
     date_enrolled = session[:datetime] || Time.now() if date_enrolled.blank?    
 	
@@ -91,7 +76,9 @@ class EncountersController < ApplicationController
         Time.now.strftime("%H:%M")) rescue Time.now()
     
     encounter = Encounter.new(params[:encounter])
+    #raise params[:encounter].to_yaml
     # encounter.encounter_datetime = session[:datetime] unless session[:datetime].blank? # not sure why this was put here. It's spoiling the dates
+    encounter.location_id = session[:location_id]
     encounter.save
 
     (params[:observations] || []).each do |observation|
@@ -117,10 +104,24 @@ class EncountersController < ApplicationController
       # observation[:location_id]     ||= encounter.location_id
       Observation.create(observation) # rescue nil
     end
+    unless session[:skip_reg]
+      already_registered = (@patient.encounters.active.find(:all, :include => [:type]).map{|e|
+          e.type.name.upcase if (Date.today == e.date_created.to_date)}.uniq rescue []).include?("REGISTRATION")
 
+      last_admission_date = PatientState.find(:last, :conditions => ["patient_program_id = ?",
+          Program.find_by_name("MATERNITY PROGRAM").id],
+        :order => ["date_created"]).program_workflow_state.map{|s|
+        s.date_created if ["ADMITTED"].include?(ConceptName.find_by_concept_id(s.concept_id).name.upcase)}.last rescue Date.today
+
+      already_registered = last_admission_date ? ((@patient.encounters.active.find(:all, :include => [:type]).map{|e|
+            e.type.name.upcase if (last_admission_date.to_date <= e.date_created.to_date)}.uniq rescue []).include?("REGISTRATION"))  : (false)
+      redirect_to "/encounters/new/registration?patient_id=#{@patient.id}" if already_registered == "false"
+    end
+    
     if (params["encounter"]["encounter_type_name"].upcase rescue "") == "IS PATIENT REFERRED?"
       redirect_to "/encounters/new/admit_patient?patient_id=#{@patient.id}" and return
     end
+    
     died_or_discharged  = encounter.patient.encounters.active.collect{|e|
       e.observations.collect{|o|
         o.answer_string if o.answer_string.to_s.upcase.include?("PATIENT DIED") ||
@@ -165,8 +166,11 @@ class EncountersController < ApplicationController
     if params[:encounter_type].upcase == "REGISTRATION"
       session[:skip_reg] = true
     end
+    if params[:encounter_type].humanize.upcase == "ADMIT PATIENT"
+     session["check_admission"] = "false"
+    end
 
-    if ["ADMIT PATIENT", "UPDATE OUTCOME"].include?(params[:encounter_type].upcase)
+    if ["ADMIT PATIENT", "UPDATE OUTCOME"].include?(params[:encounter_type].humanize.upcase)
       @patient_program = PatientProgram.find(:last, :conditions => ["patient_id = ? AND program_id = ?",
           @patient.patient_id, Program.find_by_name("MATERNITY PROGRAM").id]) rescue nil
     end
@@ -213,11 +217,12 @@ class EncountersController < ApplicationController
     @last_location = @patient.encounters.find(:last).location_id rescue nil
     
     # raise @location.downcase.to_yaml
-
+ 
     redirect_to "/" and return unless @patient
     redirect_to next_task(@patient) and return unless params[:encounter_type]
-    redirect_to :action => :create, 'encounter[encounter_type_name]' => params[:encounter_type].upcase, 'encounter[patient_id]' => @patient.id and return if ['registration'].include?(params[:encounter_type])
+    redirect_to :action => :create, 'encounter[encounter_type_name]' => params[:encounter_type].upcase, 'encounter[patient_id]' => @patient.id and return if ['registration'].include?(params[:encounter_type].downcase)
     render :action => params[:encounter_type] if params[:encounter_type]
+
   end
 
   def diagnoses
