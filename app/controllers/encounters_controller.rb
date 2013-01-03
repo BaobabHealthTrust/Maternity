@@ -9,13 +9,16 @@ class EncountersController < ApplicationController
     	
     #update params baby outcome date and time
     if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME"
-      baby_date_map = params[:baby_date_map].split("!")
-      baby_date_map.reject! { |b| b.empty? }
-      count = 1
-      params["observations"].each do |o|
-        if (o["concept_name"].upcase == "BABY OUTCOME" && (baby_date_map[count -1].split(",")[0] rescue -1) == count.to_s)
-          o[:obs_datetime] = baby_date_map[count - 1].split(",")[1]
-          count += 1
+      baby_date_map = params[:baby_date_map].split("!") rescue nil
+
+      if !baby_date_map.nil?
+        baby_date_map.reject! { |b| b.empty? }
+        count = 1
+        params["observations"].each do |o|
+          if (o["concept_name"].upcase == "BABY OUTCOME" && (baby_date_map[count -1].split(",")[0] rescue -1) == count.to_s)
+            o[:obs_datetime] = baby_date_map[count - 1].split(",")[1]
+            count += 1
+          end
         end
       end
     end    
@@ -167,7 +170,7 @@ class EncountersController < ApplicationController
       session[:skip_reg] = true
     end
     if params[:encounter_type].humanize.upcase == "ADMIT PATIENT"
-     session["check_admission"] = "false"
+      session["check_admission"] = "false"
     end
 
     if ["ADMIT PATIENT", "UPDATE OUTCOME"].include?(params[:encounter_type].humanize.upcase)
