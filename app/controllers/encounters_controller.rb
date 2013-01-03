@@ -8,7 +8,8 @@ class EncountersController < ApplicationController
 
     if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME"
 
-      baby_date_map = params[:baby_date_map].split("!")
+      baby_date_map = params[:baby_date_map].split("!") rescue nil
+      if !baby_date_map.nil?
       baby_date_map.reject! { |b| b.empty? }
       count = 1
       params["observations"].each do |o|
@@ -17,6 +18,7 @@ class EncountersController < ApplicationController
           count += 1
         end
       end
+    end
     end
 
     if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME"
