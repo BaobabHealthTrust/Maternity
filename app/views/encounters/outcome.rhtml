@@ -4,19 +4,7 @@
   var currentWeight;
   var baby_date_map = "";
   var displayText = '';
-  var apgarScore = 0;
-  var apgar = {"APPEARANCE": 0,
-    "PULSE" : 0,
-    "GRIMANCE": 0,
-    "ACTIVITY": 0,
-    "RESPIRATION": 0
-  };
-  var apgarCheck = {"APPEARANCE": "?",
-    "PULSE" : "?",
-    "GRIMANCE": "?",
-    "ACTIVITY": "?",
-    "RESPIRATION": "?"
-  };
+  var apgarScore = 0; 
   displaySummary = 'false';
 	
   var maxi;
@@ -64,6 +52,18 @@
   function showApgarControl(baby){
    $('touchscreenInput'+tstCurrentPage).value =  "";
     apgarScore = 0;
+	var apgar = {"APPEARANCE": 0,
+		"PULSE" : 0,
+		"GRIMANCE": 0,
+		"ACTIVITY": 0,
+		"RESPIRATION": 0
+	};
+	var apgarCheck = {"APPEARANCE": "?",
+		"PULSE" : "?",
+		"GRIMANCE": "?",
+		"ACTIVITY": "?",
+		"RESPIRATION": "?"
+	};
     $("clearButton").onclick = function(){
       cells = document.getElementsByClassName("butt");
       for( i = 0; 0 < cells.length; i++){
