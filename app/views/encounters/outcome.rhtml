@@ -4,15 +4,9 @@
   var currentWeight;
   var baby_date_map = "";
   var displayText = '';
-  var apgarScore = 0;
-  var apgar = {"APPEARANCE": 0,
-    "PULSE" : 0,
-    "GRIMANCE": 0,
-    "ACTIVITY": 0,
-    "RESPIRATION": 0
-  };
+  var apgarScore = 0;  
   displaySummary = 'false';
-	
+
   var maxi;
   var mini;
   function $(e) {
@@ -42,7 +36,7 @@
     }
   }
   function showApgarScore(n){
-    
+
     apgarScore = parseFloat($("appearance" + n).value) + parseFloat($("pulse" + n).value) + parseFloat($("grimance" + n).value) + parseFloat($("activity" + n).value) + parseFloat($("respiration" + n).value);
 
     displayText += "<div><span class='title'>Apgar score for baby " + n + ":</span>";
@@ -56,7 +50,19 @@
     displayText += "</div>";
   }
   function showApgarControl(baby){
-  
+    var apgar = {"APPEARANCE": 0,
+      "PULSE" : 0,
+      "GRIMANCE": 0,
+      "ACTIVITY": 0,
+      "RESPIRATION": 0
+    };
+    var apgarCheck = {"APPEARANCE": "?",
+      "PULSE" : "?",
+      "GRIMANCE": "?",
+      "ACTIVITY": "?",
+      "RESPIRATION": "?"
+    };
+    $('touchscreenInput'+tstCurrentPage).value =  "";
     apgarScore = 0;
     $("clearButton").onclick = function(){
       cells = document.getElementsByClassName("butt");
@@ -64,9 +70,14 @@
         cells[i].setAttribute("selected", "false");
         cells[i].style.background = "url('/images/btn_blue.png'";
         apgar["APPEARANCE"] = 0; apgar["PULSE"] = 0; apgar["GRIMANCE"] = 0; apgar["ACTIVITY"] = 0; apgar["RESPIRATION"] = 0;
+        apgarCheck["APPEARANCE"] = "?"; apgarCheck["PULSE"] = "?"; apgarCheck["GRIMANCE"] = "?";
+        apgarCheck["ACTIVITY"] = "?"; apgarCheck["RESPIRATION"] = "?";
+        showCategory("Apgar = " + apgarCheck['APPEARANCE'] + "+" + apgarCheck['PULSE'] +"+"+ apgarCheck['GRIMANCE']
+          + "+" + apgarCheck['ACTIVITY'] + "+" + apgarCheck['RESPIRATION']);
       }
     }
     
+
     scoreWindow = document.createElement("div");
     scoreWindow.setAttribute("id", "selectWindow");
 
@@ -81,7 +92,7 @@
     values = [0, 1, 2]
     var labels = document.createElement("div");
     labels.id = "row1";
-    
+
     placebo = document.createElement("div");
     placebo.id = "placebo";
     labels.appendChild(placebo);
@@ -93,7 +104,7 @@
       labels.appendChild(lblCell);
     }
     scoreWindow.appendChild(labels);
-   
+
     for (i = 0; i < arr.length; i ++){
       var row = document.createElement("div");
       row.id = "apgar_row_" + i
@@ -103,7 +114,7 @@
         var control = document.createElement("div");
         control.id = "" + i + j;
         if (j != 0){
-          
+
           control.setAttribute("class", "butt");
           control.setAttribute("value", j-1);
           control.setAttribute("apgar_field", arr[i]);
@@ -111,24 +122,24 @@
           control.setAttribute("i", i);
           control.setAttribute("j", j);
 
-          
-          control.innerHTML = arr_val[val_index];
-          val_index ++;var baby_date_map = "";
 
-          
+          control.innerHTML = arr_val[val_index];
+          val_index ++;
+
           control.onclick = function(){
             var num = __$(this.id).getAttribute("value");
             var field = __$(this.id).getAttribute("apgar_field");
             var key = field.toUpperCase();
             apgar[key] = num;
+            apgarCheck[key] = apgar[key];
             //update row selections
-            
+
             if (__$(this.id).getAttribute("selected") == "false"){
-              
+
               for(k = 1; k < 4; k++){
                 var x = this.getAttribute("i");
                 __$("" + x + k).setAttribute("selected", ( this.id != "" + x + k)? "false": "true");
-                
+
                 __$("" + x + k).style.background = ( this.id != "" + x + k)? "url('/images/btn_blue.png')" : "url('/images/click_btn.png')";
               }
             }
@@ -136,12 +147,13 @@
             __$(field.toLowerCase()+ baby).value = apgar[key];
             apgarScore = parseInt(apgar['APPEARANCE']) + parseInt(apgar['PULSE'])
               + parseInt(apgar['GRIMANCE']) + parseInt(apgar['ACTIVITY']) + parseInt(apgar['RESPIRATION']);
-            
-            $('touchscreenInput'+tstCurrentPage).value = apgarScore;
-            //disable row click
-            //gray buttons
+            showCategory("Apgar = " + apgarCheck['APPEARANCE'] + "+" + apgarCheck['PULSE'] +"+"+ apgarCheck['GRIMANCE']
+              + "+" + apgarCheck['ACTIVITY'] + "+" + apgarCheck['RESPIRATION']);
+            if (apgarCheck["APPEARANCE"] != "?" && apgarCheck["PULSE"] != "?" && apgarCheck["GRIMANCE"] != "?" && apgarCheck["ACTIVITY"] != "?" && apgarCheck["RESPIRATION"] != "?"){
+              $('touchscreenInput'+tstCurrentPage).value = apgarScore;
+            }
           };
-          
+
         }else{control.innerHTML = arr[i];
           control.setAttribute("class", "leftButt");
         }
