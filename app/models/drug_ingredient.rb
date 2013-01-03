@@ -1,7 +1,8 @@
-class DrugIngredient < ActiveRecord::Base
-  include Openmrs
+class DrugIngredient < ActiveRecord::Base  
   set_table_name :drug_ingredient
-  set_primary_key :id
+  set_primary_key :id	
+  include Openmrs
+
   belongs_to :drug
   belongs_to :drug_substance
 end

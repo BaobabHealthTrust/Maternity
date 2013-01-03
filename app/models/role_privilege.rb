@@ -1,10 +1,10 @@
 require "composite_primary_keys"
-class RolePrivilege < ActiveRecord::Base
+class RolePrivilege < ActiveRecord::Base  
+  set_table_name "role_privilege"  
+  set_primary_keys :privilege, :role
   include Openmrs
-  set_table_name "role_privilege"
   belongs_to :role, :foreign_key => :role
   belongs_to :privilege, :foreign_key => :privilege
-  set_primary_keys :privilege, :role
 end
 
 

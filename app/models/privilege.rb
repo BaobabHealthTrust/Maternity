@@ -1,11 +1,10 @@
 class Privilege < ActiveRecord::Base
+  set_table_name "privilege"  
+  set_primary_key "privilege"
   include Openmrs
-
-  set_table_name "privilege"
+  
   has_many :role_privileges, :foreign_key => :privilege, :dependent => :delete_all
   has_many :roles, :through => :role_privileges
-  set_primary_key "privilege"
-
   # NOT USED
   def self.create_privileges_and_attach_to_roles
     Privilege.find_all.each{|p|puts "Destroying #{p.privilege}";p.destroy}
