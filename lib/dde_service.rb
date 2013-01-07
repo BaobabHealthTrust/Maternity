@@ -510,11 +510,11 @@ module DDEService
 
     if !params["remote"]
 
-      @dde_server = GlobalProperty.find_by_property("dde_server_ip").property_value rescue ""
+      @dde_server = CoreService.get_global_property_value("dde_server_ip") rescue ""
 
-      @dde_server_username = GlobalProperty.find_by_property("dde_server_username").property_value rescue ""
+      @dde_server_username = CoreService.get_global_property_value("dde_server_username") rescue ""
 
-      @dde_server_password = GlobalProperty.find_by_property("dde_server_password").property_value rescue ""
+      @dde_server_password = CoreService.get_global_property_value("dde_server_password") rescue ""
 
       uri = "http://#{@dde_server_username}:#{@dde_server_password}@#{@dde_server}/people.json/"
       recieved_params = RestClient.post(uri,passed_params)
