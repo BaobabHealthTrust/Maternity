@@ -3,10 +3,11 @@
   var tt_cancel_destination = "/patients/show/<%= @patient.id %>"
   var currentWeight;
   var baby_date_map = "";
-  var displayText = '';
+  var displayText = "";
   var apgarScore = 0; 
-  displaySummary = 'false';
-	
+  displaySummary = 'false'; 
+  var timedEvent;
+  var baby;
   var maxi;
   var mini;
   function $(e) {
@@ -17,6 +18,20 @@
     $('inputFrame'+tstCurrentPage).innerHTML = "";
     //These values pulled from the tt_onLoad bit in the third form...
     if (__$('discharge_outcome').value.toUpperCase()=='DELIVERED'){
+
+      headers = ["    ", "WEIGHT", "APGAR"];
+      var alertsTable = document.createElement("div");
+      alertsTable.id = "alertsTable";
+      var alertsHeaderRow = document.createElement("div");
+      alertsHeaderRow.setAttribute("class", "alertsHeaderRow");
+      for (j = 0; j < headers.length; j++){
+        var alertsHeader = document.createElement("div");
+        alertsHeader.setAttribute("class", "alertsHeader");        
+        alertsHeader.innerHTML = headers[j];
+        alertsHeaderRow.appendChild(alertsHeader);
+      }
+      alertsTable.appendChild(alertsHeaderRow);
+      
       for (i = 1; i <= parseInt(document.getElementById("number_of_babies").value); i++){
         currentWeight = $('weight' + i).value;
         gender = $("baby_gender" + i).value;
@@ -27,44 +42,64 @@
           maxi = 4.4;
           mini = 2.4;
         }
-        showWeightForAge(i);
-        showApgarScore(i);
-        displayText += "<br>"
-      }
-      $('inputFrame'+tstCurrentPage).innerHTML = '<div id="summary" style="margin-bottom:4px;">' + displayText + '</div><div id="charts" style="height:185px;margin:4px 6px 6px;padding:2px;width:380px;"></div>';
+       
+        var alertsRow = document.createElement("div");
+        alertsRow.setAttribute("class", "alertsRow");
+        // add the left title of the table row
+        var alertsTitle = document.createElement("div");
+        alertsTitle.setAttribute("class", "alertsTitle");       
+        alertsTitle.innerHTML = "<span>BABY " + i + "<span>";
+        alertsRow.appendChild(alertsTitle);
+        // add cell figures
+     
+        var alertsCell = document.createElement("div");
+        alertsCell.setAttribute("class", "alertsCell");
+        alertsCell.innerHTML = showWeightForAge(i);
+        alertsRow.appendChild(alertsCell);
+
+        var alertsCell2 = document.createElement("div");
+        alertsCell2.setAttribute("class", "alertsCell");
+        alertsCell2.innerHTML = showApgarScore(i);
+        alertsRow.appendChild(alertsCell2);
+        
+        //add row to table
+        alertsTable.appendChild(alertsRow);
+      }     
+      $('inputFrame'+tstCurrentPage).appendChild(alertsTable);
       displayText = "";
     }
   }
   function showApgarScore(n){
-    
-    apgarScore = parseFloat($("appearance" + n).value) + parseFloat($("pulse" + n).value) + parseFloat($("grimance" + n).value) + parseFloat($("activity" + n).value) + parseFloat($("respiration" + n).value);
-
-    displayText += "<div><span class='title'>Apgar score for baby " + n + ":</span>";
+    displayText = ""
+    apgarScore = parseFloat($("apgar" + n).value);
     if (apgarScore >= 7){
-      displayText += "<span class='normal'> [" + apgarScore.toFixed(1) + "/10] </span>" + "<span class ='recommendation'> Normal </span><br>";
+      displayText = "<span class='normal'> " + apgarScore.toFixed(0) + "/10 - Normal APGAR</span>";
     } else if (apgarScore <=3) {
-      displayText += "<span class='red_alert'> [" + apgarScore.toFixed(1) + "/10] </span>" + " <span class='recommendation'> Low </span><br>";
+      displayText = "<span class='red_alert'> " + apgarScore.toFixed(0) + "/10 - Low APGAR</span>";
     } else {
-      displayText += "<span class='yellow_alert'> [" + apgarScore.toFixed(1) + "/10] </span>" + " <span class='recommendation'> Fairly Low </span><br>";
-    }
-    displayText += "</div>";
+      displayText = "<span class='yellow_alert'> " + apgarScore.toFixed(0) + "/10 - Fairly Low </span>";
+    }  
+    return displayText
   }
   function showApgarControl(baby){
-   $('touchscreenInput'+tstCurrentPage).value =  "";
     apgarScore = 0;
-	var apgar = {"APPEARANCE": 0,
-		"PULSE" : 0,
-		"GRIMANCE": 0,
-		"ACTIVITY": 0,
-		"RESPIRATION": 0
-	};
-	var apgarCheck = {"APPEARANCE": "?",
-		"PULSE" : "?",
-		"GRIMANCE": "?",
-		"ACTIVITY": "?",
-		"RESPIRATION": "?"
-	};
+    var apgar = {"APPEARANCE": 0,
+      "PULSE" : 0,
+      "GRIMANCE": 0,
+      "ACTIVITY": 0,
+      "RESPIRATION": 0
+    };
+    var apgarCheck = {"APPEARANCE": "?",
+      "PULSE" : "?",
+      "GRIMANCE": "?",
+      "ACTIVITY": "?",
+      "RESPIRATION": "?"
+    };
+    alert = document.createElement("div");    
+
     $("clearButton").onclick = function(){
+      apgarScore = 0
+      updateApgarAlert(apgarScore)
       cells = document.getElementsByClassName("butt");
       for( i = 0; 0 < cells.length; i++){
         cells[i].setAttribute("selected", "false");
@@ -72,13 +107,15 @@
         apgar["APPEARANCE"] = 0; apgar["PULSE"] = 0; apgar["GRIMANCE"] = 0; apgar["ACTIVITY"] = 0; apgar["RESPIRATION"] = 0;
         apgarCheck["APPEARANCE"] = "?"; apgarCheck["PULSE"] = "?"; apgarCheck["GRIMANCE"] = "?";
         apgarCheck["ACTIVITY"] = "?"; apgarCheck["RESPIRATION"] = "?";
-        showCategory("Apgar = " + apgarCheck['APPEARANCE'] + "+" + apgarCheck['PULSE'] +"+"+ apgarCheck['GRIMANCE']
+        showCategory("<span style='font-size:27px;font-weight:bold;'>APGAR</span> = " + apgarCheck['APPEARANCE'] + "+" + apgarCheck['PULSE'] +"+"+ apgarCheck['GRIMANCE']
           + "+" + apgarCheck['ACTIVITY'] + "+" + apgarCheck['RESPIRATION']);
       }
     }
-    
+    $("clearButton").onclick.apply($("clearButton"));
+    updateApgarAlert(apgarScore);
     scoreWindow = document.createElement("div");
     scoreWindow.setAttribute("id", "selectWindow");
+    
 
     arr = ["Appearance", "Pulse", "Grimance", "Activity", "Respiration"]
     arr_val = ['Blue, Pale', "Pink </br> Extreme blue", "Completely </br> pink",
@@ -117,10 +154,12 @@
           control.setAttribute("class", "butt");
           control.setAttribute("value", j-1);
           control.setAttribute("apgar_field", arr[i]);
-          control.setAttribute("selected", "false");
+          // update/set selection status of the control
+          if ((apgarCheck[arr[i].toUpperCase()] != "?") && ("" + i + (parseInt(apgarCheck[arr[i].toUpperCase()]) + 1) == control.id)){
+            control.setAttribute("selected", "true");
+          }else{ control.setAttribute("selected", "false"); }
           control.setAttribute("i", i);
           control.setAttribute("j", j);
-
           
           control.innerHTML = arr_val[val_index];
           val_index ++;
@@ -140,40 +179,60 @@
                 __$("" + x + k).setAttribute("selected", ( this.id != "" + x + k)? "false": "true");
                 
                 __$("" + x + k).style.background = ( this.id != "" + x + k)? "url('/images/btn_blue.png')" : "url('/images/click_btn.png')";
+                __$("" + x + k).style.Color= ( this.id != "" + x + k)? "black" : "white";
               }
             }
-
-            __$(field.toLowerCase()+ baby).value = apgar[key];
+           
             apgarScore = parseInt(apgar['APPEARANCE']) + parseInt(apgar['PULSE'])
               + parseInt(apgar['GRIMANCE']) + parseInt(apgar['ACTIVITY']) + parseInt(apgar['RESPIRATION']);
-            showCategory("Apgar = " + apgarCheck['APPEARANCE'] + "+" + apgarCheck['PULSE'] +"+"+ apgarCheck['GRIMANCE']
+            showCategory("<span style='font-size:27px;font-weight:bold;'>APGAR</span> = " + apgarCheck['APPEARANCE'] + "+" + apgarCheck['PULSE'] +"+"+ apgarCheck['GRIMANCE']
               + "+" + apgarCheck['ACTIVITY'] + "+" + apgarCheck['RESPIRATION']);
             if (apgarCheck["APPEARANCE"] != "?" && apgarCheck["PULSE"] != "?" && apgarCheck["GRIMANCE"] != "?" && apgarCheck["ACTIVITY"] != "?" && apgarCheck["RESPIRATION"] != "?"){
               $('touchscreenInput'+tstCurrentPage).value = apgarScore;
             }
+            updateApgarAlert(apgarScore);
           };
+          
           
         }else{control.innerHTML = arr[i];
           control.setAttribute("class", "leftButt");
         }
         row.appendChild(control);
       }
-      scoreWindow.appendChild(row);
+      scoreWindow.appendChild(row);    }
+
+    $('inputFrame' + tstCurrentPage).style.display = "none";
+    $('page' + tstCurrentPage).style.minHeight = "650px";
+    $('page' + tstCurrentPage).appendChild(scoreWindow);
+    $("page" + tstCurrentPage).appendChild(alert);
+    
+  }
+
+  function updateApgarAlert(apgarScore){   
+    if (apgarScore >= 7){
+      text = "" + apgarScore.toFixed(0) + "/10 - Normal APGAR</span>";
+      alert.id = "normal_apgar_alert";
+    } else if (apgarScore <=3) {
+      text = "" + apgarScore.toFixed(0) + "/10 - Low APGAR</span>";
+      alert.id = "red_apgar_alert";
+    } else {
+      text = "" + apgarScore.toFixed(0) + "/10 - Fairly Low </span>";
+      alert.id = "yellow_apgar_alert";
     }
-    $('inputFrame' + tstCurrentPage).appendChild(scoreWindow);
+    alert.innerHTML = text;
   }
 
   function showWeightForAge(baby){
-    $('weight_for_age').value = currentWeight;
-    displayText += "<div><span class='title'>Weight for age for baby " + baby + ":</span>";
+    displayText = "";
+    $('weight_for_age').value = currentWeight;   
     if ((currentWeight <= maxi) && (currentWeight >=mini)){
-      displayText += "<span class='normal'>" + currentWeight + "(Kg)" + "</span>" + " <span class='recommendation'> Normal </span><br>";
+      displayText = "<span class='normal'>" + currentWeight + "Kg - Normal Weight </span>";
     } else if (currentWeight > maxi) {
-      displayText += "<span class='yellow_alert'>" + currentWeight + '(Kg)' + "</span>" + " <span class='recommendation'> Over Weight </span><br>";
+      displayText = "<span class='yellow_alert'>" + currentWeight + "Kg - Over Weight </span>";
     } else if (currentWeight < mini){
-      displayText += "<span class='red_alert'>" + currentWeight + '(Kg)' + "</span>" + " <span class='recommendation'> Under Weight</span><br>";
+      displayText = "<span class='red_alert'>" + currentWeight + "Kg - Under Weight</span>";
     }
-    displayText += "</div>";
+    return displayText;
   }
   function isValidDateFormat(value){
     return value.trim().match(/(\d{4})\-(\d{2})\-(\d{2})\s(\d{2})\:(\d{2})/);
@@ -254,7 +313,7 @@
       $('nextButton').innerHTML = '<span>Finish</span>';
     else
       $('nextButton').innerHTML = '<span>Next</span>';
-    setTimeout(updateNextFinish, 500)
+    setTimeout(updateNextFinish, 500);
   }
   function calculateBabyOutcomeDate(baby){
     var baby_time = __$("time_of_delivery" + baby).value.trim();
@@ -263,6 +322,31 @@
     merged_date = mergeDateTime(baby_date, baby_time);
     baby_date_map += baby + "," +  dateTimeFormatted(merged_date) + "!";
     document.forms[0].action = "/encounters/create/<%= params[:patient_id] %>?baby_date_map=" + baby_date_map;
+  }
+  function weightAlert(){
+    if(!$('weight_label')){
+      var div = document.createElement("div");
+      div.id = "weight_label";
+      div.className = "statusLabel";  
+
+      gender = $("baby_gender" + baby_num).value;
+      if (gender == "Male"){
+        maxi = 4.5;
+        mini = 2.5;
+      }else if (gender == "Female"){
+        maxi = 4.4;
+        mini = 2.4;
+      }
+      $("inputFrame" + tstCurrentPage).appendChild(div);
+
+    }
+    weight = $("touchscreenInput" + tstCurrentPage).value.trim();
+    if (weight != ""){
+      $('weight_label').innerHTML = ((weight > maxi )? "<i style='font-size: 1.2em;color: red;float: right;'> Over Weight</i>" : ((weight < mini)? "<i  style='font-size: 1.2em;float: right;color: red;'>Under Weight</i>"  : ""));
+      if (weight < maxi && weight > mini){$('weight_label').innerHTML = "<i style='float:right;font-size:1.2em;'>  Normal Weight</i>";}
+    }else {       
+      $('weight_label').innerHTML = "<i style='float:left;font-size:1.2em;'>  Enter Weight</i>";
+    }   
   }
 </script>
 
@@ -286,11 +370,32 @@
     margin-right:10px;
   }
 
-  .red_alert {color:black;background:red;border:5px solid white;}
-  .yellow_alert {color:black;background:yellow;border:5px solid white;}
+  .red_alert {color:black;background:red;border:2px solid gray;}
+  .yellow_alert {color:black;background:yellow;border:2px solid gray;}
   .normal {color:black;}
 
-  #tt_page_summary .inputFrameClass { height:84%; }
+  #red_apgar_alert {
+    background:red;
+  }
+  #yellow_apgar_alert {    
+    background:yellow;    
+  }
+  #normal_apgar_alert, #red_apgar_alert, #yellow_apgar_alert {
+    border-radius: 10px;
+    -moz-user-select: none;
+    height: 110px;
+    color:black;
+    width: 85%;
+    border:2px solid gray;
+    font-size: 30px;
+    text-align: center;
+    margin-left:auto;
+    margin-right:auto;   
+    margin-top: 40px;
+    vertical-align: middle;
+  }
+
+  #tt_page_summary .inputFrameClass { height: 84%;}
 
   #qwerty{ display:none; }
 
@@ -299,9 +404,10 @@
   }
 
   #selectWindow{
+    -moz-user-select: none;
     display: table;
     width: 85%;
-    height:80%;
+    height:55%;
     border:1px solid #999999;
     align: center;
     border-spacing: 8px;
@@ -314,6 +420,7 @@
   .butt{
     font-family: sans-serif;
     font-size:1.1em;
+    font-weight: bold;
     -moz-border-radius: 5px;
     border-radius: 10px;
     display:table-cell;
@@ -325,7 +432,7 @@
     height: auto;
     width: auto;
     max-width: 73px;
-    text-align: center;
+    text-align: center;    
   }
   .leftButt, .value{
     font-size:1.3em;
@@ -340,9 +447,11 @@
     vertical-align: middle;
     text-align: center;
     max-width: 73px;
+
   }
   .value{
     height: 40px;
+    font-weight: bold;
   }
   .boardRow{
     display: table-row;
@@ -356,6 +465,41 @@
     border-radius: 5px;
     border-spacing: 5px 5px 5px 5px;
   }
+  #alertsTable{
+    -moz-user-select: none;
+    display: table;
+    border-radius: 4px;
+    background: gray;
+    border-spacing: 1px;
+    width: 98%;
+    height:auto;
+    border:1px solid #999999;
+    vertical-align: middle;
+    margin-left:auto;
+    margin-top: 12px;
+    margin-right:auto;
+    max-height: 99%;
+    overflow: auto;
+  }
+  .alertsRow, .alertsHeaderRow{
+    display: table-row;
+    height: 65px !important;
+  }
+  .alertsTitle, .alertsHeader, .alertsCell{
+    display: table-cell;
+    border: solid 1px lightgray;
+    font-size: 28px;
+    vertical-align: middle;   
+    text-align: center;
+    background: white;
+  }
+  .alertsHeader, .alertsTitle{
+    font-weight: bold;
+    text-align: center;
+    background: white;
+  }
+
+
 
 
 </style>
@@ -541,7 +685,8 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
           "($('discharge_outcome').value.toUpperCase() == 'DELIVERED' && parseInt($('number_of_babies').value) > #{baby - 1}) /*|| " +
           "($('discharge_outcome').value.toUpperCase() == 'DISCHARGED' && parseInt($('number_of_babies').value) > #{baby - 1})*/"),
-      :tt_onUnLoad => "updateTimeOtherFields(#{baby})"
+      :tt_onUnLoad => "updateTimeOtherFields(#{baby})",
+      :tt_onLoad => "baby_num = #{baby}"
     }%>
     <%= hidden_field_tag("observations[][concept_name]",  "TIME OF DELIVERY")%>
     <%= text_field_tag("observations[][value_time]",   nil, options)%>
@@ -627,14 +772,15 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
       {	:id => "weight#{baby}",
       :field_type => 'number',
       :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Weight (KG)",
-      :tt_onUnLoad => "displaySummary='true';",
+      :tt_onLoad => "timedEvent = self.setInterval(function(){weightAlert()}, 100);",
+      :tt_onUnLoad => "window.clearInterval(timedEvent); displaySummary='true';",
       :min => number_with_precision(2.5, :precision => 1),
       :max => number_with_precision(4.5, :precision => 1),
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
           "($('discharge_outcome').value.toUpperCase() == 'DELIVERED' && parseInt($('number_of_babies').value) > #{baby - 1}) /*|| " +
           "($('discharge_outcome').value.toUpperCase() == 'DISCHARGED' && parseInt($('number_of_babies').value) > #{baby - 1})*/"),
       :absoluteMin => 0,
-      :absoluteMax => 228,
+      :absoluteMax =>10,
       :validationRule => "([0-9]+(\\.[0-9])?)|Unknown$",
       :validationMessage => "You must enter a number between 0 and 15 (for example: 54<b>.6</b>)",
       :tt_pageStyleClass => "unknownButton"} %>
@@ -705,7 +851,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
       <%= touch_text_field_tag "APGAR", @patient, nil,
         {	:id => "apgar#{baby}",
         :field_type => 'number',
-        :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Apgar",
+        :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: APGAR",
         :condition => (@location.downcase == "ante-natal ward" ? "false" :
             "($('discharge_outcome').value.toUpperCase() == 'DELIVERED' && parseInt($('number_of_babies').value) > #{baby - 1}) /*|| " +
             "($('discharge_outcome').value.toUpperCase() == 'DISCHARGED' && parseInt($('number_of_babies').value) > #{baby - 1})*/"),
