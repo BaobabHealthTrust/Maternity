@@ -105,9 +105,9 @@ module DDEService
 
         if identifier.to_s.strip.length != 6 and identifier == self.national_id
 
-          dde_server = GlobalProperty.find_by_property("dde_server_ip").property_value rescue ""
-          dde_server_username = GlobalProperty.find_by_property("dde_server_username").property_value rescue ""
-          dde_server_password = GlobalProperty.find_by_property("dde_server_password").property_value rescue ""
+          dde_server = CoreService.get_global_property_value("dde_server_ip") rescue ""
+          dde_server_username = CoreService.get_global_property_value("dde_server_username") rescue ""
+          dde_server_password = CoreService.get_global_property_value("dde_server_password") rescue ""
           uri = "http://#{dde_server_username}:#{dde_server_password}@#{dde_server}/people/find.json"
           uri += "?value=#{identifier}"
           p = JSON.parse(RestClient.get(uri)).first rescue nil
@@ -257,9 +257,9 @@ module DDEService
     return people unless people.blank?
     create_from_dde_server = CoreService.get_global_property_value('create.from.dde.server').to_s == "true" rescue false
     if create_from_dde_server
-      dde_server = GlobalProperty.find_by_property("dde_server_ip").property_value rescue ""
-      dde_server_username = GlobalProperty.find_by_property("dde_server_username").property_value rescue ""
-      dde_server_password = GlobalProperty.find_by_property("dde_server_password").property_value rescue ""
+      dde_server = CoreService.get_global_property_value("dde_server_ip") rescue ""
+      dde_server_username = CoreService.get_global_property_value("dde_server_username") rescue ""
+      dde_server_password = CoreService.get_global_property_value("dde_server_password") rescue ""
       uri = "http://#{dde_server_username}:#{dde_server_password}@#{dde_server}/people/find.json"
       uri += "?value=#{identifier}"
       p = JSON.parse(RestClient.get(uri)).first rescue nil
