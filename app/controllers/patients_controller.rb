@@ -20,7 +20,7 @@ class PatientsController < ApplicationController
     end
     
     @last_location = @patient.encounters.find(:last).location_id rescue nil
-        @last_visit_closed = !last_visit.end_date.nil?
+    @last_visit_closed = !last_visit.end_date.nil?
     
     if ((session[:location_id] != @last_location)  || @last_visit_closed) && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : true)
       params[:skip_check] = false
@@ -429,8 +429,8 @@ class PatientsController < ApplicationController
       "Friend",
       "Aunt",
       "Neighbour",
-	  "Mother-in-law",
-	  "Landlord/Landlady",	  
+      "Mother-in-law",
+      "Landlord/Landlady",
       "Other"]
     
     @relation = Observation.find(:all, :joins => [:concept, :encounter], 
@@ -440,7 +440,7 @@ class PatientsController < ApplicationController
         EncounterType.find_by_name("SOCIAL HISTORY").id]).collect{|o| o.value_text}
     
     @relation = relation + @relation
-	@relation = @relation.collect{|rel| rel.gsub('-', ' ').gsub('_', ' ').squish.titleize}.uniq
+    @relation = @relation.collect{|rel| rel.gsub('-', ' ').gsub('_', ' ').squish.titleize}.uniq
 
     religions = ["Jehovahs Witness",  
       "Roman Catholic", 
@@ -877,6 +877,50 @@ class PatientsController < ApplicationController
     end
 
     redirect_to "/patients/birth_report?person_id=#{params[:id]}&patient_id=#{params[:patient_id]}&today=1" and return
+  end
+  def relation_type
+    search_string = params[:search_string]
+    relation = ["Mother",
+      "Husband",
+      "Sister",
+      "Friend",
+      "Aunt",
+      "Neighbour",
+      "Mother-in-law",
+      "Landlord/Landlady",
+      "Other"]
+
+    @relation = Observation.find(:all, :joins => [:concept, :encounter],
+      :conditions => ["obs.concept_id = ? AND NOT value_text IN (?) AND " +
+          "encounter_type = ?",
+        ConceptName.find_by_name("OTHER RELATIVE").concept_id, relation,
+        EncounterType.find_by_name("SOCIAL HISTORY").id]).collect{|o| o.value_text}
+
+    @relation = relation + @relation
+    @relation = @relation.collect{|rel| rel.gsub('-', ' ').gsub('_', ' ').squish.titleize}.uniq
+    @relation = @relation.collect{|rel| rel if rel.downcase.include?(search_string.downcase)}
+    render :text => "<li></li><li>" + @relation.join("</li><li>") + "</li>"
+  end
+  def religion
+    search_string = params[:search_string]
+    religions = ["Jehovahs Witness",
+      "Roman Catholic",
+      "Presbyterian (C.C.A.P.)",
+      "Seventh Day Adventist",
+      "Baptist",
+      "Moslem",
+      "Other"]
+
+    @religions = Observation.find(:all, :joins => [:concept, :encounter],
+      :conditions => ["obs.concept_id = ? AND NOT value_text IN (?) AND " +
+          "encounter_type = ?",
+        ConceptName.find_by_name("Other").concept_id, religions,
+        EncounterType.find_by_name("SOCIAL HISTORY").id]).collect{|o| o.value_text}
+
+    @religions = religions + @religions
+    @religions = @religions.collect{|rel| rel.gsub('-', ' ').gsub('_', ' ').squish.titleize}.uniq
+    @religions = @religions.collect{|rel| rel if rel.downcase.include?(search_string.downcase)}
+    render :text => "<li></li><li>" + @religions.join("</li><li>") + "</li>"
   end
   
 end

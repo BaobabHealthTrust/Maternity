@@ -43,10 +43,11 @@
     :validationRule => "^0\\d{7}$|Unknown|Not Available|N\/A|^0\\d{9}$",
     :validationMessage => "Not a valid phone number",
     :tt_pageStyleClass => "nota NumbersOnlyWithUnknown",
-    :helptext => "Next of Kin Phone Number" } %>
-
-  <%= touch_select_tag "GUARDIAN RELATION", @patient, options_for_select(@relation),
+    :helptext => "Next of Kin Phone Number" } %>	
+	
+  <%= touch_select_tag "GUARDIAN RELATION", @patient, options_for_select(@religions),
     {:id => "relation",
+	:ajaxURL => "/patients/relation_type?search_string=",
     :helptext => "Next of Kin Relation Type" } %>
 
   <%= touch_text_field_tag "OTHER RELATIVE", @patient, nil,
@@ -62,6 +63,7 @@
 
   <%= touch_select_tag "Religion", @patient, options_for_select(@religions),
     {:id => "religion",
+	:ajaxURL => "/patients/religion?search_string=",
     :helptext => "Religion" } %>
     
   <%= touch_text_field_tag "Other", @patient, nil,
