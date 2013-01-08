@@ -6,6 +6,13 @@ class EncountersController < ApplicationController
 
   def create
 
+	  @patient = Patient.find(params[:encounter][:patient_id])
+    if((CoreService.get_global_property_value("create.from.dde.server") == true) && !@patient.nil?)
+      dde_patient = DDEService::Patient.new(@patient)
+      identifier = dde_patient.get_full_identifier("National id").identifier rescue nil
+      dde_patient.check_old_national_id(identifier)
+    end
+    
     if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME"
 
       baby_date_map = params[:baby_date_map].split("!") rescue nil
@@ -68,20 +75,19 @@ class EncountersController < ApplicationController
       # observation[:location_id]     ||= encounter.location_id
       Observation.create(observation) # rescue nil
     end
-
-    # if encounter.type.name.eql?("REFER PATIENT OUT?")
-    #  encounter.patient.current_visit.update_attributes(:end_date => Time.now.strftime("%Y-%m-%d %H:%M:%S"))
+    referred_out = (params["observations"].collect{|o| o if !o["value_coded_or_text"].nil? and o["value_coded_or_text"].upcase == "REFERRED OUT"}.compact.length > 0) rescue false;
+	if referred_out
+		redirect_to "/encounters/new/refer_out?patient_id=#{@patient.id}" and return
+	end     
 
     # raise encounter.to_yaml
     
     # elsif encounter.patient.current_visit.encounters.active.collect{|e|
-
-    @patient = Patient.find(params[:encounter][:patient_id])
+  
 
     if encounter.patient.current_visit.encounters.active.collect{|e|
         e.observations.collect{|o|
-          o.answer_string if o.answer_string.to_s.upcase.include?("PATIENT DIED") ||
-            o.answer_string.to_s.upcase.include?("DISCHARGED")
+          o.answer_string if ["PATIENT DIED", "DISCHARGED", "REFERRED OUT"].include?(o.answer_string.to_s.upcase)         
         }.compact if e.type.name.upcase.eql?("UPDATE OUTCOME")
       }.compact.collect{|p| true if p.to_s.upcase.include?("DISCHARGED")}.compact.include?(true) == true
 
@@ -123,8 +129,7 @@ class EncountersController < ApplicationController
       else
         redirect_to next_task(@patient)
       end
-    end
-  
+    end  
   end
 
   def new
@@ -171,7 +176,7 @@ class EncountersController < ApplicationController
         ConceptName.find_by_name("LAST MENSTRUAL PERIOD").concept_id, @patient.encounters.collect{|e| e.id}],
       :order => :obs_datetime).last.value_datetime rescue nil
 
-    @location = Location.current_location.name rescue nil
+    @location = Location.current_location.name || Location.find(session[:location_id]).name
         
     @last_location = @patient.encounters.find(:last).location_id rescue nil
     

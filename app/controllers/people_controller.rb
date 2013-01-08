@@ -118,10 +118,16 @@ class PeopleController < ApplicationController
   def search
     found_person = nil
     if params[:identifier]
-      local_results = ANCService.search_by_identifier(params[:identifier])
+      local_result_set = ANCService.search_by_identifier(params[:identifier])
 
       # raise local_results.to_yaml
-      
+      ids_list = []
+      local_results = []
+      local_result_set.each{|persn|
+        local_results << persn if !ids_list.include?(persn.person_id)
+        ids_list << persn.id if !ids_list.include?(persn.person_id)        
+      }  
+     
       if local_results.length > 1
         @people = Person.search(params)
       elsif local_results.length == 1
@@ -285,7 +291,7 @@ class PeopleController < ApplicationController
       person = Person.create_from_form(remote_person) if create_from_remote      
       person = Person.create_from_form(params[:person]) if !create_from_remote
 
-     if params[:next_url]
+      if params[:next_url]
         if (params[:cat].downcase rescue "") == "mother"
           print_and_redirect("/patients/national_id_label/?patient_id=#{person.patient.id}",
             params[:next_url] + "?patient_id=#{ person.patient.id }") and return

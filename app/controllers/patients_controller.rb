@@ -5,7 +5,14 @@ class PatientsController < ApplicationController
   
   def show
     # raise link_to_anc.to_yaml
-    @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil 
+    @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil
+
+    if((CoreService.get_global_property_value("create.from.dde.server") == true) && !@patient.nil?)
+      dde_patient = DDEService::Patient.new(@patient)
+      identifier = dde_patient.get_full_identifier("National id").identifier rescue nil
+      dde_patient.check_old_national_id(identifier)
+    end
+
     last_visit = Visit.find(:last, :conditions => ["patient_id = ?", @patient.id])
     @maternity_patient = ANCService::ANC.new(@patient)
 
