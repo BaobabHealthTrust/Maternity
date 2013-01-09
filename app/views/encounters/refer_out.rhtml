@@ -10,20 +10,9 @@
   <%= hidden_field_tag "encounter[encounter_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M") %>
   <%= hidden_field_tag "encounter[provider_id]", session[:user_id] %>
 
-  <%= hidden_field_tag "next_url", "/patients/show/?patient_id=#{@patient.id }" %>
-
-    <% options = {
-	:id => "referred",
-	:field_type => 'text'
-	} %>
-  <%= hidden_field_tag("observations[][concept_name]", "Patient referred to other site", options) %>
-  <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
-  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
-
   <label for="referrer">Facility Referred To?</label>
   <% options = {
-    :id => "referrer",
-    :field_type => 'text',
+    :id => "referrer",   
     :helptext =>"Facility Referred To?",  
     :allowFreeText => 'true',
     :ajaxURL => "/encounters/static_locations?search_string="

@@ -87,10 +87,15 @@ class Encounter < ActiveRecord::Base
         observation.obs_chronics_string
       }.compact.join(", ")
 
+    elsif name.upcase == "REFER PATIENT OUT?"
+      
+      observations.collect{|observation|      
+        observation.obs_referred_out_string
+      }.compact.join(", ")
     elsif @encounter_types.include? name
       observations.collect{|observation| observation.to_s}.uniq.delete_if{|x| x.blank? }.compact.join(", ")
-
-    else  
+      
+    else     
       observations.collect{|observation| observation.to_s}.uniq.delete_if{|x| x.blank? }.join(", ")
     end  
   end
@@ -206,8 +211,8 @@ class Encounter < ActiveRecord::Base
   def admission_date
     patient_id = self.patient.id
     Encounter.find(:last,
-          :conditions => ["patient_id = ? AND encounter_type = ? AND voided = 0", patient_id,
-            EncounterType.find_by_name("ADMIT PATIENT").encounter_type_id],
+      :conditions => ["patient_id = ? AND encounter_type = ? AND voided = 0", patient_id,
+        EncounterType.find_by_name("ADMIT PATIENT").encounter_type_id],
 		  :order => "date_created").encounter_datetime.strftime("%d %b %Y %H:%M") rescue "Unknown"
 
   end
@@ -257,12 +262,12 @@ class Encounter < ActiveRecord::Base
       return rows.inject({}) {|result, row| result[encounter_types_hash[row['encounter_type']]] = row['number']; result }
     end
   end
- def discharge_date
-	 Observation.find(:last, :conditions => ["person_id = ? AND value_coded = ? AND voided = 0 AND encounter_id IN (?)", patient_id,
+  def discharge_date
+    Observation.find(:last, :conditions => ["person_id = ? AND value_coded = ? AND voided = 0 AND encounter_id IN (?)", patient_id,
         ConceptName.find_by_name("DISCHARGED").concept_id, Encounter.find(:all,
           :conditions => ["patient_id = ? AND encounter_type = ? AND voided = 0", patient_id,
             EncounterType.find_by_name("UPDATE OUTCOME").encounter_type_id]).collect{|e| 
           e.encounter_id}]).obs_datetime.strftime("%d %b %Y %H:%M") rescue "Unknown"
- end
+  end
 
 end

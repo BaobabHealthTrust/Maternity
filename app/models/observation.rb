@@ -94,7 +94,7 @@ class Observation < ActiveRecord::Base
     end
   end
 
-  # Search Obs table by Lab Identifier
+  # Search Obs table by Lab obs_referred_out_stringIdentifier
   def self.search_lab_test(identifier)
     Observation.find_by_value_text(identifier)    
   end
@@ -151,5 +151,18 @@ class Observation < ActiveRecord::Base
     "#{self.answer_concept_name.name rescue nil}#{self.value_text}".blank? ? "" : 
       ["#{self.answer_concept_name.name rescue nil}#{self.value_text}", "#{self.obs_datetime.strftime("%d %b %Y")}"]
   end
-  
+
+  def obs_referred_out_string
+    if ConceptName.find_by_name("CLINIC PATIENT WAS REFERRRED").concept_id == self.concept_id    
+      "CLINIC PATIENT WAS REFERRED".titleize  + ": " + (self.answer_string rescue "")
+    elsif ConceptName.find_by_name("REFERRAL DIAGNOSES").concept_id == self.concept_id     
+      "REFERRAL DIAGNOSES".titleize + ": " + (self.answer_string rescue "")
+    elsif ConceptName.find_by_name("REFERRAL OUT TIME").concept_id == self.concept_id
+      "REFERRAL OUT TIME".titleize + ": " + (self.value_datetime.strftime("%H:%M") rescue "Unknown")
+    elsif ConceptName.find_by_name("REFERRAL OUT DATE").concept_id == self.concept_id
+      "REFERRAL OUT DATE".titleize + ": " + (self.value_datetime.strftime("%d %b %Y") rescue "Unknown")
+    else
+      "#{self.concept.name.name rescue nil}: #{self.value_text rescue nil}#{self.value_numeric rescue nil}"
+    end
+  end
 end
