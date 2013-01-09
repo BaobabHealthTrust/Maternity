@@ -312,7 +312,7 @@
     if (tstInputTarget.value == '')
       $('nextButton').innerHTML = '<span>Finish</span>';
     else
-      $('nextButton').innerHTML = '<span>Next</span>';P170001002135
+      $('nextButton').innerHTML = '<span>Next</span>'
     setTimeout(updateNextFinish, 500);
   }
   function calculateBabyOutcomeDate(baby){
@@ -1028,6 +1028,49 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
   <% end %>
+
+  <% options = {
+    :id => "date_of_death",
+    :field_type => "date",
+    :helptext =>"Date of Death",
+    :condition => "$('discharge_outcome').value.toUpperCase() == 'PATIENT DIED'"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]",  "DATE OF DEATH")%>
+  <%= text_field_tag("observations[][value_datetime]",   nil, options)%>
+  <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+
+  <% options = {
+    :id => "place_of_death",
+    :field_type => 'text',
+    :helptext =>"Place of Death",
+    :condition => "$('discharge_outcome').value.toUpperCase() == 'PATIENT DIED'"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]",  "PLACE OF DEATH")%>
+  <%= select_tag("observations[][value_coded_or_text]", options_for_select([" ", "Home", "Current Health Center", "On The Way", "Other" ]), options)%>
+  <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% options = {
+    :id => "death_diagnoses",
+    :helpText => 'Select discharge diagnosis',
+    :allowFreeText => 'true',
+    :optional => 'true',
+    :ajaxURL => "/encounters/diagnoses?search_string=",
+    :textCase => "upper",
+    :tt_onLoad => "$('nextButton').innerHTML = '<span>Finish</span>'",
+    :tt_pageStyleClass => "n qwertyKeyboardOnly",
+    :condition => "$('discharge_outcome').value.toUpperCase() == 'PATIENT DIED'"
+  } %>
+    
+  <%= text_field_tag("observations[][value_coded_or_text]", nil, options) %>
+  <%= hidden_field_tag("observations[][concept_name]", "DIAGNOSIS", options) %>
+  <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
+
 
   <%= touch_hidden_tag "WT FOR AGE", @patient, nil, {:id => 'weight_for_age'} %>
 
