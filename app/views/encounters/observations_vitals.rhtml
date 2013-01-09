@@ -132,8 +132,7 @@
       :absoluteMin => 50,
       :absoluteMax => 250,
       :units => 'mm Hg',
-      :validationRule => "^([0-9]+)|Unknown$",      
-      :tt_pageStyleClass => "Numeric NumbersOnly"
+      :validationRule => "^([0-9]+)|Unknown$"    
     }) %>
 
   <%= hidden_field_tag("observations[][concept_name]",  "SYSTOLIC BLOOD PRESSURE", {:id => 'systolic_blood_pressure_concept_name'}) %>
