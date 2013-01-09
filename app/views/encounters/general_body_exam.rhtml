@@ -4,11 +4,17 @@
   tt_cancel_show = "/encounters/new/<%= (params[:ret] ? params[:ret] : "observations") %>/?patient_id=<%=  @patient.id %>"
   var tt_cancel_destination = "/encounters/new/<%= (params[:ret] ? params[:ret] : "observations") %>/?patient_id=<%=  @patient.id %>"
   //-->
+  function updateNextFinish(){
+    if (tstInputTarget.value == '')
+      $('nextButton').innerHTML = '<span>Finish</span>';
+    else
+      $('nextButton').innerHTML = '<span>Next</span>';
+    setTimeout(updateNextFinish, 500)
+  }
 </script>
 <form id='medical_history' action="/encounters/create" method='post'>
   <% default={
-    :allowFreeText => 'true',
-    :tt_requireNextClick => false,
+    :allowFreeText => 'true',    
     :tt_onLoad => "__$('nextButton').style.display='none';",    
   } %>
 
@@ -20,6 +26,7 @@
   <% options = default.merge({
       :id => "head",
       :helptext => "Head",
+      :tt_requireNextClick => false,
       :field_type => "text"
     }) %>
   <% @select_options = ["", "Normal", "Abnormal", "Not Done"] %>
@@ -31,6 +38,7 @@
 
   <% options = default.merge({
       :id => "heart",
+      :tt_requireNextClick => false,
       :helptext => "Heart Beat",
       :field_type => "text"
     }) %>
@@ -43,6 +51,7 @@
   <% options = default.merge({
       :id => "chest",
       :helptext => "Chest",
+      :tt_requireNextClick => false,
       :field_type => "text"
     }) %>
   <% @select_options = ["", "Clear", "Abnormal", "Not Done"]%>
@@ -55,6 +64,7 @@
   <% options = default.merge({
       :id => "breast",
       :helptext => "Breasts",
+      :tt_requireNextClick => false,
       :field_type => "text"
     }) %>
   <% @select_options = ["", "Normal", "Lumps","Sores", "Not Done"]%>
@@ -67,6 +77,7 @@
   <% options = default.merge({
       :id => "abdomen",
       :helptext => "Abdomen",
+      :tt_requireNextClick => false,
       :field_type => "text"
     }) %>
   <% @select_options = ["", "Enlarged", "Not Enlarged", "Not Done"]%>
@@ -79,6 +90,7 @@
   <% options = default.merge({
       :id => "spleen",
       :helptext => "Spleen",
+      :tt_onLoad => "$('nextButton').style.display = 'block';",
       :field_type => "text"
     }) %>
   <% @select_options = ["", "Enlarged", "Not Enlarged", "Not Done"]%>
