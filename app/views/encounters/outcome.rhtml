@@ -95,6 +95,7 @@
       "ACTIVITY": "?",
       "RESPIRATION": "?"
     };
+   
     alert = document.createElement("div");    
 
     $("clearButton").onclick = function(){
@@ -163,7 +164,7 @@
           
           control.innerHTML = arr_val[val_index];
           val_index ++;
-          
+         
           control.onclick = function(){
             var num = __$(this.id).getAttribute("value");
             var field = __$(this.id).getAttribute("apgar_field");
@@ -182,7 +183,7 @@
                 __$("" + x + k).style.Color= ( this.id != "" + x + k)? "black" : "white";
               }
             }
-           
+           __$(key.toLowerCase() + baby).value = apgar[key];
             apgarScore = parseInt(apgar['APPEARANCE']) + parseInt(apgar['PULSE'])
               + parseInt(apgar['GRIMANCE']) + parseInt(apgar['ACTIVITY']) + parseInt(apgar['RESPIRATION']);
             showCategory("<span style='font-size:27px;font-weight:bold;'>APGAR</span> = " + apgarCheck['APPEARANCE'] + "+" + apgarCheck['PULSE'] +"+"+ apgarCheck['GRIMANCE']
