@@ -101,6 +101,39 @@
 
     timedEvent = setTimeout('calculateBP(' + pos + ')', 500);
   }
+  function isValidDateFormat(value){
+    return value.trim().match(/(\d{4})\-(\d{2})\-(\d{2})\s(\d{2})\:(\d{2})/);
+  }
+  function createDate(value){
+    var d = isValidDateFormat(value);
+    if(d){
+      return new Date(eval(d[1]),(eval(d[2])-1),eval(d[3]),eval(d[4]),eval(d[5]));
+    } else {
+      return new Date();
+    }
+  }  
+  function calculatePeriodOnARVs(){
+    var periodOnARVs = 0;
+    var date_started = $("touchscreenInput" + tstCurrentPage).value.trim() + " 00:00"
+    var one_month = 1000*60*60*24*30;
+    var date = createDate(date_started);
+    var today = new Date();   
+    var periodOnARVs = Math.round(Math.abs(today - date)/one_month);
+    //feed a value as a patient selection
+    // $("period_on_arvs").value = periodOnARVs;
+    return periodOnARVs;
+  }
+  function showPeriodOnARVs(){
+    if(!$('arv_period')){
+      var div = document.createElement("div"); 
+      div.id = "arv_period";
+      div.className = "statusLabel";
+      $("inputFrame" + tstCurrentPage).appendChild(div);
+    }
+   
+    $('arv_period').innerHTML = "<i style='font-size: 1.2em;float: left;'> Period On ARVs    </i> "
+      +  "<i style='font-size: 1.2em;float: right;'>" + calculatePeriodOnARVs() + ((calculatePeriodOnARVs() == 1)? " Month</i>" : " Months</i>")
+  }
 
 </script>
 <style>
@@ -178,13 +211,15 @@
 
   <% options = default.merge({
       :id => "period_on_arvs",
-      :helptext => "Period On ARVs",
-      :field_type => "number",
+      :helptext => "Date Started ARVs (Estimate)",
+      :field_type => "date",
+      :tt_onLoad => "timedEvent = self.setInterval(function(){showPeriodOnARVs()}, 100);",
+      :tt_onUnLoad => "window.clearInterval(timedEvent);",
       :condition => "$('on_arvs').value.trim().toUpperCase() == 'YES';"
     }) %>
 
-  <%= hidden_field_tag("observations[][concept_name]",  "PERIOD ON ARVS", {:id => 'period_on_arvs_concept_name'}) %>
-  <%= text_field_tag("observations[][value_coded_or_text]", nil, options) %>
+  <%= hidden_field_tag("observations[][concept_name]",  "ARV START DATE", {:id => 'period_on_arvs_concept_name'}) %>
+  <%= text_field_tag("observations[][value_datetime]", nil, options) %>
   <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
   <%= hidden_field_tag("observations[][obs_datetime]",  DateTime.now()) %>
 
