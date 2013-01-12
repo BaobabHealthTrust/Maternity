@@ -155,7 +155,10 @@ class PeopleController < ApplicationController
         if create_from_dde_server
           patient = DDEService::Patient.new(found_person.patient)
 
-          patient.check_old_national_id(params[:identifier])
+          national_id_replaced = patient.check_old_national_id(params[:identifier])
+          if national_id_replaced
+            print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", next_task(found_person.patient)) and return
+          end
         end
 
 				if (params[:cat].downcase rescue "") != "mother" && params[:patient_id]
