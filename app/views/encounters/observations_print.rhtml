@@ -19,7 +19,7 @@
   }
 </style>
 
-<iframe id="main" src="/encounters/observations_printable/?patient_id=<%= @patient.id %><%= (params[:ret] ? "&ret=" + params[:ret] : 
+<iframe id="main" src="/encounters/observations_printable?patient_id=<%= @patient.id %><%= (params[:ret] ? "&ret=" + params[:ret] : 
     "") %>"></iframe>
 <div id="nav">
   <button class="green" onclick="window.location = '/encounters/new/<%= (params[:ret] ? params[:ret] : 
