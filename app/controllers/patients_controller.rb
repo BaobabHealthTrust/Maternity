@@ -10,7 +10,10 @@ class PatientsController < ApplicationController
     if((CoreService.get_global_property_value("create.from.dde.server") == true) && !@patient.nil?)
       dde_patient = DDEService::Patient.new(@patient)
       identifier = dde_patient.get_full_identifier("National id").identifier rescue nil
-      dde_patient.check_old_national_id(identifier)
+      national_id_replaced = dde_patient.check_old_national_id(identifier)
+      if national_id_replaced
+        print_and_redirect("/patients/national_id_label?patient_id=#{@patient.id}", "/patients/show?patient_id=#{@patient.id}") and return
+      end
     end
 
     last_visit = Visit.find(:last, :conditions => ["patient_id = ?", @patient.id])
