@@ -2,7 +2,17 @@ module PatientService
 	include CoreService
 	require 'bean'
 	require 'json'
-	require 'rest_client'                                                           
+	require 'rest_client'  
+                                                         
+  def self.search_from_remote(params)
+    return [] if params[:given_name].blank?
+    dde_server = CoreService.get_global_property_value("dde_server_ip") rescue nil
+    dde_server_username = CoreService.get_global_property_value("dde_server_username") rescue ""
+    dde_server_password = CoreService.get_global_property_value("dde_server_password") rescue ""
+    uri = "http://#{dde_server_username}:#{dde_server_password}@#{dde_server}/people/find.json/"                          
+    
+    return JSON.parse(RestClient.post(uri,params))
+  end                                                       
 
   def self.create_patient_from_dde(params)
 	  address_params = params["person"]["addresses"]
@@ -766,7 +776,7 @@ EOF
     patient.arv_number = get_patient_identifier(person.patient, 'ARV Number')
     patient.address = person.addresses.first.city_village
     patient.national_id = get_patient_identifier(person.patient, 'National id')    
-	  patient.national_id_with_dashes = get_national_id_with_dashes(person.patient)
+	  patient.national_id_with_dashes = get_national_id_with_dashes(person.patient, true)
     patient.name = person.names.first.given_name + ' ' + person.names.first.family_name rescue nil
     patient.sex = sex(person)
     patient.age = age(person)
@@ -1012,9 +1022,8 @@ EOF
   
   def self.person_search(params)
     people = search_by_identifier(params[:identifier])
-
-    return people.first.id unless people.blank? || people.size > 1
-    people = Person.find(:all, :include => [{:names => [:person_name_code]}, :patient], :conditions => [
+	return people.first.id unless people.blank? || people.size > 1
+    people = Person.find(:all, :conditions => [
         "gender = ? AND \
      (person_name.given_name LIKE ? OR person_name_code.given_name_code LIKE ?) AND \
      (person_name.family_name LIKE ? OR person_name_code.family_name_code LIKE ?)",
