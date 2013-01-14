@@ -37,7 +37,8 @@
   <% options = {
     :id => "date_referred",
     :field_type => 'date',
-    :helptext =>"Date of Referred Out"    
+    :tt_OnLoad => "__$('Unknown').style.display = 'none'",
+    :helptext =>"Date Referred Out"
   }%>
   <%= hidden_field_tag "observations[][value_coded_or_text]", nil %>
   <%= text_field_tag("observations[][value_datetime]",   nil, options)%>

@@ -627,8 +627,8 @@ class CohortController < ActionController::Base # < ApplicationController
   end
 
   def abortions(startdate = Time.now, enddate = Time.now, group = 1, field = "")
-    patients = PatientReport.find(:all, :conditions => ["diagnosis = ? AND diagnosis_date >= ? AND diagnosis_date <= ?", 
-        "Abortions", startdate, enddate]).collect{|p| p.patient_id}.uniq
+    patients = PatientReport.find(:all, :conditions => ["diagnosis regexp ? AND diagnosis_date >= ? AND diagnosis_date <= ?",
+        "Abortion", startdate, enddate]).collect{|p| p.patient_id}.uniq
 
     render :text => patients.to_json
   end
