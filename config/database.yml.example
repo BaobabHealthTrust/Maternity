@@ -7,10 +7,9 @@ production:
 
 development:
   adapter: mysql
-  #database: openmrs_development
-  database: maternity_stable
+  database: openmrs_maternity
   username: root
-  password: masula
+  password: 
   host: localhost
 
 test:

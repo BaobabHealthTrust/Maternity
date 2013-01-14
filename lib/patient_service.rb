@@ -1021,20 +1021,41 @@ EOF
   end
   
   def self.person_search(params)
-    people = search_by_identifier(params[:identifier])
-	return people.first.id unless people.blank? || people.size > 1
-    people = Person.find(:all, :conditions => [
-        "gender = ? AND \
-     (person_name.given_name LIKE ? OR person_name_code.given_name_code LIKE ?) AND \
-     (person_name.family_name LIKE ? OR person_name_code.family_name_code LIKE ?)",
-        params[:gender],
-        params[:given_name],
-        (params[:given_name] || '').soundex,
-        params[:family_name],
-        (params[:family_name] || '').soundex
-      ]) if people.blank?
+    people = []                                                                 
+    people = search_by_identifier(params[:identifier]) if params[:identifier]   
+    return people.first.id unless people.blank? || people.size > 1              
+                                                                                
+    gender = params[:gender]                                                    
+    given_name = params[:given_name].squish unless params[:given_name].blank?   
+    family_name = params[:family_name].squish unless params[:family_name].blank?
+           
+    people = Person.find(:all, :include => [{:names => [:person_name_code]}, :patient], :conditions => [
+        "gender = ? AND \                                                       
+     person_name.given_name = ? AND \                                           
+     person_name.family_name = ?",                                              
+        gender,                                                                 
+        given_name,                                                             
+        family_name                                                             
+      ]) if people.blank?                                                       
+                                                                                
+    if people.length < 15                                                       
+      matching_people = people.collect{| person |                               
+                              person.person_id                                  
+                          }                                                     
+                          # raise matching_people.to_yaml                       
+      people_like = Person.find(:all, :limit => 15, :include => [{:names => [:person_name_code]}, :patient], :conditions => [
+        "gender = ? AND \                                                       
+     person_name_code.given_name_code LIKE ? AND \                              
+     person_name_code.family_name_code LIKE ? AND person.person_id NOT IN (?)", 
+        gender,                                                                 
+        (given_name || '').soundex,                                             
+        (family_name || '').soundex,                                            
+        matching_people                                                         
+      ], :order => "person_name.given_name ASC, person_name_code.family_name_code ASC")
+      people = people + people_like                                             
+    end
 
-    return people
+     return people
   end
 
   def self.person_search_from_dde(params)
@@ -1361,13 +1382,23 @@ EOF
 
   def self.get_remote_national_id(patient)
     id = patient.patient_identifiers.find_by_identifier_type(PatientIdentifierType.find_by_name("National id").id).identifier rescue nil
-    return id unless id.blank?
+    return id unless id.blank?                                                  
     PatientIdentifierType.find_by_name("National id").next_identifier(:patient => patient).identifier
   end
 
   def self.get_national_id_with_dashes(patient, force = true)
-    id = self.get_national_id(patient, force)
-    id[0..4] + "-" + id[5..8] + "-" + id[9..-1] rescue id
+    id = self.get_national_id(patient, force)                                   
+    length = id.length                                                          
+    case length                                                                 
+      when 13                                                                   
+        id[0..4] + "-" + id[5..8] + "-" + id[9..-1] rescue id                   
+      when 9                                                                    
+        id[0..2] + "-" + id[3..6] + "-" + id[7..-1] rescue id                   
+      when 6                                                                    
+        id[0..2] + "-" + id[3..-1] rescue id                                    
+      else                                                                      
+        id                                                                      
+    end 
   end
 
 end
