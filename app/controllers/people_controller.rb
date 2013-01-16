@@ -174,10 +174,12 @@ class PeopleController < ApplicationController
       end
     end
     @relation = params[:relation] if params[:relation]
-		@people = Person.search(params) 
     @search_results = {}
     @patients = []
-   # people = PatientService.search_from_remote(params)
+		@people = PatientService.person_search(params)
+
+    create_from_dde_server = CoreService.get_global_property_value('create.from.dde.server') rescue false
+
     (PatientService.search_from_remote(params) || []).each do |data|
 			results = PersonSearch.new(data["npid"]["value"])
       results.national_id = data["npid"]["value"]
@@ -223,6 +225,7 @@ class PeopleController < ApplicationController
 		(@search_results || {}).each do |npid , data |
       @patients << data
     end
+
   end
  
   # This method is just to allow the select box to submit, we could probably do this better
@@ -458,5 +461,33 @@ class PeopleController < ApplicationController
   def admin
     render :layout => false
   end
-
+  
+  protected
+  
+   def cul_age(birthdate , birthdate_estimated , date_created = Date.today, today = Date.today)
+                                                                                
+    # This code which better accounts for leap years                            
+    patient_age = (today.year - birthdate.year) + ((today.month - birthdate.month) + ((today.day - birthdate.day) < 0 ? -1 : 0) < 0 ? -1 : 0)
+                                                                                
+    # If the birthdate was estimated this year, we round up the age, that way if
+    # it is March and the patient says they are 25, they stay 25 (not become 24)
+    birth_date = birthdate                                                      
+    estimate = birthdate_estimated == 1                                         
+    patient_age += (estimate && birth_date.month == 7 && birth_date.day == 1  &&
+        today.month < birth_date.month && date_created.year == today.year) ? 1 : 0
+  end                                                                           
+                                                                                
+  def birthdate_formatted(birthdate,birthdate_estimated)                        
+    if birthdate_estimated == 1                                                 
+      if birthdate.day == 1 and birthdate.month == 7                            
+        birthdate.strftime("??/???/%Y")                                         
+      elsif birthdate.day == 15                                                 
+        birthdate.strftime("??/%b/%Y")                                          
+      elsif birthdate.day == 1 and birthdate.month == 1                         
+        birthdate.strftime("??/???/%Y")                                         
+      end                                                                       
+    else                                                                        
+      birthdate.strftime("%d/%b/%Y")                                            
+    end                                                                         
+  end
 end

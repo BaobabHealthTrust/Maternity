@@ -285,7 +285,7 @@ end -%>
   <% end -%>
   <% unless (params[:gender].blank? || params[:given_name].blank? || params[:family_name].blank?) && (params[:identifier].blank?) %>
     <% form_tag "select", :method => :post do %>
-      <% if @people.blank? %>
+      <% if @patients.blank? %>
         <% if @relation.blank? %>
           <label for="person">No patients were found:</label>
         <% else %>
