@@ -89,8 +89,8 @@ end -%>
     __$('nextButton').innerHTML = "<span>" + text + "</span>";
    
     if(pos && (person_id == 0)){
-      document.forms[0].action = "create";
-      __$('nextButton').onmousedown = function(){
+       document.forms[0].action = "create?patient_id=<%= params[:patient_id] %>&cat=<%= params[:cat] %>";
+       __$('nextButton').onmousedown = function(){
         document.forms[0].submit();
       }
       
@@ -134,7 +134,7 @@ end -%>
           createControlAndAssignValue("national_id", "person[patient][identifiers][National id]","<%=data.national_id%>") 
       <%end%>
     } else {
-      document.forms[0].action = "select";
+       document.forms[0].action = "select?patient_id=<%= params[:patient_id] %>&cat=<%= params[:cat] %>";
       __$('nextButton').onmousedown = function(){
         gotoNextPage();
       }
@@ -278,6 +278,8 @@ end -%>
       Gender: <%= select_tag :gender, options_for_select({"" => "", "Male" => "M", "Female" => "F"}), {:helpText => "Gender"} %>
       <%= hidden_field_tag :create_patient, params[:create_patient] %>
       <%= hidden_field_tag :relation, params[:relation] %>
+      <%= hidden_field_tag :cat, params[:cat] %>
+      <%= hidden_field_tag :patient_id, params[:patient_id] %>
       <%= submit_tag "Find person" %>
     <% end -%>
   <% end -%>
@@ -298,7 +300,7 @@ end -%>
       <% end -%>
       <select name="person[id]" id="person" dualView="true" dualViewOptions="people">
         <!--option onmousedown="search_remote()">Search from remote server for person with name <%=h params[:given_name] -%> <%=h params[:family_name] -%></option-->
-
+                      
 			<% if @relation.blank? %>
 					<% if params[:identifier] %>
 						<option value="0" onmousedown="changeNextButtonText('New Patient')">Create a new person with the identifier <%=h params[:identifier] -%></option>
@@ -335,6 +337,7 @@ end -%>
       <input type="hidden" id="family_name2" name="family_name2" value="<%=h params[:family_name2] -%>" />
       <input type="hidden" id="address2" name="address2" value="<%=h params[:address2] -%>" />
       <input type="hidden" id="relation" name="relation" value="<%=h params[:relation] -%>" />
+     
     <% end -%>
   <% end -%>
 

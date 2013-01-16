@@ -880,10 +880,13 @@ class PatientsController < ApplicationController
 
     uri = CoreService.get_global_property_value("birth_registration_url") rescue nil
 
-    result = RestClient.post(uri, data)
-
+    result = RestClient.post(uri, data) rescue "birth report couldnt be sent"
+    
     if ((result.downcase rescue "") == "baby added") and params[:update].nil?
+      flash[:error] = "Birth Report Sent"
       BirthReport.create(:person_id => params[:id])
+    else
+      flash[:error] = "Sending failed. Check configurations and make sure you are not resending"
     end
 
     redirect_to "/patients/birth_report?person_id=#{params[:id]}&patient_id=#{params[:patient_id]}&today=1" and return
