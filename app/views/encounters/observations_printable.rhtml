@@ -140,7 +140,8 @@
 
           <b>ARVs:</b> <%= @encounters["ON ANTIRETROVIRAL THERAPY"].titleize rescue "" %>&nbsp;&nbsp;&nbsp;
 
-          <b>Period:</b> <%= @encounters["PERIOD ON ARVS"] %>&nbsp;&nbsp;&nbsp;
+          <b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Arv Start Date:</b> <%= @encounters["ARV START DATE"] %>&nbsp;&nbsp;&nbsp;
+          <b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Period On ARvs:</b> <%= @period_on_arvs_string %>&nbsp;&nbsp;&nbsp;
 
         <% end %>
       </td>

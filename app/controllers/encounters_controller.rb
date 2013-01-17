@@ -20,15 +20,15 @@ class EncountersController < ApplicationController
 
       baby_date_map = params[:baby_date_map].split("!") rescue nil
       if !baby_date_map.nil?
-      baby_date_map.reject! { |b| b.empty? }
-      count = 1
-      params["observations"].each do |o|
-        if (o["concept_name"].upcase == "BABY OUTCOME" && (baby_date_map[count -1].split(",")[0] rescue -1) == count.to_s)
-          o[:obs_datetime] = baby_date_map[count - 1].split(",")[1]
-          count += 1
+        baby_date_map.reject! { |b| b.empty? }
+        count = 1
+        params["observations"].each do |o|
+          if (o["concept_name"].upcase == "BABY OUTCOME" && (baby_date_map[count -1].split(",")[0] rescue -1) == count.to_s)
+            o[:obs_datetime] = baby_date_map[count - 1].split(",")[1]
+            count += 1
+          end
         end
       end
-    end
     end
 
     if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME"
@@ -79,9 +79,9 @@ class EncountersController < ApplicationController
       Observation.create(observation) # rescue nil
     end
     referred_out = (params["observations"].collect{|o| o if !o["value_coded_or_text"].nil? and o["value_coded_or_text"].upcase == "REFERRED OUT"}.compact.length > 0) rescue false;
-	if referred_out
-		redirect_to "/encounters/new/refer_out?patient_id=#{@patient.id}" and return
-	end     
+    if referred_out
+      redirect_to "/encounters/new/refer_out?patient_id=#{@patient.id}" and return
+    end
 
     # raise encounter.to_yaml
     
@@ -742,13 +742,27 @@ class EncountersController < ApplicationController
     @religion = (@patient.next_of_kin["RELIGION"] ? (@patient.next_of_kin["RELIGION"].upcase == "OTHER" ? 
           @patient.next_of_kin["OTHER"] : @patient.next_of_kin["RELIGION"]) : "") rescue ""
     
-    @education = @patient.next_of_kin["HIGHEST LEVEL OF SCHOOL COMPLETED"] rescue ""
+    @education = @patient.next_of_kin["EDUCATION LEVEL"] rescue ""
     
     @position = (@encounters["CEPHALIC"] ? @encounters["CEPHALIC"] : "") + 
       (@encounters["BREECH"] ? @encounters["BREECH"] : "") + (@encounters["FACE"] ? @encounters["FACE"] : "") + 
       (@encounters["SHOULDER"] ? @encounters["SHOULDER"] : "") rescue ""
     
-    # raise @patient.next_of_kin.to_yaml
+    if @encounters["ARV START DATE"].match("/")
+      mon = [" ", "Jan","Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+      year = @encounters["ARV START DATE"].split("/")[2].to_i
+      month = @encounters["ARV START DATE"].split("/")[1]
+      month = mon.index(month).to_i
+      day = @encounters["ARV START DATE"].split("/")[0].to_i
+      date_started_arvs = Date.new(year, month, day)
+      months_from_start_date = date_started_arvs.year * 12 + date_started_arvs.month
+      months_today = Date.today.year * 12 + Date.today.month
+      @period_on_arvs = months_today - months_from_start_date
+      @period_on_arvs_string = (@period_on_arvs > 11)? ((@period_on_arvs/12).to_s == 1? (@period_on_arvs/12).to_s + " Yr   " +
+          (@period_on_arvs%12).to_s + " months": (@period_on_arvs./12).to_s + " Yrs " + (@period_on_arvs%12).to_s + " months") :  (@period_on_arvs%12).to_s + " months"
+    else
+      @period_on_arvs_string = "unknown"
+    end
     
     render :layout => false
   end
