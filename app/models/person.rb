@@ -295,7 +295,7 @@ class Person < ActiveRecord::Base
       params = params['person']
     end
     
-    	address_params = params["addresses"]
+    address_params = params["addresses"]
 		names_params = params["names"]
 		patient_params = params["patient"]
 		
@@ -305,15 +305,15 @@ class Person < ActiveRecord::Base
 		person_params = params_to_process.reject{|key,value| key.match(/birth_|age_estimate|occupation|identifiers|citizenship|race/) }
 
 		if person_params["gender"].to_s == "Female"
-        	person_params["gender"] = 'F'
+      person_params["gender"] = 'F'
 		elsif person_params["gender"].to_s == "Male"
-        	person_params["gender"] = 'M'
+      person_params["gender"] = 'M'
 		end
 
-     	person_params["attributes"].delete("occupation") if person_params["attributes"]
-     	person_params["attributes"].delete("cell_phone_number") if person_params["attributes"]
+    person_params["attributes"].delete("occupation") if person_params["attributes"]
+    person_params["attributes"].delete("cell_phone_number") if person_params["attributes"]
 
-      	person = Person.create(person_params)
+    person = Person.create(person_params)
 
 		unless birthday_params.empty?
 		  if birthday_params["birth_year"] == "Unknown"
@@ -402,9 +402,9 @@ class Person < ActiveRecord::Base
   # use the autossh tunnels setup in environment.rb to query the demographics servers
   # then pull down the demographics
   def self.find_remote(known_demographics)
-     create_from_remote = CoreService.get_global_property_value("create.from.remote")
+    create_from_remote = CoreService.get_global_property_value("create.from.remote")
 	  if create_from_remote
-	  servers = CoreService.get_global_property_value("remote_servers.parent")
+      servers = CoreService.get_global_property_value("remote_servers.parent")
       server_address_and_port = servers.to_s.split(':')
 
       server_address = server_address_and_port.first
@@ -418,7 +418,7 @@ class Person < ActiveRecord::Base
       uri = "http://#{server_address}:#{server_port}/people/remote_demographics"
       
       p = JSON.parse(RestClient.post(uri, known_demographics)).first # rescue nil
-            return [] if p.blank?
+      return [] if p.blank?
 
       results = p.second if p.second and p.first.match /person/
 
@@ -433,7 +433,7 @@ class Person < ActiveRecord::Base
 
       return [self.create_from_form(results)]
     end
-   end
+  end
   
   def formatted_gender
 
@@ -592,6 +592,164 @@ class Person < ActiveRecord::Base
     else
       return nil
     end
+  end
+  
+  def self.search_from_remote(params)
+    return [] if params[:given_name].blank?
+    dde_server = CoreService.get_global_property_value("dde_server_ip") rescue nil
+    dde_server_username = CoreService.get_global_property_value("dde_server_username") rescue ""
+    dde_server_password = CoreService.get_global_property_value("dde_server_password") rescue ""
+    uri = "http://#{dde_server_username}:#{dde_server_password}@#{dde_server}/people/find.json/"
+
+    return JSON.parse(RestClient.post(uri,params))
+  end
+  def self.sex(person)
+    value = nil
+    if person.gender == "M"
+      value = "Male"
+    elsif person.gender == "F"
+      value = "Female"
+    end
+    value
+  end
+  def self.age(person, today = Date.today)
+    return nil if person.birthdate.nil?
+
+    # This code which better accounts for leap years
+    patient_age = (today.year - person.birthdate.year) + ((today.month - person.birthdate.month) + ((today.day - person.birthdate.day) < 0 ? -1 : 0) < 0 ? -1 : 0)
+
+    # If the birthdate was estimated this year, we round up the age, that way if
+    # it is March and the patient says they are 25, they stay 25 (not become 24)
+    birth_date=person.birthdate
+    estimate=person.birthdate_estimated==1
+    patient_age += (estimate && birth_date.month == 7 && birth_date.day == 1  &&
+        today.month < birth_date.month && person.date_created.year == today.year) ? 1 : 0
+  end
+  def self.age_in_months(person, today = Date.today)
+    years = (today.year - person.birthdate.year)
+    months = (today.month - person.birthdate.month)
+    (years * 12) + months
+  end
+  def self.birthdate_formatted(person)
+    if person.birthdate_estimated==1
+      if person.birthdate.day == 1 and person.birthdate.month == 7
+        person.birthdate.strftime("??/???/%Y")
+      elsif person.birthdate.day == 15
+        person.birthdate.strftime("??/%b/%Y")
+      elsif person.birthdate.day == 1 and person.birthdate.month == 1
+        person.birthdate.strftime("??/???/%Y")
+      end
+    else
+      person.birthdate.strftime("%d/%b/%Y")
+    end
+  end
+  def self.get_attribute(person, attribute)
+    PersonAttribute.find(:first,:conditions =>["voided = 0 AND person_attribute_type_id = ? AND person_id = ?",
+        PersonAttributeType.find_by_name(attribute).id, person.id]).value rescue nil
+  end
+  def self.get_patient(person)
+    require "bean"
+    patient = PatientBean.new('')
+    patient.person_id = person.id
+    patient.patient_id = person.patient.id
+    patient.arv_number = get_patient_identifier(person.patient, 'ARV Number')
+    patient.address = person.addresses.first.city_village
+    patient.national_id = get_patient_identifier(person.patient, 'National id')
+	  patient.national_id_with_dashes = get_national_id_with_dashes(person.patient, true)
+    patient.name = person.names.first.given_name + ' ' + person.names.first.family_name rescue nil
+    patient.sex = sex(person)
+    patient.age = age(person)
+    patient.age_in_months = age_in_months(person)
+    patient.dead = person.dead
+    patient.birth_date = birthdate_formatted(person)
+    patient.birthdate_estimated = person.birthdate_estimated
+    patient.home_district = person.addresses.first.address2
+    patient.traditional_authority = person.addresses.first.county_district
+    patient.current_residence = person.addresses.first.city_village
+    patient.landmark = person.addresses.first.address1
+    patient.mothers_surname = person.names.first.family_name2
+    patient.eid_number = get_patient_identifier(person.patient, 'EID Number') rescue nil
+    patient.pre_art_number = get_patient_identifier(person.patient, 'Pre ART Number (Old format)') rescue nil
+    patient.archived_filing_number = get_patient_identifier(person.patient, 'Archived filing number') rescue nil
+    patient.filing_number = get_patient_identifier(person.patient, 'Filing Number')
+    patient.occupation = get_attribute(person, 'Occupation')
+    patient.cell_phone_number = get_attribute(person, 'Cell phone number')
+    patient.office_phone_number = get_attribute(person, 'Office phone number')
+    patient.home_phone_number = get_attribute(person, 'Home phone number')
+    patient.guardian = art_guardian(person.patient) rescue nil
+    patient
+
+  end
+  def self.art_guardian(patient)
+    person_id = Relationship.find(:first,:order => "date_created DESC",
+      :conditions =>["person_a = ?",patient.person.id]).person_b rescue nil
+    guardian_name = name(Person.find(person_id))
+    guardian_name rescue nil
+  end
+  def self.get_patient_identifier(patient, identifier_type)
+    patient_identifier_type_id = PatientIdentifierType.find_by_name(identifier_type).patient_identifier_type_id rescue nil
+    patient_identifier = PatientIdentifier.find(:first, :select => "identifier",
+      :conditions  =>["patient_id = ? and identifier_type = ?", patient.id, patient_identifier_type_id],
+      :order => "date_created DESC" ).identifier rescue nil
+    return patient_identifier
+  end
+
+  def self.person_search(params)
+    people = []
+    people = search_by_identifier(params[:identifier]) if params[:identifier]
+    return people.first.id unless people.blank? || people.size > 1
+
+    gender = params[:gender]
+    given_name = params[:given_name].squish unless params[:given_name].blank?
+    family_name = params[:family_name].squish unless params[:family_name].blank?
+
+    people = Person.find(:all, :include => [{:names => [:person_name_code]}, :patient], :conditions => [
+        "gender = ? AND \
+     person_name.given_name = ? AND \
+     person_name.family_name = ?",
+        gender,
+        given_name,
+        family_name
+      ]) if people.blank?
+
+    if people.length < 15
+      matching_people = people.collect{| person |
+        person.person_id
+      }
+      # raise matching_people.to_yaml
+      people_like = Person.find(:all, :limit => 15, :include => [{:names => [:person_name_code]}, :patient], :conditions => [
+          "gender = ? AND \
+     person_name_code.given_name_code LIKE ? AND \
+     person_name_code.family_name_code LIKE ? AND person.person_id NOT IN (?)",
+          gender,
+          (given_name || '').soundex,
+          (family_name || '').soundex,
+          matching_people
+        ], :order => "person_name.given_name ASC, person_name_code.family_name_code ASC")
+      people = people + people_like
+    end
+
+    return people
+  end
+  def self.get_national_id_with_dashes(patient, force = true)
+    id = self.get_national_id(patient, force)
+    length = id.length
+    case length
+    when 13
+      id[0..4] + "-" + id[5..8] + "-" + id[9..-1] rescue id
+    when 9
+      id[0..2] + "-" + id[3..6] + "-" + id[7..-1] rescue id
+    when 6
+      id[0..2] + "-" + id[3..-1] rescue id
+    else
+      id
+    end
+  end
+  def self.get_national_id(patient, force = true)
+    id = patient.patient_identifiers.find_by_identifier_type(PatientIdentifierType.find_by_name("National id").id).identifier rescue nil
+    return id unless force
+    id ||= PatientIdentifierType.find_by_name("National id").next_identifier(:patient => patient).identifier
+    id
   end
 
 end

@@ -176,11 +176,12 @@ class PeopleController < ApplicationController
     @relation = params[:relation] if params[:relation]
     @search_results = {}
     @patients = []
-		@people = PatientService.person_search(params)
+    
+		@people = Person.person_search(params)
 
     create_from_dde_server = CoreService.get_global_property_value('create.from.dde.server') rescue false
 
-    (PatientService.search_from_remote(params) || []).each do |data|
+    (Person.search_from_remote(params) || []).each do |data|
 			results = PersonSearch.new(data["npid"]["value"])
       results.national_id = data["npid"]["value"]
       results.current_residence =data["person"]["data"]["addresses"]["city_village"]
@@ -200,7 +201,7 @@ class PeopleController < ApplicationController
 
 
 		(@people || []).each do | person |
-			patient = PatientService.get_patient(person)
+			patient = Person.get_patient(person)
       next if patient.blank?
 			results = PersonSearch.new(patient.national_id || patient.patient_id)
       results.national_id = patient.national_id
@@ -230,11 +231,30 @@ class PeopleController < ApplicationController
  
   # This method is just to allow the select box to submit, we could probably do this better
   def select
-
-    if params[:person][:id] != '0' && Person.find(params[:person][:id]).dead == 1
+=begin
+    people= Person.search_from_remote(params)    
+    people = Person.search_by_identifier(params[:identifier]) if (people == {} rescue false)
+    raise people.to_yaml
+    found_person = people.first.patient
+=end
+  
+    if params[:person][:id] != '0' && (Person.find(params[:person][:id]).dead == 1 rescue false)
 
 			redirect_to :controller => :patients, :action => :show, :id => params[:person]
 		else
+
+      related_person = Person.search_by_identifier(params[:identifier]).first.patient rescue nil     
+      dde_person = ANCService.search_by_identifier(params[:identifier]) if related_person.nil? and !params[:identifier].blank?
+      related_person = Person.search_by_identifier(params[:identifier]).first.patient rescue nil
+      params[:person][:id] = related_person.id if related_person
+       
+      if dde_person
+        print_and_redirect("/patients/national_id_label?patient_id=#{related_person.id}",
+          "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{person.id}&cat=#{params[:cat]}") and return if params[:cat] != 'mother'
+        print_and_redirect("/patients/national_id_label?patient_id=#{related_person.id}",
+          "/patients/show/#{params[:person][:id]}?patient_id=#{related_person.id}&cat=#{params[:cat]}") and return if params[:cat] == 'mother'
+      end
+
 			redirect_to "/patients/show/#{params[:person][:id]}" and return if (!params[:person][:id].blank? &&
           params[:person][:id] != '0') && (params[:cat] and !params[:cat].blank? and params[:cat] == "mother")
 
@@ -242,7 +262,7 @@ class PeopleController < ApplicationController
             }&cat=#{params[:cat]}" and return if (params[:person][:id] rescue '0') != '0' and
         (params[:cat].downcase rescue "") != "mother"
 
-      if params[:cat] and params[:cat] == "child"
+      if params[:cat] and (params[:cat] == "child" && params[:cat] == "baby")
         redirect_to :action => :new_baby,
           :gender => params[:gender],
           :given_name => params[:given_name],
@@ -464,7 +484,7 @@ class PeopleController < ApplicationController
   
   protected
   
-   def cul_age(birthdate , birthdate_estimated , date_created = Date.today, today = Date.today)
+  def cul_age(birthdate , birthdate_estimated , date_created = Date.today, today = Date.today)
                                                                                 
     # This code which better accounts for leap years                            
     patient_age = (today.year - birthdate.year) + ((today.month - birthdate.month) + ((today.day - birthdate.day) < 0 ? -1 : 0) < 0 ? -1 : 0)

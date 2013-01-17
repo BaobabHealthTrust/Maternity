@@ -1,9 +1,9 @@
 module PatientService
 	include CoreService
-	require 'bean'
+  require 'bean'
 	require 'json'
-	require 'rest_client'  
-                                                         
+	require 'rest_client'
+ 
   def self.search_from_remote(params)
     return [] if params[:given_name].blank?
     dde_server = CoreService.get_global_property_value("dde_server_ip") rescue nil

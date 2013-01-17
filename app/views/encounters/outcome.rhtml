@@ -42,7 +42,7 @@
           maxi = 4.4;
           mini = 2.4;
         }
-       
+
         var alertsRow = document.createElement("div");
         alertsRow.setAttribute("class", "alertsRow");
         // add the left title of the table row
@@ -183,7 +183,7 @@
                 __$("" + x + k).style.Color= ( this.id != "" + x + k)? "black" : "white";
               }
             }
-           __$(key.toLowerCase() + baby).value = apgar[key];
+            __$(key.toLowerCase() + baby).value = apgar[key];
             apgarScore = parseInt(apgar['APPEARANCE']) + parseInt(apgar['PULSE'])
               + parseInt(apgar['GRIMANCE']) + parseInt(apgar['ACTIVITY']) + parseInt(apgar['RESPIRATION']);
             showCategory("<span style='font-size:27px;font-weight:bold;'>APGAR</span> = " + apgarCheck['APPEARANCE'] + "+" + apgarCheck['PULSE'] +"+"+ apgarCheck['GRIMANCE']
@@ -1066,7 +1066,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     :tt_pageStyleClass => "n qwertyKeyboardOnly",
     :condition => "$('discharge_outcome').value.toUpperCase() == 'PATIENT DIED'"
   } %>
-    
+
   <%= text_field_tag("observations[][value_coded_or_text]", nil, options) %>
   <%= hidden_field_tag("observations[][concept_name]", "DIAGNOSIS", options) %>
   <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>

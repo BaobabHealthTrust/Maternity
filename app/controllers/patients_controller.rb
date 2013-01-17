@@ -30,7 +30,7 @@ class PatientsController < ApplicationController
     end
     
     @last_location = @patient.encounters.find(:last).location_id rescue nil
-    @last_visit_closed = !last_visit.end_date.nil?
+    @last_visit_closed = !last_visit.end_date.nil? rescue true
     
     if ((session[:location_id] != @last_location)  || @last_visit_closed) && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : true)
       params[:skip_check] = false
