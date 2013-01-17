@@ -248,7 +248,7 @@ class PeopleController < ApplicationController
       related_person = Person.search_by_identifier(params[:identifier]).first.patient rescue nil
       params[:person][:id] = related_person.id if related_person
        
-      if dde_person
+      if dde_person && !related_person.nil?
         print_and_redirect("/patients/national_id_label?patient_id=#{related_person.id}",
           "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{person.id}&cat=#{params[:cat]}") and return if params[:cat] != 'mother'
         print_and_redirect("/patients/national_id_label?patient_id=#{related_person.id}",

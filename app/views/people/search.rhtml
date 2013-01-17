@@ -79,10 +79,10 @@ pos = 1
   pos = pos + 1
 end -%>
 
-<% if (params[:cat].strip rescue "").downcase != "baby" %>
+<% if (params[:cat].strip rescue "").downcase != "baby" and (!params[:patient_id].blank? rescue false)%>
     var tt_cancel_destination = "/patients/show/<%=h params[:patient_id] -%>"
 <% else %>
-    var tt_cancel_destination = "/clinic"
+    var tt_cancel_destination = "/"
 <% end %>
 
   function changeNextButtonText(text, pos){
