@@ -375,11 +375,9 @@ end -%>
   <% unless (params[:gender].blank? || params[:given_name].blank? || params[:family_name].blank?) && (params[:identifier].blank?) %>
     <% form_tag "select", :method => :post do %>
       <% if @patient.blank? %>
-        <% if params[:cat] && params[:cat] == "baby" %>
+       
           <label for="person">No people were found:</label>
-        <% else %>
-          <label for="person">No guardians were found:</label>
-        <% end %>
+                
       <% else -%>
         <% if @relation.blank? %>
           <label for="person">Select the person from the following</label>
