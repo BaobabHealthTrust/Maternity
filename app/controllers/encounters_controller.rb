@@ -748,7 +748,7 @@ class EncountersController < ApplicationController
       (@encounters["BREECH"] ? @encounters["BREECH"] : "") + (@encounters["FACE"] ? @encounters["FACE"] : "") + 
       (@encounters["SHOULDER"] ? @encounters["SHOULDER"] : "") rescue ""
     
-    if @encounters["ARV START DATE"].match("/")
+    if (@encounters["ARV START DATE"].match("/") rescue false)
       mon = [" ", "Jan","Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
       year = @encounters["ARV START DATE"].split("/")[2].to_i
       month = @encounters["ARV START DATE"].split("/")[1]
@@ -761,7 +761,7 @@ class EncountersController < ApplicationController
       @period_on_arvs_string = (@period_on_arvs > 11)? ((@period_on_arvs/12).to_s == 1? (@period_on_arvs/12).to_s + " Yr   " +
           (@period_on_arvs%12).to_s + " months": (@period_on_arvs./12).to_s + " Yrs " + (@period_on_arvs%12).to_s + " months") :  (@period_on_arvs%12).to_s + " months"
     else
-      @period_on_arvs_string = "unknown"
+      @period_on_arvs_string = ""
     end
     
     render :layout => false

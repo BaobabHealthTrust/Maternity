@@ -139,10 +139,14 @@
         <% if !@encounters["HIV STATUS"].nil? && @encounters["HIV STATUS"].upcase == "REACTIVE" %>
 
           <b>ARVs:</b> <%= @encounters["ON ANTIRETROVIRAL THERAPY"].titleize rescue "" %>&nbsp;&nbsp;&nbsp;
-
+          
+          <%if params[:ret] == "postnatal"%>
+          <b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Arv Start Date:</b> <%= @encounters["ARV START DATE"] %>&nbsp;&nbsp;&nbsp;
+          <b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Period On ARvs:</b> <%= @period_on_arvs_string %>&nbsp;&nbsp;&nbsp;
+          <%else%>
           <b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Arv Start Date:</b> <%= @encounters["ARV START DATE"] %>&nbsp;&nbsp;&nbsp;
-          <b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Period On ARvs:</b> <%= @period_on_arvs_string %>&nbsp;&nbsp;&nbsp;
-
+          <b></br>Period On ARvs:</b> <%= @period_on_arvs_string %>&nbsp;&nbsp;&nbsp;
+          <%end%>
         <% end %>
       </td>
     </tr>
@@ -204,10 +208,10 @@
         <b>Condition:</b> <%= @encounters["CONDITION"] %>
       </td>
       <td>
-        <b>Anaemia:</b> <%= @encounters["ANEMIA"].titleize rescue "" %>
+        <b>Anaemia:</b> <%= @encounters["ANAEMIC"].titleize rescue "" %>
       </td>
       <td colspan="3">
-        <b>Oedema:</b> <%= @encounters["EDEMA NOS"].titleize rescue "" %>
+        <b>Oedema:</b> <%= @encounters["OEDEMA"].titleize rescue "" %>
       </td>
     </tr>
     <tr>
