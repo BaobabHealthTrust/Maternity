@@ -768,11 +768,11 @@ class EncountersController < ApplicationController
   end
 
   def print_note
-    # raise request.remote_ip.to_yaml
+   # raise request.remote_ip.to_yaml
 
     location = request.remote_ip rescue ""
-    @patient    = Patient.find(params[:patient_id] || session[:patient_id]) rescue nil
-    @user = params[:user_id]
+    @patient    = Patient.find(params[:patient_id] || params[:id] || session[:patient_id]) rescue nil
+
     if @patient
       current_printer = ""
 
@@ -781,33 +781,28 @@ class EncountersController < ApplicationController
       printers = wards.each{|ward|
         current_printer = ward.split(":")[1] if ward.split(":")[0].upcase == location
       } rescue []
+      ["ORIGINAL FOR:(PARENT)", "DUPLICATE FOR DISTRICT:REGISTRY OF BIRTH", "TRIPLICATE FOR DISTRICT:REGISTRY OF ORIGINAL HOME", "QUADRUPLICATE FOR:THE HOSPITAL", ""].each do |rec|
+        @recipient = rec
+        t1 = Thread.new{
+          Kernel.system "wkhtmltopdf -s A4 http://" +
+            request.env["HTTP_HOST"] + "\"/patients/birth_report_printable/" +
+            @patient.id.to_s + "?recipient=#{@recipient}"+ "\" /tmp/output-" + session[:user_id].to_s + ".pdf \n"
+        } if !rec.blank?
 
-      t1 = Thread.new{
-        # wkhtmltopdf
-=begin        
-        Kernel.system "htmldoc --size 210x297mm --webpage -f /tmp/output-" + session[:user_id].to_s + ".pdf http://" +
-          request.env["HTTP_HOST"] + "\"/encounters/observations_printable?patient_id=" +
-          @patient.id.to_s + "&user_id=" + @user + "\"\n"
-=end        
-        
-        Kernel.system "wkhtmltopdf -s A4 http://" +
-          request.env["HTTP_HOST"] + "\"/encounters/observations_printable?patient_id=" +
-          @patient.id.to_s + (params[:ret] ? "&ret=" + params[:ret] : "") + "&user_id=" + @user + 
-          "\" /tmp/output-" + session[:user_id].to_s + ".pdf \n"
-      }
+        t2 = Thread.new{
+          sleep(5)
+          Kernel.system "lp #{(!current_printer.blank? ? '-d ' + current_printer.to_s : "")} /tmp/output-" +
+            session[:user_id].to_s + ".pdf\n"
+        }
 
-      t2 = Thread.new{
-        sleep(5)
-        Kernel.system "lp #{(!current_printer.blank? ? '-d ' + current_printer.to_s : "")} /tmp/output-" +
-          session[:user_id].to_s + ".pdf\n"
-      }
+        t3 = Thread.new{
+          sleep(10)
+          Kernel.system "rm /tmp/output-" + session[:user_id].to_s + ".pdf\n"
+        }
 
-      t3 = Thread.new{
-        sleep(10)
-        Kernel.system "rm /tmp/output-" + session[:user_id].to_s + ".pdf\n"
-      }
-
+      end
     end
+
 
     redirect_to "/encounters/new/observations_print?patient_id=#{@patient.id}"+ 
       (params[:ret] ? "&ret=" + params[:ret] : "") and return
