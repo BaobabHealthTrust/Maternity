@@ -114,7 +114,9 @@ class EncountersController < ApplicationController
 
       redirect_to "/people" and return
     end
-
+    if delivered && delivered > 0
+     redirect_to "/patients/show/#{@patient.id}" and return
+    end
     if params[:next_url]
 
       if (encounter.type.name.upcase == "UPDATE OUTCOME" && encounter.to_s.upcase.include?("ADMITTED"))
@@ -768,7 +770,7 @@ class EncountersController < ApplicationController
   end
 
   def print_note
-   # raise request.remote_ip.to_yaml
+    # raise request.remote_ip.to_yaml
 
     location = request.remote_ip rescue ""
     @patient    = Patient.find(params[:patient_id] || params[:id] || session[:patient_id]) rescue nil
