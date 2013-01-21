@@ -512,7 +512,7 @@
   <%@baby_outcome = [""] + Concept.find_by_name("BABY OUTCOME").concept_answers.collect{|c| c.name} %>
   <% @main_outcomes = [""] + Concept.find_by_name("MATERNITY OUTCOME").concept_members_names rescue [] %>
 
-  <% @main_outcomes.concat(["Referred out"]).uniq if @location.upcase == "LABOUR WARD" %>
+  <% @main_outcomes.concat(["REFERRED OUT"]).uniq if @location.upcase == "LABOUR WARD" %>
   <% @delivery_period = ["", "DELIVERED IN THE WARD",
     "DELIVERED BEFORE ARRIVAL",
     "DELIVERED IN THEATRE",
