@@ -48,7 +48,7 @@ mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/global_proper
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/create_site_printers.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/locations.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/create_site_wards.sql
-mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/change_concept_names_case_to_upper.sql
+#mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/change_concept_names_case_to_upper.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/create_dde_server_connection.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/districts.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/relationship_type.sql
