@@ -292,12 +292,12 @@ module MaternityService
 
     def create_baby(params)
       if !params["DATE OF DELIVERY"].nil? && !params["GENDER OF CONTACT"].nil? &&
-          (!params["BABY OUTCOME"].nil? && params["BABY OUTCOME"].upcase == "ALIVE")
-        
+          (!params["BABY OUTCOME"].nil? && params["BABY OUTCOME"].upcase == "ALIVE")       
+      
         baby = {
           "patient"=>{
             "identifiers"=>{
-              "diabetes_number"=>""
+              "diabetes_number"=> ""             
             }
           },
           "names"=>{
@@ -328,7 +328,18 @@ module MaternityService
         if person.blank?
           person = Person.create_from_form(baby)
         end
+        
+        id_type = PatientIdentifierType.find_by_name("Serial Number").patient_identifier_type_id
+        serial_num = SerialNumber.find(:first, :conditions => ["national_id IS NULL"])
 
+        PatientIdentifier.create(:patient_id => person.patient.patient_id,
+          :identifier => serial_num.serial_number,
+          :identifier_type => id_type) if serial_num and !person.blank?
+        
+        serial_num.national_id = person.patient.national_id
+        serial_num.date_assigned = Date.today
+        serial_num.save
+        
         person.patient.national_id_label
 
         child_type = RelationshipType.find_by_a_is_to_b("Mother").relationship_type_id

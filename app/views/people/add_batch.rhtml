@@ -1,0 +1,9 @@
+<script>
+  tt_cancel_destination = "/";
+</script>
+<form id='batch_limits' action="/people/create_batch">
+ <%= text_field_tag("start_serial_number", nil, {:field_type => 'number', :tt_PageStyleClass => 'NumbersOnly', :helpText => 'Start Serial Number'}) %> <br>
+  <%= text_field_tag("end_serial_number", nil, {:field_type => 'number', :tt_PageStyleClass => 'NumbersOnly', :helpText => 'End Serial Number'})%><br>
+
+  <%= submit_tag value="Submit"%>
+</form>

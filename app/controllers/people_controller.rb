@@ -481,6 +481,31 @@ class PeopleController < ApplicationController
   def admin
     render :layout => false
   end
+ def serial_numbers
+	@remaining_serial_numbers = SerialNumber.find(:all, :conditions => ["national_id IS NULL"]).size
+	@print_string = (@remaining_serial_numbers ==1)?  "" + @remaining_serial_numbers.to_s + " Serial Number Remaining" : "" + @remaining_serial_numbers.to_s + " Serial Numbers Remaining"
+	@limited_serial_numbers = (SerialNumber.all.size  <= 100) rescue false
+	render :layout => false
+  end  
+  def create_batch
+    @initial_numbers = SerialNumber.all.size
+
+    if ((!params[:start_serial_number].blank? rescue false) && (!params[:end_serial_number].blank? rescue false) &&
+          (params[:start_serial_number].to_i < params[:end_serial_number].to_i) rescue false)
+      (params[:start_serial_number]..params[:end_serial_number]).each do |number|
+        snum = SerialNumber.new()
+        snum.serial_number = number
+        snum.creator = params[:user_id]
+        snum.save if (SerialNumber.find(number).nil? rescue true)
+      end
+      @final_numbers = initial_numbers = SerialNumber.all.size
+    else
+    end
+    redirect_to "/"
+  end
+  def add_batch
+ 
+  end
   
   protected
   
@@ -510,4 +535,5 @@ class PeopleController < ApplicationController
       birthdate.strftime("%d/%b/%Y")                                            
     end                                                                         
   end
+  
 end
