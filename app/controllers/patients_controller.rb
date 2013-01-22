@@ -797,11 +797,8 @@ class PatientsController < ApplicationController
     @person = Patient.find(params[:id] || params[:person_id]) rescue nil
     @anc_patient = ANCService::ANC.new(@person) rescue nil
 
-    @mother = Patient.find(@person.mother.person_a) rescue nil
-    serial_num_id = PatientIdentifierType.find_by_name("Serial Number").id
-   
-    @serial_number = @person.patient_identifiers.collect{|id| id.identifier if id.identifier_type ==serial_num_id }.first
-    
+    @mother = Patient.find(@person.mother.person_a) rescue nil    
+       
     @anc_mother = ANCService::ANC.new(@mother) rescue nil
     
     @maternity_mother = MaternityService::Maternity.new(@mother) rescue nil
@@ -810,6 +807,10 @@ class PatientsController < ApplicationController
 
     @anc_father = ANCService::ANC.new(@father) rescue nil
     
+     @serial_number = PatientIdentifier.find(:first, :conditions => ["patient_id = ? AND identifier_type = ?",
+            @person.id,
+            PatientIdentifierType.find_by_name("Serial Number").id]).identifier rescue nil
+        
     facility = CoreService.get_global_property_value("current_facility") rescue ''
 
     district = CoreService.get_global_property_value("current_district") rescue ''

@@ -13,8 +13,8 @@
         <tr>
           <td style="text-align: center;">
             <div style="float:center;">
-               <span style="text-align:center;float:right;margin-left:70%;font-size: 0.8em;padding:0px;"> <%= (params[:recipient].split(":")[0]  +"<br>"+ params[:recipient].split(":")[1]) rescue " "%> </span>
-              <img style="margin-left:35%;margin-right:35%;float:center;padding:0px;" src="/images/emblem.gif" alt="emblem" />
+               <span style="float:center;font-weight:bold;"></span>  <span style="text-align:center;float:right;margin-left:70%;font-size: 0.8em;padding:0px;"> <%= (params[:recipient].split(":")[0]  +"<br>"+ params[:recipient].split(":")[1]) rescue " "%> </span>
+              <img style="margin-left:35%;margin-right:24%;float:center;padding:0px;" src="/images/emblem.gif" alt="emblem" /> <span style="float:right;font-weight:bold;text-align:center"></br>LL</br></br>Serial No. <%=@serial_number%></span>
             </div>
 
           </td>
@@ -51,7 +51,7 @@
                   1.
                 </td>
                 <td>
-                  Name of child:
+                  Name of child: 
                 </td>
                 <td id="fnc" style="text-align: center; padding-bottom: 0px;" class="cell">
                   <%= @anc_patient.first_name %>&nbsp;

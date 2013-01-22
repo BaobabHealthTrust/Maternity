@@ -369,9 +369,14 @@ module MaternityService
 
       if !current_user.nil?
         child = ANCService::ANC.new(self.patient) rescue nil
+       
+        @serial_number = PatientIdentifier.find(:first, :conditions => ["patient_id = ? AND identifier_type = ?", 
+            child.patient.id,
+            PatientIdentifierType.find_by_name("Serial Number").id]).identifier rescue nil
+         
         mother = ANCService::ANC.new(self.mother.person.patient) rescue nil
         father = ANCService::ANC.new(self.father.relation.patient) rescue nil
-        {
+       {
           "birthdate_estimated" => (self.person.birthdate_estimated rescue 0),
           "gender" => (child.person.gender rescue nil),
           "birthdate" => (child.person.birthdate.strftime("%Y-%m-%d") rescue nil),
@@ -387,7 +392,8 @@ module MaternityService
           "patient" => {
             "identifiers" => {
               "diabetes_number" => "",
-              "national_id" => (child.national_id rescue nil)
+              "national_id" => (child.national_id rescue nil),
+              "serial_number" => (@serial_number rescue nil)
             }
           },
           "attributes" => {
