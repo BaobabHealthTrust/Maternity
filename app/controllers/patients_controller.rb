@@ -792,15 +792,18 @@ class PatientsController < ApplicationController
   end
 
   def birth_report_printable
+   
     @patient = Patient.find(params[:patient_id]) rescue nil
     @person = Patient.find(params[:id] || params[:person_id]) rescue nil
-    
     @anc_patient = ANCService::ANC.new(@person) rescue nil
 
     @mother = Patient.find(@person.mother.person_a) rescue nil
-
+    serial_num_id = PatientIdentifierType.find_by_name("Serial Number").id
+   
+    @serial_number = @person.patient_identifiers.collect{|id| id.identifier if id.identifier_type ==serial_num_id }.first
+    
     @anc_mother = ANCService::ANC.new(@mother) rescue nil
-
+    
     @maternity_mother = MaternityService::Maternity.new(@mother) rescue nil
 
     @father = Patient.find(@maternity_mother.husband.person_b) rescue nil
@@ -830,12 +833,11 @@ class PatientsController < ApplicationController
   end
 
   def print_note
-    # raise request.remote_ip.to_yaml
-
-    location = request.remote_ip rescue ""
-    @person    = Patient.find(params[:id]) rescue nil
-
-    if @person
+     location = request.remote_ip rescue ""
+    
+    @patient    = Patient.find(params[:patient_id] || params[:id] || session[:patient_id]) rescue nil
+    person_id = params[:id] || params[:person_id]
+    if @patient
       current_printer = ""
 
       wards = GlobalProperty.find_by_property("facility.ward.printers").property_value.split(",") rescue []
@@ -843,28 +845,30 @@ class PatientsController < ApplicationController
       printers = wards.each{|ward|
         current_printer = ward.split(":")[1] if ward.split(":")[0].upcase == location
       } rescue []
+      ["ORIGINAL FOR:(PARENT)", "DUPLICATE FOR DISTRICT:REGISTRY OF BIRTH", "TRIPLICATE FOR DISTRICT:REGISTRY OF ORIGINAL HOME", "QUADRUPLICATE FOR:THE HOSPITAL", ""].each do |rec|
 
-      t1 = Thread.new{
+        @recipient = rec
+        name = rec.split(":").last.downcase.gsub("(", "").gsub(")", "") if !rec.blank?
+     
+         t1 = Thread.new{
+          Kernel.system "wkhtmltopdf -s A4 http://" +
+            request.env["HTTP_HOST"] + "\"/patients/birth_report_printable/" +
+            person_id.to_s + "?patient_id=#{@patient.id}&person_id=#{person_id}&recipient=#{@recipient}" + "\" /tmp/output-#{Regexp.escape(name)}" + ".pdf \n"
+        } if !rec.blank?
 
-        Kernel.system "wkhtmltopdf -s A4 http://" +
-          request.env["HTTP_HOST"] + "\"/patients/birth_report_printable/" +
-          @person.id.to_s + "\" /tmp/output-" + session[:user_id].to_s + ".pdf \n"
-      }
+         t2 = Thread.new{
+          sleep(8)
+          Kernel.system "lp #{(!current_printer.blank? ? '-d ' + current_printer.to_s : "")} /tmp/output-#{Regexp.escape(name)}" + ".pdf\n"
+        } if !rec.blank?
 
-      t2 = Thread.new{
-        sleep(5)
-        Kernel.system "lp #{(!current_printer.blank? ? '-d ' + current_printer.to_s : "")} /tmp/output-" +
-          session[:user_id].to_s + ".pdf\n"
-      }
-
-      t3 = Thread.new{
-        sleep(10)
-        Kernel.system "rm /tmp/output-" + session[:user_id].to_s + ".pdf\n"
-      }
-
+         t3 = Thread.new{
+          sleep(10)
+          Kernel.system "rm /tmp/output-#{Regexp.escape(name)}"+ ".pdf\n"
+        }if !rec.blank?
+       sleep(3)
+      end
     end
-
-    redirect_to "/patients/birth_report?person_id=#{@person.id}&patient_id=#{params[:patient_id]}" and return
+    redirect_to "/patients/birth_report?person_id=#{person_id}&patient_id=#{params[:patient_id]}" and return
   end
 
   def send_birth_report
