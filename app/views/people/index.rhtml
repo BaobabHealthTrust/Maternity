@@ -28,12 +28,11 @@
         <option value='/people/overview'>Overview</option>
         <option value='/people/reports'>Reports</option>
 
-        <% #if session[:user].admin? %>
-
-        <%# end %>
-        <option value='/people/admin'>Administration</option>
-        <option value='/people/serial_numbers' >Serial Numbers</option>
-
+        <% if session[:user].admin? %>
+          <option value='/people/admin'>Administration</option>
+          <option value='/people/serial_numbers' >Serial Numbers</option>
+        <% end %>
+          
       </select>
       <select id="links">
         <option value='/logout'>Logout</option>
@@ -83,9 +82,9 @@
     </button>
 
   <% if @super_user%>
-            <button id="admin_button" class="button green"  style="min-width:480px;"
-                    onclick="window.location = '/admin'"><span>Administration</span>
-            </button>
+          <button id="admin_button" class="button green"  style="min-width:480px;"
+                  onclick="window.location = '/admin'"><span>Administration</span>
+          </button>
   <%end%>
   <!-- <button id="find_or_register_by_identifier_button" class="button green" onclick="window.location = '/people/identifiers'"><span>Find patient by identifier</span></button> -->
   <!-- TODO: need to show current date
@@ -96,10 +95,10 @@
   <% Encounter.count_by_type_for_date(Date.today).each do |type,total|
     type = "Reception - patients seen" if type == "REGISTRATION"
     type = "patients referred to other clinics" if type == "REFERRED" %>
-            <tr>
-              <td><%= type.upcase %>:</td>
-              <td><strong><%= total %></strong></td>
-            </tr>
+          <tr>
+            <td><%= type.upcase %>:</td>
+            <td><strong><%= total %></strong></td>
+          </tr>
   <% end %>
   </table>
 </div>  
