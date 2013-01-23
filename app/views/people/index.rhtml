@@ -28,10 +28,10 @@
         <option value='/people/overview'>Overview</option>
         <option value='/people/reports'>Reports</option>
 
-        <% if session[:user].admin? %>
+        <% #if session[:user].admin? %>
           <option value='/people/admin'>Administration</option>
           <option value='/people/serial_numbers' >Serial Numbers</option>
-        <% end %>
+        <%# end %>
           
       </select>
       <select id="links">
