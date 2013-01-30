@@ -107,7 +107,7 @@ module MedicationService
 		}.uniq.compact rescue []
 	end
 	
-  def self.concept_set(concept_name)
+  def concept_set(concept_name)
     concept_id = ConceptName.find(:first, :conditions =>["name = ?", concept_name]).concept_id
     set = ConceptSet.find_all_by_concept_set(concept_id, :order => 'sort_weight')
     options = set.map{|item|next if item.concept.blank? ; [item.concept.fullname, item.concept.concept_id] }

@@ -185,8 +185,6 @@ class EncountersController < ApplicationController
         
     @last_location = @patient.encounters.find(:last).location_id rescue nil
     
-    # raise @location.downcase.to_yaml
-
     redirect_to "/" and return unless @patient
     redirect_to next_task(@patient) and return unless params[:encounter_type]
     redirect_to :action => :create, 'encounter[encounter_type_name]' => params[:encounter_type].upcase, 'encounter[patient_id]' => @patient.id and return if ['registration'].include?(params[:encounter_type])

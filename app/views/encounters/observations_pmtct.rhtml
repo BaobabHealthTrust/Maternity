@@ -2,6 +2,7 @@
   var tt_cancel_destination = "/encounters/new/<%= (params[:ret] ? params[:ret] : "observations") %>/?patient_id=<%=  @patient.id %>"
   var timedEvent;
 
+
   function setDate(elementId){
 
     if ($(elementId).value.toLowerCase() == 'unknown'){
@@ -133,6 +134,8 @@
    
     $('arv_period').innerHTML = "<i style='font-size: 1.2em;float: left;'> Period On ARVs    </i> "
       +  "<i style='font-size: 1.2em;float: right;'>" + calculatePeriodOnARVs() + ((calculatePeriodOnARVs() == 1)? " Month</i>" : " Months</i>")
+
+    timedEvent = self.setTimeout(function(){showPeriodOnARVs()}, 100);
   }
 
 </script>

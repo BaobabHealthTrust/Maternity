@@ -23,13 +23,13 @@
   <%= hidden_field_tag "encounter[encounter_datetime]", (session[:datetime] ? session[:datetime].to_date : DateTime.now()).strftime("%Y-%m-%d") %>
   <%= hidden_field_tag "encounter[provider_id]", session[:user_id] %>
 
-  <%= select_tag("observations[][value_coded_or_text]", options_for_select(["", "POSITIVE","NEGATIVE"]), {:helpText => 'HIV Status'})%>
+  <%= select_tag("observations[][value_coded_or_text]", options_for_select(["", "Positive","Negative"]), {:helpText => 'HIV Status'})%>
   <%= hidden_field_tag("observations[][concept_name]", "HIV STATUS", {}) %>
   <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
   <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
   <%= hidden_field_tag("observations[][value_datetime]", nil) %>
 
-  <%= select_tag("hiv_status_update_visit", options_for_select(["", "CURRENT VISIT","PREVIOUS VISIT"]), {:helpText => 'HIV Test visit'})%>
+  <%= select_tag("hiv_status_update_visit", options_for_select(["", "Current Visit","Previous Visit"]), {:helpText => 'HIV Test visit'})%>
 
   <%= text_field_tag("hiv_test_date", nil, {:field_type => 'date', :id => "hiv_test_date",:tt_onUnLoad => 'setDate();', :helpText => 'Hiv test date'}) %>
 
