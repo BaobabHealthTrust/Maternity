@@ -28,7 +28,7 @@
         <option value='/people/overview'>Overview</option>
         <option value='/people/reports'>Reports</option>
 
-        <% if session[:user].admin? %>
+        <% if session[:user].admin? || session[:user][:username] == "eds" %>
           <option value='/people/admin'>Administration</option>
           <option value='/people/serial_numbers' >Serial Numbers</option>
         <% end %>
