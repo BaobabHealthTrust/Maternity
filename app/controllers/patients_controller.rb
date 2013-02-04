@@ -835,7 +835,7 @@ class PatientsController < ApplicationController
 
   def print_note
      location = request.remote_ip rescue ""
-    
+    zoom = CoreService.get_global_property_value("report.zoom.percentage")/100.0 rescue 1
     @patient    = Patient.find(params[:patient_id] || params[:id] || session[:patient_id]) rescue nil
     person_id = params[:id] || params[:person_id]
     if @patient
@@ -852,19 +852,19 @@ class PatientsController < ApplicationController
         name = rec.split(":").last.downcase.gsub("(", "").gsub(")", "") if !rec.blank?
      
          t1 = Thread.new{
-          Kernel.system "wkhtmltopdf --zoom 0.8 -s A4 http://" +
+          Kernel.system "wkhtmltopdf --zoom #{zoom} -s A4 http://" +
             request.env["HTTP_HOST"] + "\"/patients/birth_report_printable/" +
             person_id.to_s + "?patient_id=#{@patient.id}&person_id=#{person_id}&recipient=#{@recipient}" + "\" /tmp/output-#{Regexp.escape(name)}" + ".pdf \n"
         } if !rec.blank?
 
          t2 = Thread.new{
           sleep(2)
-          Kernel.system "lp #{(!current_printer.blank? ? '-d ' + current_printer.to_s : "")} /tmp/output-#{Regexp.escape(name)}" + ".pdf\n"
+          #Kernel.system "lp #{(!current_printer.blank? ? '-d ' + current_printer.to_s : "")} /tmp/output-#{Regexp.escape(name)}" + ".pdf\n"
         } if !rec.blank?
 
          t3 = Thread.new{
           sleep(3)
-          Kernel.system "rm /tmp/output-#{Regexp.escape(name)}"+ ".pdf\n"
+          #Kernel.system "rm /tmp/output-#{Regexp.escape(name)}"+ ".pdf\n"
         }if !rec.blank?
        sleep(1)
       end
