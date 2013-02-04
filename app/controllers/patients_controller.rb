@@ -852,21 +852,21 @@ class PatientsController < ApplicationController
         name = rec.split(":").last.downcase.gsub("(", "").gsub(")", "") if !rec.blank?
      
          t1 = Thread.new{
-          Kernel.system "wkhtmltopdf -s A4 http://" +
+          Kernel.system "wkhtmltopdf --zoom 0.8 -s A4 http://" +
             request.env["HTTP_HOST"] + "\"/patients/birth_report_printable/" +
             person_id.to_s + "?patient_id=#{@patient.id}&person_id=#{person_id}&recipient=#{@recipient}" + "\" /tmp/output-#{Regexp.escape(name)}" + ".pdf \n"
         } if !rec.blank?
 
          t2 = Thread.new{
-          sleep(8)
+          sleep(2)
           Kernel.system "lp #{(!current_printer.blank? ? '-d ' + current_printer.to_s : "")} /tmp/output-#{Regexp.escape(name)}" + ".pdf\n"
         } if !rec.blank?
 
          t3 = Thread.new{
-          sleep(10)
+          sleep(3)
           Kernel.system "rm /tmp/output-#{Regexp.escape(name)}"+ ".pdf\n"
         }if !rec.blank?
-       sleep(3)
+       sleep(1)
       end
     end
     redirect_to "/patients/birth_report?person_id=#{person_id}&patient_id=#{params[:patient_id]}" and return
