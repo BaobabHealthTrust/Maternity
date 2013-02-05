@@ -879,12 +879,12 @@ class PatientsController < ApplicationController
 
         t2 = Thread.new{
           sleep(2)
-          #Kernel.system "lp #{(!current_printer.blank? ? '-d ' + current_printer.to_s : "")} /tmp/output-#{Regexp.escape(name)}" + ".pdf\n"
+          Kernel.system "lp #{(!current_printer.blank? ? '-d ' + current_printer.to_s : "")} /tmp/output-#{Regexp.escape(name)}" + ".pdf\n"
         } if !rec.blank?
 
         t3 = Thread.new{
           sleep(3)
-          #Kernel.system "rm /tmp/output-#{Regexp.escape(name)}"+ ".pdf\n"
+          Kernel.system "rm /tmp/output-#{Regexp.escape(name)}"+ ".pdf\n"
         }if !rec.blank?
         sleep(1)
       end
