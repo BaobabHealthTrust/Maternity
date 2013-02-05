@@ -789,6 +789,7 @@ class PatientsController < ApplicationController
   def birth_report
     @patient = Patient.find(params[:patient_id]) rescue nil
     @person = Patient.find(params[:id] || params[:person_id]) rescue nil
+    @anc_patient = ANCService::ANC.new(@person) rescue nil
   end
 
   def birth_report_printable
@@ -807,10 +808,30 @@ class PatientsController < ApplicationController
 
     @anc_father = ANCService::ANC.new(@father) rescue nil
     
-     @serial_number = PatientIdentifier.find(:first, :conditions => ["patient_id = ? AND identifier_type = ?",
-            @person.id,
-            PatientIdentifierType.find_by_name("Serial Number").id]).identifier rescue nil
-        
+    @serial_number = PatientIdentifier.find(:first, :conditions => ["patient_id = ? AND identifier_type = ?",
+        @person.id,
+        PatientIdentifierType.find_by_name("Serial Number").id]).identifier rescue nil
+
+    unless @serial_number
+      id_type = PatientIdentifierType.find_by_name("Serial Number").patient_identifier_type_id
+        serial_num = SerialNumber.find(:first, :conditions => ["national_id IS NULL"])
+
+        PatientIdentifier.create(:patient_id => @person.id,
+          :identifier => serial_num.serial_number,
+          :creator => session[:user_id],
+          :location_id => session[:facility],
+          :identifier_type => id_type) if serial_num and !@person.blank?
+
+        serial_num.national_id = @person.national_id
+        serial_num.date_assigned = Date.today
+        serial_num.save
+
+        @serial_number = PatientIdentifier.find(:first, :conditions => ["patient_id = ? AND identifier_type = ?",
+        @person.id,
+        PatientIdentifierType.find_by_name("Serial Number").id]).identifier rescue "?"
+
+    end
+    
     facility = CoreService.get_global_property_value("current_facility") rescue ''
 
     district = CoreService.get_global_property_value("current_district") rescue ''
@@ -834,7 +855,7 @@ class PatientsController < ApplicationController
   end
 
   def print_note
-     location = request.remote_ip rescue ""
+    location = request.remote_ip rescue ""
     zoom = CoreService.get_global_property_value("report.zoom.percentage")/100.0 rescue 1
     @patient    = Patient.find(params[:patient_id] || params[:id] || session[:patient_id]) rescue nil
     person_id = params[:id] || params[:person_id]
@@ -851,22 +872,22 @@ class PatientsController < ApplicationController
         @recipient = rec
         name = rec.split(":").last.downcase.gsub("(", "").gsub(")", "") if !rec.blank?
      
-         t1 = Thread.new{
+        t1 = Thread.new{
           Kernel.system "wkhtmltopdf --zoom #{zoom} -s A4 http://" +
             request.env["HTTP_HOST"] + "\"/patients/birth_report_printable/" +
             person_id.to_s + "?patient_id=#{@patient.id}&person_id=#{person_id}&recipient=#{@recipient}" + "\" /tmp/output-#{Regexp.escape(name)}" + ".pdf \n"
         } if !rec.blank?
 
-         t2 = Thread.new{
+        t2 = Thread.new{
           sleep(2)
           #Kernel.system "lp #{(!current_printer.blank? ? '-d ' + current_printer.to_s : "")} /tmp/output-#{Regexp.escape(name)}" + ".pdf\n"
         } if !rec.blank?
 
-         t3 = Thread.new{
+        t3 = Thread.new{
           sleep(3)
           #Kernel.system "rm /tmp/output-#{Regexp.escape(name)}"+ ".pdf\n"
         }if !rec.blank?
-       sleep(1)
+        sleep(1)
       end
     end
     redirect_to "/patients/birth_report?person_id=#{person_id}&patient_id=#{params[:patient_id]}" and return
@@ -939,6 +960,36 @@ class PatientsController < ApplicationController
     @religions = @religions.collect{|rel| rel.gsub('-', ' ').gsub('_', ' ').squish.titleize}.uniq
     @religions = @religions.collect{|rel| rel if rel.downcase.include?(search_string.downcase)}
     render :text => "<li></li><li>" + @religions.join("</li><li>") + "</li>"
+  end
+  def provider_details
+    @patient = Patient.find(params[:patient_id])
+    @person = Person.find(params[:person_id])
+  end
+
+  def create_provider
+    @patient = Patient.find(params[:person_id]) rescue nil
+    @anc_patient = ANCService::ANC.new(@patient) rescue nil
+
+    if !params[:HospitalDate].nil? && !params[:HospitalDate].blank?
+      @anc_patient.set_attribute("Hospital Date", params[:HospitalDate])
+    end
+
+    if !params[:Hospital].nil? && !params[:Hospital].blank?
+      @anc_patient.set_attribute("Health Center", params[:Hospital])
+    end
+
+    if !params[:district].nil? && !params[:district].blank?
+      @anc_patient.set_attribute("Health District", params[:district])
+    end
+
+    if !params[:ProviderTitle].nil? && !params[:ProviderTitle].blank?
+      @anc_patient.set_attribute("Provider Title", params[:ProviderTitle])
+    end
+
+    if !params[:ProviderName].nil? && !params[:ProviderName].blank?
+      @anc_patient.set_attribute("Provider Name", params[:ProviderName])
+    end
+    redirect_to "/patients/birth_report?person_id=#{params[:person_id]}&patient_id=#{params[:patient_id]}"
   end
   
 end
