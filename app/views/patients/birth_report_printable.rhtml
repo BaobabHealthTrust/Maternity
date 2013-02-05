@@ -91,13 +91,13 @@
                   Date of birth:
                 </td>
                 <td id="ddob" style="text-align: center; padding-bottom: 0px; padding-top: 9px;" class="cell">
-                  <%= @patient.person.birthdate.to_date.strftime("%d") rescue "&nbsp;" %>
+                  <%= @anc_patient.person.birthdate.to_date.strftime("%d") rescue "&nbsp;" %>
                 </td>
                 <td id="mdob" style="text-align: center; padding-bottom: 0px; padding-top: 9px;" class="cell">
-                  <%= @patient.person.birthdate.to_date.strftime("%B").titleize rescue "&nbsp;" %>
+                  <%= @anc_patient.person.birthdate.to_date.strftime("%B").titleize rescue "&nbsp;" %>
                 </td>
                 <td id="ydob" style="text-align: center; padding-bottom: 0px; padding-top: 9px;" class="cell">
-                  <%= @patient.person.birthdate.to_date.strftime("%Y") rescue "&nbsp;" %>
+                  <%= @anc_patient.person.birthdate.to_date.strftime("%Y") rescue "&nbsp;" %>
                 </td>
               </tr>
               <tr>
