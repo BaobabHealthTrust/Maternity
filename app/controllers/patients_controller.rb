@@ -841,7 +841,6 @@ class PatientsController < ApplicationController
     maternity = MaternityService::Maternity.new(patient) rescue nil
 
     data = maternity.export_person((User.current_user.id rescue 1), facility, district)
-
     # data = data.delete_blank
 
     # Due to space limitation, no father demographics on barcode for now
@@ -964,6 +963,13 @@ class PatientsController < ApplicationController
   def provider_details
     @patient = Patient.find(params[:patient_id])
     @person = Person.find(params[:person_id])
+    
+    @name = Person.find(User.find(session[:user_id]).id).name rescue " "
+
+    @facility = CoreService.get_global_property_value("current_facility") rescue ''
+
+    @district = CoreService.get_global_property_value("current_district") rescue ''
+   
   end
 
   def create_provider

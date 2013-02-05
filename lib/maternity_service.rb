@@ -482,9 +482,9 @@ module MaternityService
           "facility" => {
             "Health District" => (district),
             "Health Center" => (facility),
-            "Provider Title" => ((current_user.user_roles.first.role.titleize rescue nil)),
-            "Hospital Date" => (Date.today.strftime("%Y-%m-%d")),
-            "Provider Name" => ((current_user.name rescue nil))
+            "Provider Title" => (child.get_full_attribute("Provider Title").value rescue nil),
+            "Hospital Date" => (child.get_full_attribute("Hospital Date").value rescue nil),
+            "Provider Name" => (child.get_full_attribute("Provider Name").value rescue nil)
           }
         }
       else
