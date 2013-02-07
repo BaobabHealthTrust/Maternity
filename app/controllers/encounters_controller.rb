@@ -785,7 +785,7 @@ class EncountersController < ApplicationController
        t1 = Thread.new{
           Kernel.system "wkhtmltopdf -s A4 http://" +
             request.env["HTTP_HOST"] + "\"/encounters/observations_printable/" +
-            @patient.id.to_s + "?patient_id=#{@patient.id}"+ "\" /tmp/output-" + session[:user_id].to_s + ".pdf \n"
+            @patient.id.to_s + "?patient_id=#{@patient.id}&ret=#{params[:ret]}"+ "\" /tmp/output-" + session[:user_id].to_s + ".pdf \n"
         } 
 
         t2 = Thread.new{
