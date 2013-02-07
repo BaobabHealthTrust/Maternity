@@ -181,6 +181,14 @@
             onclick="if (tt_cancel_destination) window.location = tt_cancel_destination;">
       <span>Finish</span>
     </button>
+
+    <% if params[:cat] && params[:cat].downcase == "baby" && !@person.name.blank? %>
+    <button id="printButton" class="button navButton blue" 
+            onclick="window.location = '/patients/national_id_label?patient_id=<%= @person.id %>'">
+      <span>Print Baby Barcode</span>
+    </button>
+    <% end %>
+
   </div>
   <div id="tt_extraButtons"/>
 </div>
