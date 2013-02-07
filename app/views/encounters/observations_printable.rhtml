@@ -135,19 +135,7 @@
       <td colspan="<%= (params[:ret] && params[:ret] != "postnatal" ? 3 : 5) %>">
         <b>PMTCT:</b> <%= (!@encounters["HIV STATUS"].nil? ? 
             (@encounters["HIV STATUS"].upcase == "REACTIVE" ? "R" : (@encounters["HIV STATUS"].upcase == 
-                "UNKNOWN" ? "Unknown" : "NR")) : "") %>&nbsp;&nbsp;&nbsp;
-        <% if !@encounters["HIV STATUS"].nil? && @encounters["HIV STATUS"].upcase == "REACTIVE" %>
-
-          <b>ARVs:</b> <%= @encounters["ON ANTIRETROVIRAL THERAPY"].titleize rescue "" %>&nbsp;&nbsp;&nbsp;
-          
-          <%if params[:ret] == "postnatal"%>
-          <b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Arv Start Date:</b> <%= @encounters["ARV START DATE"] %>&nbsp;&nbsp;&nbsp;
-          <b></br>Period On ARvs:</b> <%= @period_on_arvs_string %>&nbsp;&nbsp;&nbsp;
-          <%else%>
-          <b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Arv Start Date:</b> <%= @encounters["ARV START DATE"] %>&nbsp;&nbsp;&nbsp;
-          <b></br>Period On ARvs:</b> <%= @period_on_arvs_string %>&nbsp;&nbsp;&nbsp;
-          <%end%>
-        <% end %>
+                "UNKNOWN" ? "Unknown" : "NR")) : "") %>&nbsp;&nbsp;&nbsp;        
       </td>
     </tr>
     <!--tr>
@@ -176,7 +164,7 @@
       <td>
         <% if @referral["IS PATIENT REFERRED?"].to_s == "Yes" %>
 
-          <b>From:</b> <div><%= @referral["REFERRAL CLINIC IF REFERRED"] rescue "" %></div>
+          <b>From:</b> <%= @referral["REFERRAL CLINIC IF REFERRED"] || @referral["REFERRED FROM"] rescue "" %>
 
         <% else %>
           &nbsp;
@@ -208,10 +196,10 @@
         <b>Condition:</b> <%= @encounters["CONDITION"] %>
       </td>
       <td>
-        <b>Anaemia:</b> <%= @encounters["ANAEMIC"].titleize rescue "" %>
+        <b>Anaemia:</b> <%= (@encounters["ANEMIA"] || @encounters["ANAEMIC"]).titleize rescue "" %>
       </td>
       <td colspan="3">
-        <b>Oedema:</b> <%= @encounters["OEDEMA"].titleize rescue "" %>
+        <b>Oedema:</b> <%= (@encounters["EDEMA"] || @encounters["OEDEMA"]).titleize rescue "" %>
       </td>
     </tr>
     <tr>
@@ -295,12 +283,14 @@
         <td colspan="2">
           <b>Membranes:</b> <%= @encounters["MEMBRANES"].titleize rescue "" %>
         </td>
+	<% if @encounters["MEMBRANES"] && @encounters["MEMBRANES"].downcase == "tear" %>
         <td>
           <b>On:</b> <%= @encounters["RUPTURE DATE"].titleize rescue "" %>
         </td>
         <td colspan="2">
           <b>At:</b> <%= @encounters["RUPTURE TIME"].titleize rescue "" %>
         </td>
+	<% end %>
       </tr>
       <tr>
         <td colspan="2">

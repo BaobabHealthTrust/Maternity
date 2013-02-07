@@ -685,7 +685,8 @@ class EncountersController < ApplicationController
         elsif o.concept.name.name.upcase.include?("TIME")
           @encounters[o.concept.name.name.upcase] = o.value_datetime.strftime("%H:%M")
         else
-          @encounters[o.concept.name.name.upcase] = o.answer_string
+	 name = o.concept.name.name.upcase.gsub('"', "").strip
+          @encounters[name] = o.answer_string
         end
       }
     } rescue {}
@@ -732,7 +733,7 @@ class EncountersController < ApplicationController
       }
     } rescue {}
 
-    # raise @encounters.to_yaml
+    # raise @referral.to_yaml
     
     @nok = (@patient.next_of_kin["GUARDIAN FIRST NAME"] + " " + @patient.next_of_kin["GUARDIAN LAST NAME"] + 
         " - " + @patient.next_of_kin["GUARDIAN RELATIONSHIP TO CHILD"] + " " +
@@ -747,7 +748,7 @@ class EncountersController < ApplicationController
     @position = (@encounters["CEPHALIC"] ? @encounters["CEPHALIC"] : "") + 
       (@encounters["BREECH"] ? @encounters["BREECH"] : "") + (@encounters["FACE"] ? @encounters["FACE"] : "") + 
       (@encounters["SHOULDER"] ? @encounters["SHOULDER"] : "") rescue ""
-    
+    @position = @encounters["POSITION"]
     if (@encounters["ARV START DATE"].match("/") rescue false)
       mon = [" ", "Jan","Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
       year = @encounters["ARV START DATE"].split("/")[2].to_i
