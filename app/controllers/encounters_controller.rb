@@ -197,7 +197,7 @@ class EncountersController < ApplicationController
 
     diagnosis_concepts    = Concept.find_by_name("MATERNITY DIAGNOSIS LIST").concept_members_names.sort.uniq rescue []
 
-    @results = diagnosis_concepts.collect{|e| e}.delete_if{|x| !x.match(/^#{search_string}/i)}
+    @results = diagnosis_concepts.collect{|e| e if e.downcase.include?(search_string.downcase)}
     
     render :text => "<li>" + @results.join("</li><li>") + "</li>"
     
