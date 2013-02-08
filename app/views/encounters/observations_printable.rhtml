@@ -283,7 +283,7 @@
         <td colspan="2">
           <b>Membranes:</b> <%= @encounters["MEMBRANES"].titleize rescue "" %>
         </td>
-	<% if @encounters["MEMBRANES"] && @encounters["MEMBRANES"].downcase == "tear" %>
+	<% if @encounters["MEMBRANES"] && @encounters["MEMBRANES"].downcase == "ruptured" %>
         <td>
           <b>On:</b> <%= @encounters["RUPTURE DATE"].titleize rescue "" %>
         </td>
