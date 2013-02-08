@@ -748,7 +748,11 @@ class EncountersController < ApplicationController
     @position = (@encounters["CEPHALIC"] ? @encounters["CEPHALIC"] : "") + 
       (@encounters["BREECH"] ? @encounters["BREECH"] : "") + (@encounters["FACE"] ? @encounters["FACE"] : "") + 
       (@encounters["SHOULDER"] ? @encounters["SHOULDER"] : "") rescue ""
-    @position = @encounters["POSITION"]
+  
+    if @encounters["PRESENTATION"] && @encounters["PRESENTATION"].upcase == "BREECH"
+	@position = @encounters["BREECH DELIVERY"] if  @encounters["BREECH DELIVERY"].downcase.match("sacro")
+    end
+
     if (@encounters["ARV START DATE"].match("/") rescue false)
       mon = [" ", "Jan","Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
       year = @encounters["ARV START DATE"].split("/")[2].to_i
