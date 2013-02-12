@@ -643,10 +643,11 @@
               
             }
             
-            if(__$(base + "_total") && __$("frm" + base + "_1") && __$("frm" + base + "_2")){
-              __$(base + "_total").innerHTML = eval(__$("frm" + base + "_1").getElementsByTagName("a")[0].innerHTML) + 
-                (__$("frm" + base + "_2").getElementsByTagName("a")[0].innerHTML != "&nbsp;" ? 
-                eval(__$("frm" + base + "_2").getElementsByTagName("a")[0].innerHTML) : 0)
+            if(__$(base + "_total")){
+		 col1 = __$("frm" + base + "_1")? eval(__$("frm" + base + "_1").getElementsByTagName("a")[0].innerHTML) : 0
+		 col2 = __$("frm" + base + "_2")? eval(__$("frm" + base + "_2").getElementsByTagName("a")[0].innerHTML) : 0
+		
+              __$(base + "_total").innerHTML = col1 + col2
             }
           }
         }
