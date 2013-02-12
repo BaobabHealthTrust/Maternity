@@ -212,10 +212,13 @@ class CohortController < ActionController::Base # < ApplicationController
 
     if params
       link = ""
-      
-      link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report" : "report") }" + 
+      if CoreService.get_global_property_value("extended_diagnoses_report").to_s == "true"
+      link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report_extended" : "report") }" + 
         "?start_date=#{@start_date}+#{@start_time}&end_date=#{@end_date}+#{@end_time}&reportType=#{@reportType}"
-      
+      else
+	link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report" : "report") }" + 
+        "?start_date=#{@start_date}+#{@start_time}&end_date=#{@end_date}+#{@end_time}&reportType=#{@reportType}"
+      end
       #t1 = Thread.new{
         # Kernel.system "htmldoc --webpage -f /tmp/output-" + session[:user_id].to_s + ".pdf \"http://" +
         #  request.env["HTTP_HOST"] + link + "\"\n"
@@ -226,7 +229,7 @@ class CohortController < ActionController::Base # < ApplicationController
 
       t2 = Thread.new{
         sleep(5)
-        Kernel.system "lpr /tmp/output-" + session[:user_id].to_s + ".pdf\n"
+        Kernel.system "lp /tmp/output-" + session[:user_id].to_s + ".pdf\n"
       }
 
       t3 = Thread.new{
