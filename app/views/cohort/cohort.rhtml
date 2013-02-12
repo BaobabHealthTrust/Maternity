@@ -19,8 +19,15 @@
     </style>
   </head>
   <body>
-    <iframe id="main" src="/cohort/<%= (@reportType.to_i == 2 ? "diagnoses_report" : "report") %>?start_date=<%= @start_date %>+<%= @start_time %>&end_date=<%= @end_date 
+<% if CoreService.get_global_property_value("extended_diagnoses_report").to_s == "true" %>
+    <iframe id="main" src="/cohort/<%= (@reportType.to_i == 2 ? "diagnoses_report_extended" : "report") %>?start_date=<%= @start_date %>+<%= @start_time %>&end_date=<%= @end_date 
           %>+<%= @end_time %>&reportType=<%= @reportType %>"></iframe>
+<% else %>
+
+ <iframe id="main" src="/cohort/<%= (@reportType.to_i == 2 ? "diagnoses_report" : "report") %>?start_date=<%= @start_date %>+<%= @start_time %>&end_date=<%= @end_date 
+          %>+<%= @end_time %>&reportType=<%= @reportType %>"></iframe>
+
+<% end %>
 
     <div style="z-index:11;bottom:0px; height: 82px; width: 100%; left: 0px;
          right: -66px; position: absolute; background-color: #333333; padding: 0px;">

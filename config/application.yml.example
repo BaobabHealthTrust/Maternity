@@ -18,6 +18,7 @@ production:
  application.include_baby_weight_and_apgar: yes
  hdu_pog_theater_wards: false
  report.zoom.percentage: 100
+ extended_diagnoses_report: false
  
 development:
  create.from.dde.server: true
@@ -39,6 +40,7 @@ development:
  application.include_baby_weight_and_apgar: yes
  hdu_pog_theater_wards: false
  report.zoom.percentage: 100
+ extended_diagnoses_report: false
  #demographic_server_ips_and_local_ports: {"localhost":"4000"}
 
 test: &TEST 

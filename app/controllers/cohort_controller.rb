@@ -276,6 +276,24 @@ class CohortController < ActionController::Base # < ApplicationController
        
     render :layout => false
   end
+
+  def diagnoses_report_extended
+    @section = Location.find(params[:location_id]).name rescue ""
+    
+    @start_date = (params[:start_date].to_time rescue Time.now)
+    
+    @end_date = (params[:end_date].to_time rescue Time.now)
+    
+    @group1_start = @start_date
+    
+    @group1_end = (@end_date <= (@start_date + 12.hour) ? @end_date : (@start_date + 12.hour))
+        
+    @group2_start = (@end_date > (@start_date + 12.hour) ? (@start_date + 12.hour) : nil)
+    
+    @group2_end = (@end_date > (@start_date + 12.hour) ? @end_date : nil)
+       
+    render :layout => false
+  end
   
   def q
 	
