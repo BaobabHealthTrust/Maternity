@@ -216,13 +216,13 @@ class CohortController < ActionController::Base # < ApplicationController
       link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report" : "report") }" + 
         "?start_date=#{@start_date}+#{@start_time}&end_date=#{@end_date}+#{@end_time}&reportType=#{@reportType}"
       
-      t1 = Thread.new{
+      #t1 = Thread.new{
         # Kernel.system "htmldoc --webpage -f /tmp/output-" + session[:user_id].to_s + ".pdf \"http://" +
         #  request.env["HTTP_HOST"] + link + "\"\n"
 
         Kernel.system "wkhtmltopdf -s A4 \"http://" +
           request.env["HTTP_HOST"] + "#{link}\" \"/tmp/output-" + session[:user_id].to_s + ".pdf\" \n"
-      }
+     # }
 
       t2 = Thread.new{
         sleep(5)
