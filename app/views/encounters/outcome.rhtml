@@ -992,6 +992,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
       :id => "procedure_done#{proc}",
       :field_type => 'text',
       :helptext =>"#{proc}<sup>#{prefixes[proc]}</sup> Procedure Done",
+      :tt_onUnLoad => "cedure = $('procedure_done#{proc}').value",
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
           "($('discharge_outcome').value.toUpperCase() == 'DELIVERED' || " +
           "$('discharge_outcome').value.toUpperCase() == 'DISCHARGED') #{proc > 1 ?
@@ -1014,18 +1015,214 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
     <% options = {
-      :id => "postpartum_type",
-      :field_type => 'text',
-      :helptext =>"Select Postpartum Hesterectomy Type",
+      :id => "procedure_diagnosis#{proc}",
+      :field_type => 'text', 
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=hysterectomy&search_string=",     
+      :helptext =>"Reason For Procedure",     
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
-          "($('procedure_done#{proc}').value == 'POSTPARTUM HYSTERECTOMY')"),
+          "($('procedure_done#{proc}').value.toUpperCase() == 'HYSTERECTOMY')"),
       :tt_pageStyleClass => "qwertyKeyboardOnly"
     }%>
-    <%= hidden_field_tag("observations[][concept_name]", "POSTPARTUM HYSTERECTOMY") %>
-    <%= select_tag("observations[][value_coded_or_text]", options_for_select(@postpartum_type), options)%>
+    <%= hidden_field_tag("observations[][concept_name]", "HYSTERECTOMY DIAGNOSIS") %>
+    <%= select_tag("observations[][value_coded_or_text]", nil, options)%>
     <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
     <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
+	<% options = {
+      :id => "procedure_diagnosis#{proc}",
+      :field_type => 'text', 
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=biopsy&search_string=",     
+      :helptext =>"Reason For Procedure",     
+      :condition => (@location.downcase == "ante-natal ward" ? "false" :
+          "($('procedure_done#{proc}').value.toUpperCase() == 'BIOPSY')"),
+      :tt_pageStyleClass => "qwertyKeyboardOnly"
+    }%>
+    <%= hidden_field_tag("observations[][concept_name]", "BIOPSY DIAGNOSIS") %>
+    <%= select_tag("observations[][value_coded_or_text]", nil, options)%>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+	<% options = {
+      :id => "procedure_diagnosis#{proc}",
+      :field_type => 'text', 
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=bilateral_tubal_ligation&search_string=",     
+      :helptext =>"Reason For Procedure",     
+      :condition => (@location.downcase == "ante-natal ward" ? "false" :
+          "($('procedure_done#{proc}').value.toUpperCase() == 'BILATERAL TUBAL LIGATION')"),
+      :tt_pageStyleClass => "qwertyKeyboardOnly"
+    }%>
+    <%= hidden_field_tag("observations[][concept_name]", "BILATERAL TUBAL LIGATION DIAGNOSIS") %>
+    <%= select_tag("observations[][value_coded_or_text]", nil, options)%>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+	<% options = {
+      :id => "procedure_diagnosis#{proc}",
+      :field_type => 'text', 
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=bilateral_tubal_ligation&search_string=",     
+      :helptext =>"Reason For Procedure",     
+      :condition => (@location.downcase == "ante-natal ward" ? "false" :
+          "($('procedure_done#{proc}').value.toUpperCase() == 'BILATERAL TUBAL LIGATION')"),
+      :tt_pageStyleClass => "qwertyKeyboardOnly"
+    }%>
+    <%= hidden_field_tag("observations[][concept_name]", "BILATERAL TUBAL LIGATION DIAGNOSIS") %>
+    <%= select_tag("observations[][value_coded_or_text]", nil, options)%>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+	<% options = {
+      :id => "procedure_diagnosis#{proc}",
+      :field_type => 'text', 
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=myomectomy&search_string=",     
+      :helptext =>"Reason For Procedure",     
+      :condition => (@location.downcase == "ante-natal ward" ? "false" :
+          "($('procedure_done#{proc}').value.toUpperCase() == 'MYOMECTOMY')"),
+      :tt_pageStyleClass => "qwertyKeyboardOnly"
+    }%>
+    <%= hidden_field_tag("observations[][concept_name]", "MYOMECTOMY DIAGNOSIS") %>
+    <%= select_tag("observations[][value_coded_or_text]", nil, options)%>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+<% options = {
+      :id => "procedure_diagnosis#{proc}",
+      :field_type => 'text', 
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=ceclage&search_string=",     
+      :helptext =>"Reason For Procedure",     
+      :condition => (@location.downcase == "ante-natal ward" ? "false" :
+          "($('procedure_done#{proc}').value.toUpperCase() == 'CECLAGE')"),
+      :tt_pageStyleClass => "qwertyKeyboardOnly"
+    }%>
+    <%= hidden_field_tag("observations[][concept_name]", "CECLAGE DIAGNOSIS") %>
+    <%= select_tag("observations[][value_coded_or_text]", nil, options)%>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+<% options = {
+      :id => "procedure_diagnosis#{proc}",
+      :field_type => 'text', 
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=cystectomy&search_string=",     
+      :helptext =>"Reason For Procedure",     
+      :condition => (@location.downcase == "ante-natal ward" ? "false" :
+          "($('procedure_done#{proc}').value.toUpperCase() == 'CYSTECTOMY')"),
+      :tt_pageStyleClass => "qwertyKeyboardOnly"
+    }%>
+    <%= hidden_field_tag("observations[][concept_name]", "CYSTECTOMY DIAGNOSIS") %>
+    <%= select_tag("observations[][value_coded_or_text]", nil, options)%>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+<% options = {
+      :id => "procedure_diagnosis#{proc}",
+      :field_type => 'text', 
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=malsupilisation&search_string=",     
+      :helptext =>"Reason For Procedure",     
+      :condition => (@location.downcase == "ante-natal ward" ? "false" :
+          "($('procedure_done#{proc}').value.toUpperCase() == 'MALSUPILISATION')"),
+      :tt_pageStyleClass => "qwertyKeyboardOnly"
+    }%>
+    <%= hidden_field_tag("observations[][concept_name]", "MALSUPILISATION DIAGNOSIS") %>
+    <%= select_tag("observations[][value_coded_or_text]", nil, options)%>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+<% options = {
+      :id => "procedure_diagnosis#{proc}",
+      :field_type => 'text', 
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=excision&search_string=",     
+      :helptext =>"Reason For Procedure",     
+      :condition => (@location.downcase == "ante-natal ward" ? "false" :
+          "($('procedure_done#{proc}').value.toUpperCase() == 'EXCISION')"),
+      :tt_pageStyleClass => "qwertyKeyboardOnly"
+    }%>
+    <%= hidden_field_tag("observations[][concept_name]", "EXCISION DIAGNOSIS") %>
+    <%= select_tag("observations[][value_coded_or_text]", nil, options)%>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+<% options = {
+      :id => "procedure_diagnosis#{proc}",
+      :field_type => 'text', 
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=incision_and_drainage&search_string=",     
+      :helptext =>"Reason For Procedure",     
+      :condition => (@location.downcase == "ante-natal ward" ? "false" :
+          "($('procedure_done#{proc}').value.toUpperCase().trim() == 'INCISION AND DRAINAGE')"),
+      :tt_pageStyleClass => "qwertyKeyboardOnly"
+    }%>
+    <%= hidden_field_tag("observations[][concept_name]", "INCISION AND DRAINAGE DIAGNOSIS") %>
+    <%= select_tag("observations[][value_coded_or_text]", nil, options)%>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+<% options = {
+      :id => "procedure_diagnosis#{proc}",
+      :field_type => 'text', 
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=caesarean_section&search_string=",     
+      :helptext =>"Reason For Procedure",     
+      :condition => (@location.downcase == "ante-natal ward" ? "false" :
+          "($('procedure_done#{proc}').value.toUpperCase() == 'CAESAREAN SECTION')"),
+      :tt_pageStyleClass => "qwertyKeyboardOnly"
+    }%>
+    <%= hidden_field_tag("observations[][concept_name]", "CAESAREAN SECTION DIAGNOSIS") %>
+    <%= select_tag("observations[][value_coded_or_text]", nil, options)%>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+<% options = {
+      :id => "procedure_diagnosis#{proc}",
+      :field_type => 'text', 
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=exam_under_anaesthesia&search_string=",     
+      :helptext =>"Reason For Procedure",     
+      :condition => (@location.downcase == "ante-natal ward" ? "false" :
+          "($('procedure_done#{proc}').value.toUpperCase() == 'EXAM UNDER ANAESTHESIA')"),
+      :tt_pageStyleClass => "qwertyKeyboardOnly"
+    }%>
+    <%= hidden_field_tag("observations[][concept_name]", "EXAM UNDER ANAESTHESIA DIAGNOSIS") %>
+    <%= select_tag("observations[][value_coded_or_text]", nil, options)%>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+<% options = {
+      :id => "procedure_diagnosis#{proc}",
+      :field_type => 'text', 
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=evacuation&search_string=",     
+      :helptext =>"Reason For Procedure",     
+      :condition => (@location.downcase == "ante-natal ward" ? "false" :
+          "($('procedure_done#{proc}').value.toUpperCase() == 'EVACUATION/MANUAL VACUUM ASPIRATION')"),
+      :tt_pageStyleClass => "qwertyKeyboardOnly"
+    }%>
+    <%= hidden_field_tag("observations[][concept_name]", "EVACUATION/MVA DIAGNOSIS") %>
+    <%= select_tag("observations[][value_coded_or_text]", nil, options)%>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+<% options = {
+      :id => "procedure_diagnosis#{proc}",
+      :field_type => 'text', 
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=dilation_and_curettage&search_string=",     
+      :helptext =>"Reason For Procedure",     
+      :condition => (@location.downcase == "ante-natal ward" ? "false" :
+          "($('procedure_done#{proc}').value.toUpperCase() == 'DILATION AND CURETTAGE')"),
+      :tt_pageStyleClass => "qwertyKeyboardOnly"
+    }%>
+    <%= hidden_field_tag("observations[][concept_name]", "DILATION AND CURETTAGE DIAGNOSIS") %>
+    <%= select_tag("observations[][value_coded_or_text]", nil, options)%>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+<% options = {
+      :id => "procedure_diagnosis#{proc}",
+      :field_type => 'text', 
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=laparatomy&search_string=",     
+      :helptext =>"Reason For Procedure",     
+      :condition => (@location.downcase == "ante-natal ward" ? "false" :
+          "($('procedure_done#{proc}').value.toUpperCase() == 'EXPLORATORY LAPARATOMY +/- ADNEXECTOMY')"),
+      :tt_pageStyleClass => "qwertyKeyboardOnly"
+    }%>
+    <%= hidden_field_tag("observations[][concept_name]", "LAPARATOMY DIAGNOSIS") %>
+    <%= select_tag("observations[][value_coded_or_text]", nil, options)%>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
   <% end %>
 
   <% options = {

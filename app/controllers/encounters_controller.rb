@@ -203,6 +203,21 @@ class EncountersController < ApplicationController
     
   end
 
+  def procedure_diagnoses
+   
+    procedure = params[:procedure].upcase.gsub("_", " ")
+    procedure ="Exploratory laparatomy +/- adnexectomy".upcase  if params[:procedure] == "laparatomy"
+    procedure ="Evacuation/Manual Vacuum Aspiration".upcase  if params[:procedure] == "evacuation"
+    search_string         = (params[:search_string] || '').upcase
+
+    diagnosis_concepts    = Concept.find_by_name(procedure).concept_members_names.sort.uniq rescue []
+
+    @results = diagnosis_concepts.collect{|e| e if e.downcase.include?(search_string.downcase)}
+    
+    render :text => "<li>" + @results.join("</li><li>") + "</li>"
+    
+  end
+
   def treatment
     search_string = (params[:search_string] || '').upcase
     filter_list = params[:filter_list].split(/, */) rescue []

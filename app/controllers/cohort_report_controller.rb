@@ -738,6 +738,13 @@ class CohortReportController < ApplicationController
     render :text => patients.to_json
   end
 
+  def pul_diag(startdate = Time.now, enddate = Time.now, group = 1, field = "")
+    patients = PatientReport.find(:all, :conditions => ["diagnosis = ? AND diagnosis_date >= ? AND diagnosis_date <= ?", 
+        field, startdate, enddate]).collect{|p| p.patient_id}.uniq
+
+    render :text => patients.to_json
+  end
+
   def decompose
     @patients = Patient.find(:all, :conditions => ["patient_id IN (?)", params[:patients].split(",")]).uniq
     

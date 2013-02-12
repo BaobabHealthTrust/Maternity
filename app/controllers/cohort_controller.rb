@@ -278,7 +278,12 @@ class CohortController < ActionController::Base # < ApplicationController
   end
   
   def q
-    if params[:field]
+	
+    if params[:parent]
+
+	procedure(params[:start_date], params[:end_date], params[:group], params[:field], params[:parent])
+
+    elsif params[:field] && !params[:ext] && !params[:pro] && !params[:proc]
       case params[:field]
       when "admissions"
         admissions(params[:start_date], params[:end_date], params[:group], params[:field])
@@ -376,7 +381,9 @@ class CohortController < ActionController::Base # < ApplicationController
         laparatomy(params[:start_date], params[:end_date], params[:group], params[:field])
       when "ruptured_uterus"
         ruptured_uterus(params[:start_date], params[:end_date], params[:group], params[:field])
-      end
+      end    
+    elsif !params[:proc]
+	diagnosis(params[:start_date], params[:end_date], params[:group], params[:field])
     end           
   end
   
@@ -734,6 +741,28 @@ class CohortController < ActionController::Base # < ApplicationController
   def ruptured_uterus(startdate = Time.now, enddate = Time.now, group = 1, field = "")
     patients = PatientReport.find(:all, :conditions => ["diagnosis = ? AND diagnosis_date >= ? AND diagnosis_date <= ?", 
         "Ruptured Uterus", startdate, enddate]).collect{|p| p.patient_id}.uniq
+
+    render :text => patients.to_json
+  end
+
+  def diagnosis(startdate = Time.now, enddate = Time.now, group = 1, field = "")
+	
+	check_field = field.humanize.gsub("- ", "-").gsub("!", "/")
+    patients = PatientReport.find(:all, :conditions => ["diagnosis = ? AND diagnosis_date >= ? AND diagnosis_date <= ?", 
+        check_field, startdate, enddate]).collect{|p| p.patient_id}.uniq
+
+    render :text => patients.to_json
+  end
+
+  def procedure(startdate = Time.now, enddate = Time.now, group = 1, field = "", proc = "")
+    check_field = field.humanize.gsub("- ", "-").gsub("!", "/") 
+    check_proc = proc.humanize.gsub("- ", "-").gsub("!", "/")
+    if proc.downcase == "evacuation"
+	check_proc = "Evacuation/Manual Vacuum Aspiration"
+    end
+	
+    patients = PatientReport.find(:all, :conditions => ["diagnosis = ? AND procedure_done = ? AND diagnosis_date >= ? AND diagnosis_date <= ?", 
+        check_field, check_proc, startdate, enddate]).collect{|p| p.patient_id}.uniq
 
     render :text => patients.to_json
   end

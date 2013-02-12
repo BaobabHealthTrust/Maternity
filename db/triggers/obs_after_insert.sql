@@ -52,6 +52,98 @@ BEGIN
   		INSERT INTO patient_report (patient_id, diagnosis, diagnosis_date, obs_datetime, obs_id) VALUES(new.person_id, @diagnosis, new.obs_datetime, new.obs_datetime, new.obs_id);
 	END IF;
 	
+	IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "DIAGNOSIS ON DISCHARGE" LIMIT 1) THEN
+		SET @diagnosis = (SELECT name FROM concept_name WHERE concept_name_id = new.value_coded_name_id);	
+
+  		INSERT INTO patient_report (patient_id, diagnosis, diagnosis_date, obs_datetime, obs_id) VALUES(new.person_id, @diagnosis, new.obs_datetime, new.obs_datetime, new.obs_id);
+	END IF;	
+
+IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "HYSTERECTOMY DIAGNOSIS" LIMIT 1) THEN
+		SET @diagnosis = (SELECT name FROM concept_name WHERE concept_name_id = new.value_coded_name_id);	
+
+  		INSERT INTO patient_report (patient_id, diagnosis, procedure_done, diagnosis_date, obs_datetime, obs_id) VALUES(new.person_id, @diagnosis, "HYSTERECTOMY", new.obs_datetime, new.obs_datetime, new.obs_id);
+	END IF;	
+
+IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "LAPARATOMY DIAGNOSIS" LIMIT 1) THEN
+		SET @diagnosis = (SELECT name FROM concept_name WHERE concept_name_id = new.value_coded_name_id);	
+
+  		INSERT INTO patient_report (patient_id, diagnosis, procedure_done, diagnosis_date, obs_datetime, obs_id) VALUES(new.person_id, @diagnosis, "LAPARATOMY", new.obs_datetime, new.obs_datetime, new.obs_id);
+	END IF;	
+
+IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "DILATION AND CURETTAGE DIAGNOSIS" LIMIT 1) THEN
+		SET @diagnosis = (SELECT name FROM concept_name WHERE concept_name_id = new.value_coded_name_id);	
+
+  		INSERT INTO patient_report (patient_id, diagnosis, procedure_done, diagnosis_date, obs_datetime, obs_id) VALUES(new.person_id, @diagnosis, "DILATION AND CURETTAGE", new.obs_datetime, new.obs_datetime, new.obs_id);
+	END IF;	
+
+IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "EVACUATION/MVA DIAGNOSIS" LIMIT 1) THEN
+		SET @diagnosis = (SELECT name FROM concept_name WHERE concept_name_id = new.value_coded_name_id);	
+
+  		INSERT INTO patient_report (patient_id, diagnosis, procedure_done, diagnosis_date, obs_datetime, obs_id) VALUES(new.person_id, @diagnosis, "Evacuation/Manual Vacuum Aspiration", new.obs_datetime, new.obs_datetime, new.obs_id);
+	END IF;
+
+IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "EXAM UNDER ANAESTHESIA DIAGNOSIS" LIMIT 1) THEN
+		SET @diagnosis = (SELECT name FROM concept_name WHERE concept_name_id = new.value_coded_name_id);	
+
+  		INSERT INTO patient_report (patient_id, diagnosis, procedure_done, diagnosis_date, obs_datetime, obs_id) VALUES(new.person_id, @diagnosis, "Exam Under Anaesthesia", new.obs_datetime, new.obs_datetime, new.obs_id);
+	END IF;
+
+IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "CAESAREAN SECTION DIAGNOSIS" LIMIT 1) THEN
+		SET @diagnosis = (SELECT name FROM concept_name WHERE concept_name_id = new.value_coded_name_id);	
+
+  		INSERT INTO patient_report (patient_id, diagnosis, procedure_done, diagnosis_date, obs_datetime, obs_id) VALUES(new.person_id, @diagnosis, "Caesarean Section", new.obs_datetime, new.obs_datetime, new.obs_id);
+	END IF;
+
+IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "INCISION AND DRAINAGE DIAGNOSIS" LIMIT 1) THEN
+		SET @diagnosis = (SELECT name FROM concept_name WHERE concept_name_id = new.value_coded_name_id);	
+
+  		INSERT INTO patient_report (patient_id, diagnosis, procedure_done, diagnosis_date, obs_datetime, obs_id) VALUES(new.person_id, @diagnosis, "Incision And Drainage", new.obs_datetime, new.obs_datetime, new.obs_id);
+	END IF;
+
+IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "BIOPSY DIAGNOSIS" LIMIT 1) THEN
+		SET @diagnosis = (SELECT name FROM concept_name WHERE concept_name_id = new.value_coded_name_id);	
+
+  		INSERT INTO patient_report (patient_id, diagnosis, procedure_done, diagnosis_date, obs_datetime, obs_id) VALUES(new.person_id, @diagnosis, "Biopsy", new.obs_datetime, new.obs_datetime, new.obs_id);
+	END IF;
+
+IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "EXCISION DIAGNOSIS" LIMIT 1) THEN
+		SET @diagnosis = (SELECT name FROM concept_name WHERE concept_name_id = new.value_coded_name_id);	
+
+  		INSERT INTO patient_report (patient_id, diagnosis, procedure_done, diagnosis_date, obs_datetime, obs_id) VALUES(new.person_id, @diagnosis, "Excision", new.obs_datetime, new.obs_datetime, new.obs_id);
+	END IF;
+
+IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "MALSUPILISATION DIAGNOSIS" LIMIT 1) THEN
+		SET @diagnosis = (SELECT name FROM concept_name WHERE concept_name_id = new.value_coded_name_id);	
+
+  		INSERT INTO patient_report (patient_id, diagnosis, procedure_done, diagnosis_date, obs_datetime, obs_id) VALUES(new.person_id, @diagnosis, "Malsupilisation", new.obs_datetime, new.obs_datetime, new.obs_id);
+	END IF;
+
+IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "CYSTECTOMY DIAGNOSIS" LIMIT 1) THEN
+		SET @diagnosis = (SELECT name FROM concept_name WHERE concept_name_id = new.value_coded_name_id);	
+
+  		INSERT INTO patient_report (patient_id, diagnosis, procedure_done, diagnosis_date, obs_datetime, obs_id) VALUES(new.person_id, @diagnosis, "Cystectomy", new.obs_datetime, new.obs_datetime, new.obs_id);
+	END IF;
+
+IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "CECLAGE DIAGNOSIS" LIMIT 1) THEN
+		SET @diagnosis = (SELECT name FROM concept_name WHERE concept_name_id = new.value_coded_name_id);	
+
+  		INSERT INTO patient_report (patient_id, diagnosis, procedure_done, diagnosis_date, obs_datetime, obs_id) VALUES(new.person_id, @diagnosis, "Ceclage", new.obs_datetime, new.obs_datetime, new.obs_id);
+	END IF;
+
+IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "MYOMECTOMY DIAGNOSIS" LIMIT 1) THEN
+		SET @diagnosis = (SELECT name FROM concept_name WHERE concept_name_id = new.value_coded_name_id);	
+
+  		INSERT INTO patient_report (patient_id, diagnosis, procedure_done, diagnosis_date, obs_datetime, obs_id) VALUES(new.person_id, @diagnosis, "Myomectomy", new.obs_datetime, new.obs_datetime, new.obs_id);
+	END IF;
+
+IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "BILATERAL TUBAL LIGATION DIAGNOSIS" LIMIT 1) THEN
+		SET @diagnosis = (SELECT name FROM concept_name WHERE concept_name_id = new.value_coded_name_id);	
+
+  		INSERT INTO patient_report (patient_id, diagnosis, procedure_done, diagnosis_date, obs_datetime, obs_id) VALUES(new.person_id, @diagnosis, "Bilateral Tubal Ligation", new.obs_datetime, new.obs_datetime, new.obs_id);
+	END IF;
+
+
+
 	IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "ADMISSION SECTION" LIMIT 1) AND COALESCE(new.value_modifier, '') != '' THEN
 		SET @ward = (SELECT name FROM location WHERE location_id = new.value_modifier);	
 
