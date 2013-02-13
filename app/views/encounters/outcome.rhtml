@@ -1059,20 +1059,6 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
 	<% options = {
       :id => "procedure_diagnosis#{proc}",
       :field_type => 'text', 
-      :ajaxURL => "/encounters/procedure_diagnoses?procedure=bilateral_tubal_ligation&search_string=",     
-      :helptext =>"Reason For Procedure",     
-      :condition => (@location.downcase == "ante-natal ward" ? "false" :
-          "($('procedure_done#{proc}').value.toUpperCase() == 'BILATERAL TUBAL LIGATION')"),
-      :tt_pageStyleClass => "qwertyKeyboardOnly"
-    }%>
-    <%= hidden_field_tag("observations[][concept_name]", "BILATERAL TUBAL LIGATION DIAGNOSIS") %>
-    <%= select_tag("observations[][value_coded_or_text]", nil, options)%>
-    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
-    <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
-
-	<% options = {
-      :id => "procedure_diagnosis#{proc}",
-      :field_type => 'text', 
       :ajaxURL => "/encounters/procedure_diagnoses?procedure=myomectomy&search_string=",     
       :helptext =>"Reason For Procedure",     
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
