@@ -136,17 +136,17 @@
                   </div>
 
                   <% @patients.each do |patient| %>
-                    <div class="row">
-                      <div class="cell">
+                    <div class="row" style="vertical-align: middle;">
+                      <div class="cell" style="vertical-align: middle;">
                         <%= patient.national_id rescue "&nbsp;" %>
                       </div>
-                      <div class="cell">
+                      <div class="cell" style="vertical-align: middle;">
                         <%= patient.person.name rescue "" %>
                       </div>
-                      <div class="cell">
+                      <div class="cell" style="vertical-align: middle;">
                         <%= patient.date_created.strftime("%d/%b/%Y") rescue "" %>
                       </div>
-                      <div class="cell">
+                      <div class="cell"  style="vertical-align: middle;">
                         <%= patient.person.birthdate_formatted rescue "" %>
                       </div>
                       <div class="cell" style="vertical-align: middle; padding-left: 55px;">
@@ -169,7 +169,7 @@
                               patient.id, encounter.id]).collect{|obs|  obs.answer_string}.uniq rescue ['none']%>
 
                           <% diagnoses.each do |diag|%>
-                            <li> <%=diag%> </li>
+                            <li> <%=truncate(diag, :limit => 10, :separator => " ")%> </li>
                           <%end %>
                         </ul>
                       </div>
