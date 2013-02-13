@@ -149,10 +149,10 @@
                       <div class="cell">
                         <%= patient.person.birthdate_formatted rescue "" %>
                       </div>
-                      <div class="cell" style="vertical-align: top; padding: 0px;">
+                      <div class="cell" style="vertical-align: middle; padding-left: 55px;">
                         <div class="table">
                           <div class="row">                            
-                            <div text-align ="center" vertical-align= "middle" id="<%= "__" + patient.national_id rescue "" %>" 
+                            <div id="<%= "__" + patient.national_id rescue "" %>" 
                                  style="display: block; display: table-cell; vertical-align: middle; text-align: center;">
                               <%= patient.encounters.length %>
                             </div>
@@ -160,7 +160,7 @@
                         </div>
                       </div>
 					<div class="cell">
-                        <ul>
+                        <ul type="none">
                           <%  encounter_type = EncounterType.find_by_name("DIAGNOSIS")%>
                           <%  encounter = Encounter.find(:last, :conditions => ['patient_id = ? AND encounter_type = ?',
                               patient.id, encounter_type.id], :order => [:date_created], :include => [:observations]) if encounter_type%>
