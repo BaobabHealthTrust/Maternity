@@ -303,7 +303,8 @@ class CohortController < ActionController::Base # < ApplicationController
     if params[:parent]
 
 	procedure(params[:start_date], params[:end_date], params[:group], params[:field], params[:parent])
-
+    elsif params[:like]
+	diagnosis_regex(params[:start_date], params[:end_date], params[:group], params[:field])
     elsif params[:field] && !params[:ext] && !params[:pro] && !params[:proc]
       case params[:field]
       when "admissions"
@@ -768,12 +769,28 @@ class CohortController < ActionController::Base # < ApplicationController
 
   def diagnosis(startdate = Time.now, enddate = Time.now, group = 1, field = "")
 	
-	check_field = field.humanize.gsub("- ", "-").gsub("!", "/")
+	check_field = field.humanize.gsub("- ", "-").gsub("_", " ").gsub("!", "/")
+	if check_field.downcase == "pprom"
+		check_field = " Preterm Premature Rupture Of Membranes (Pprom)"
+	end
     patients = PatientReport.find(:all, :conditions => ["diagnosis = ? AND diagnosis_date >= ? AND diagnosis_date <= ?", 
         check_field, startdate, enddate]).collect{|p| p.patient_id}.uniq
 
     render :text => patients.to_json
   end
+
+  def diagnosis_regex(startdate = Time.now, enddate = Time.now, group = 1, field = "")
+
+	check_field = field.humanize.gsub("- ", "-").gsub("_", " ").gsub("!", "/")
+ 	if field == "invasive_cancer_of_cervix"
+		patients = PatientReport.find(:all, :conditions => ["diagnosis IN (?) AND diagnosis_date >= ? AND diagnosis_date <= ?", 
+		["Cervical stage 1", "Cervical stage 2", "Cervical stage 3", "Cervical stage 4", "Invasive cancer of cervix", "Cancer of Cervix"], startdate, enddate]).collect{|p| p.patient_id}.uniq
+	else
+	 	patients = PatientReport.find(:all, :conditions => ["diagnosis regexp ? AND diagnosis_date >= ? AND diagnosis_date <= ?", 
+		check_field, startdate, enddate]).collect{|p| p.patient_id}.uniq
+	end
+	render :text => patients.to_json
+end
 
   def procedure(startdate = Time.now, enddate = Time.now, group = 1, field = "", proc = "")
     check_field = field.humanize.gsub("- ", "-").gsub("!", "/") 
