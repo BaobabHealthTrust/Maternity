@@ -593,11 +593,11 @@ class PeopleController < ApplicationController
 		new_npid = Person.create_from_dde_server_only(passed_params)
 		npid = PatientIdentifier.new()
 		npid.patient_id = patient.id
-		npid.identifier_type = PatientIdentifierType.find_by_name('National ID').id
+		npid.identifier_type = PatientIdentifierType.find_by_name('National id').patient_identifier_type_id
 		npid.identifier = new_npid
 		npid.save
     else
-      PatientIdentifierType.find_by_name('National ID').next_identifier({:patient => patient})
+      PatientIdentifierType.find_by_name('National id').next_identifier({:patient => patient})
     end
     npid = PatientIdentifier.find(:first,
            :conditions => ["patient_id = ? AND identifier = ? 
