@@ -197,8 +197,11 @@ class PeopleController < ApplicationController
     create_from_dde_server = CoreService.get_global_property_value('create.from.dde.server') rescue false
 
     (Person.search_from_remote(params) || []).each do |data|
-			results = PersonSearch.new(data["npid"]["value"])
-      results.national_id = data["npid"]["value"]
+	  national_id = data["npid"]["value"] rescue nil
+      national_id = data["legacy_ids"] if national_id.blank?
+      next if national_id.blank?
+      results = PersonSearch.new(national_id)
+      results.national_id = national_id
       results.current_residence =data["person"]["data"]["addresses"]["city_village"]
       results.person_id = 0
       results.home_district = data["person"]["data"]["addresses"]["state_province"]
