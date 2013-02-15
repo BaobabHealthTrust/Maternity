@@ -1,15 +1,15 @@
 production:
   adapter: mysql
-  database: openmrs
+  database: maternity_stable
   username: root
-  password:
+  password: password
   host: localhost
 
 development:
   adapter: mysql
-  database: openmrs_maternity
+  database: maternity_stable
   username: root
-  password: 
+  password: password
   host: localhost
 
 test:

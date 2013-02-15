@@ -61,6 +61,7 @@ class Patient < ActiveRecord::Base
   end
 
   def national_id(force = true)
+	#raise PatientIdentifierType.find_by_name("National Id").id.to_yaml
     id = self.patient_identifiers.find_by_identifier_type(PatientIdentifierType.find_by_name("National id").id).identifier rescue nil
     return id unless force
     id ||= PatientIdentifierType.find_by_name("National id").next_identifier(:patient => self).identifier
