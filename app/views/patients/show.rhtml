@@ -58,11 +58,12 @@
 
             </select>
             <select id="links">
+			  
               <!--option value='/encounters/new/observations?patient_id=<%= @patient.id %>'>Admission Exams</option-->
-              <option value='/encounters/new/antenatal?patient_id=<%= @patient.id %>'>Ante-Natal Exams</option>
-              <option value='/encounters/new/postnatal?patient_id=<%= @patient.id %>'>Post-Natal Exams</option>
-              <option value='/encounters/new/outcome?patient_id=<%= @patient.id %>'>Update Outcome</option>
-              <option value='/encounters/update_hiv_status?patient_id=<%= @patient.id %>'>Update Hiv Status</option>
+              <optgroup label='Ante-Natal Exams' value='/encounters/new/antenatal?patient_id=<%= @patient.id %>'>Ante-Natal Exams</option>
+              <optgroup label='Post-Natal Exams' value='/encounters/new/postnatal?patient_id=<%= @patient.id %>'>Post-Natal Exams</option>
+              <optgroup label='Update Outcome' value='/encounters/new/outcome?patient_id=<%= @patient.id %>'>Update Outcome</option>
+              <optgroup label='Update Hiv Status' value='/encounters/update_hiv_status?patient_id=<%= @patient.id %>'>Update Hiv Status</option>
             </select>
             <select id="navigation_links">
 
