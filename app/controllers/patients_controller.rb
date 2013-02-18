@@ -416,7 +416,7 @@ class PatientsController < ApplicationController
     @past_encounter_dates = []
 
     @encounter_dates.each do |encounter|
-      @past_encounter_dates << encounter if encounter < (session[:datetime].to_date rescue Date.today.to_date)
+      @past_encounter_dates << encounter if encounter <= (session[:datetime].to_date rescue Date.today.to_date)
     end
 
     render :layout => false
