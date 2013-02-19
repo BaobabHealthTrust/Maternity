@@ -775,7 +775,10 @@ class CohortController < ActionController::Base # < ApplicationController
 	end
     patients = PatientReport.find(:all, :conditions => ["diagnosis = ? AND diagnosis_date >= ? AND diagnosis_date <= ?", 
         check_field, startdate, enddate]).collect{|p| p.patient_id}.uniq
-
+	if check_field == "anaemia"
+		patients_like = PatientReport.find(:all, :conditions => ["diagnosis = ? AND diagnosis_date >= ? AND diagnosis_date <= ?", 
+        check_field, startdate, enddate]).collect{|p| p.patient_id}.uniq
+	end
     render :text => patients.to_json
   end
 
@@ -784,10 +787,16 @@ class CohortController < ActionController::Base # < ApplicationController
 	check_field = field.humanize.gsub("- ", "-").gsub("_", " ").gsub("!", "/")
  	if field == "invasive_cancer_of_cervix"
 		patients = PatientReport.find(:all, :conditions => ["diagnosis IN (?) AND diagnosis_date >= ? AND diagnosis_date <= ?", 
-		["Cervical stage 1", "Cervical stage 2", "Cervical stage 3", "Cervical stage 4", "Invasive cancer of cervix", "Cancer of Cervix"], startdate, enddate]).collect{|p| p.patient_id}.uniq
+		["Cervical stage 1", "Cervical stage 2", "Cervical stage 3", "Cervical stage 4", "Invasive cancer of cervix", "Cancer of Cervix"], 			startdate, enddate]).collect{|p| p.patient_id}.uniq
 	else
 	 	patients = PatientReport.find(:all, :conditions => ["diagnosis regexp ? AND diagnosis_date >= ? AND diagnosis_date <= ?", 
 		check_field, startdate, enddate]).collect{|p| p.patient_id}.uniq
+	end
+	if check_field == "anaemia"
+		patients_like = PatientReport.find(:all, :conditions => ["diagnosis regexp ? AND diagnosis_date >= ? AND diagnosis_date <= ?", 
+        "anemia", startdate, enddate]).collect{|p| p.patient_id}.uniq
+		patients = patients.concat(patient_like)
+		patients.uniq!
 	end
 	render :text => patients.to_json
 end
@@ -799,8 +808,7 @@ end
 	check_proc = "Evacuation/Manual Vacuum Aspiration"
     end
 	
-    patients = PatientReport.find(:all, :conditions => ["diagnosis = ? AND procedure_done = ? AND diagnosis_date >= ? AND diagnosis_date <= ?", 
-        check_field, check_proc, startdate, enddate]).collect{|p| p.patient_id}.uniq
+    patients = PatientReport.find(:all, :conditions => ["diagnosis = ? AND procedure_done = ? AND diagnosis_date >= ? AND diagnosis_date <= ?",   check_field, check_proc, startdate, enddate]).collect{|p| p.patient_id}.uniq
 
     render :text => patients.to_json
   end
