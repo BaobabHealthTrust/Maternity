@@ -770,13 +770,104 @@ def self.create_from_dde_server_only(params)
       return JSON.parse(received_params)["npid"]["value"]
   end
 
+    def self.create_patient_from_dde(params)
+    old_identifier = params["identifier"] rescue nil
+	  address_params = params["person"]["addresses"]
+		names_params = params["person"]["names"]
+		patient_params = params["person"]["patient"]
+    birthday_params = params["person"]
+		params_to_process = params.reject{|key,value| 
+      key.match(/identifiers|addresses|patient|names|relation|cell_phone_number|home_phone_number|office_phone_number|agrees_to_be_visited_for_TB_therapy|agrees_phone_text_for_TB_therapy/) 
+    }
+		birthday_params = params_to_process["person"].reject{|key,value| key.match(/gender/) }
+		person_params = params_to_process["person"].reject{|key,value| key.match(/birth_|age_estimate|occupation/) }
+
+
+		if person_params["gender"].to_s == "Female"
+      person_params["gender"] = 'F'
+		elsif person_params["gender"].to_s == "Male"
+      person_params["gender"] = 'M'
+		end
+    
+		unless birthday_params.empty?
+		  if birthday_params["birth_year"] == "Unknown"
+			  birthdate = Date.new(Date.today.year - birthday_params["age_estimate"].to_i, 7, 1) 
+        birthdate_estimated = 1
+		  else
+			  year = birthday_params["birth_year"]
+        month = birthday_params["birth_month"]
+        day = birthday_params["birth_day"]
+
+        month_i = (month || 0).to_i                                                 
+        month_i = Date::MONTHNAMES.index(month) if month_i == 0 || month_i.blank?   
+        month_i = Date::ABBR_MONTHNAMES.index(month) if month_i == 0 || month_i.blank?
+                                                                                    
+        if month_i == 0 || month == "Unknown"                                       
+          birthdate = Date.new(year.to_i,7,1)                                
+          birthdate_estimated = 1
+        elsif day.blank? || day == "Unknown" || day == 0                            
+          birthdate = Date.new(year.to_i,month_i,15)                         
+          birthdate_estimated = 1
+        else                                                                        
+          birthdate = Date.new(year.to_i,month_i,day.to_i)                   
+          birthdate_estimated = 0
+        end
+		  end
+    else
+      birthdate_estimated = 0
+		end
+
+    passed_params = {"person"=> 
+        {"data" => 
+          {"addresses"=> 
+            {"state_province"=> address_params["address2"], 
+            "address2"=> address_params["address1"], 
+            "city_village"=> address_params["city_village"],
+            "county_district"=> address_params["county_district"]
+          }, 
+          "attributes"=> 
+            {"occupation"=> params["person"]["occupation"], 
+            "cell_phone_number" => params["person"]["cell_phone_number"] },
+          "patient"=> 
+            {"identifiers"=> {"old_identification_number"=> old_identifier}},
+          "gender"=> person_params["gender"], 
+          "birthdate"=> birthdate, 
+          "birthdate_estimated"=> birthdate_estimated , 
+          "names"=>{"family_name"=> names_params["family_name"], 
+            "given_name"=> names_params["given_name"]
+          }}}}
+
+    if !params["remote"]
+      
+      @dde_server = GlobalProperty.find_by_property("dde_server_ip").property_value rescue ""
+    
+      @dde_server_username = GlobalProperty.find_by_property("dde_server_username").property_value rescue ""
+    
+      @dde_server_password = GlobalProperty.find_by_property("dde_server_password").property_value rescue ""
+    
+      uri = "http://#{@dde_server_username}:#{@dde_server_password}@#{@dde_server}/people.json/"                          
+      recieved_params = RestClient.post(uri,passed_params)      
+                                          
+      national_id = JSON.parse(recieved_params)["npid"]["value"]
+    else
+      national_id = params["person"]["patient"]["identifiers"]["National_id"]
+    end
+      
+	  person = person = self.create_from_form(params[:person] || params["person"])
+    
+    identifier_type = PatientIdentifierType.find_by_name("National id") || PatientIdentifierType.find_by_name("Unknown id")
+    person.patient.patient_identifiers.create("identifier" => national_id, 
+      "identifier_type" => identifier_type.patient_identifier_type_id) unless national_id.blank?
+    return person
+  end
+
   def self.get_patient(person)
     require "bean"
     patient = PatientBean.new('')
     patient.person_id = person.id
     patient.patient_id = person.patient.id
     patient.arv_number = get_patient_identifier(person.patient, 'ARV Number')
-    patient.address = person.addresses.first.city_village
+    patient.address = person.addresses.first.city_village rescue nil
     patient.national_id = get_patient_identifier(person.patient, 'National id')
 	patient.national_id_with_dashes = get_national_id_with_dashes(person.patient, true) 
     patient.name = person.names.first.given_name + ' ' + person.names.first.family_name rescue nil
@@ -786,10 +877,10 @@ def self.create_from_dde_server_only(params)
     patient.dead = person.dead
     patient.birth_date = birthdate_formatted(person)
     patient.birthdate_estimated = person.birthdate_estimated
-    patient.home_district = person.addresses.first.address2
-    patient.traditional_authority = person.addresses.first.county_district
-    patient.current_residence = person.addresses.first.city_village
-    patient.landmark = person.addresses.first.address1
+    patient.home_district = person.addresses.first.address2 rescue nil
+    patient.traditional_authority = person.addresses.first.county_district rescue nil
+    patient.current_residence = person.addresses.first.city_village rescue nil
+    patient.landmark = person.addresses.first.address1 rescue nil
     patient.mothers_surname = person.names.first.family_name2
     patient.eid_number = get_patient_identifier(person.patient, 'EID Number') rescue nil
     patient.pre_art_number = get_patient_identifier(person.patient, 'Pre ART Number (Old format)') rescue nil
@@ -858,7 +949,7 @@ def self.get_birthdate_formatted(birthdate,birthdate_estimated)
     end                                                                         
   end 
 
-def self.search_from_dde_by_identifier(identifier)
+ def self.search_from_dde_by_identifier(identifier)
       dde_server = GlobalProperty.find_by_property("dde_server_ip").property_value rescue ""
       dde_server_username = GlobalProperty.find_by_property("dde_server_username").property_value rescue ""
       dde_server_password = GlobalProperty.find_by_property("dde_server_password").property_value rescue ""
@@ -869,8 +960,8 @@ def self.search_from_dde_by_identifier(identifier)
 
       local_people = []
       people.each do |person|
-        national_id = person['person']["value"] rescue person["person"]["data"]["patient"]["identifiers"]["old_identification_number"]
-        old_national_id = person["person"]["data"]["patient"]["identifiers"]["old_identification_number"] rescue nil
+        national_id = person['person']["value"] rescue nil
+        old_national_id = person["person"]["old_identification_number"] rescue nil
 
         birthdate_year = person["person"]["data"]["birthdate"].to_date.year rescue "Unknown"
         birthdate_month = person["person"]["data"]["birthdate"].to_date.month rescue nil
