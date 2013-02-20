@@ -118,17 +118,18 @@ class PeopleController < ApplicationController
   def search
     found_person = nil
     if params[:identifier]
-      local_result_set = ANCService.search_by_identifier(params[:identifier])
+      local_result_set = Person.search_by_identifier(params[:identifier])
 
       # raise local_results.to_yaml
       ids_list = []
       local_results = []
       local_result_set.each{|persn|
+        next if persn.to_s == "found duplicate identifiers"
         local_results << persn if !ids_list.include?(persn.person_id)
         ids_list << persn.id if !ids_list.include?(persn.person_id)        
       }  
      
-      if local_results.length > 1
+      if local_result_set.length > 1
 		redirect_to :action => 'duplicates' ,:search_params => params
         return	
         #@people = Person.search(params)
@@ -169,9 +170,9 @@ class PeopleController < ApplicationController
 
         if create_from_dde_server
           patient = DDEService::Patient.new(found_person.patient)
-
-          national_id_replaced = patient.check_old_national_id(params[:identifier])
-          if national_id_replaced
+	
+          national_id_replaced = patient.check_old_national_id(params[:identifier]) rescue ""
+          if national_id_replaced.to_s == "true"
             print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", next_task(found_person.patient)) and return
           end
         end
@@ -249,26 +250,18 @@ class PeopleController < ApplicationController
  
   # This method is just to allow the select box to submit, we could probably do this better
   def select
-=begin
-    people= Person.search_from_remote(params)    
-    people = Person.search_by_identifier(params[:identifier]) if (people == {} rescue false)
-    raise people.to_yaml
-    found_person = people.first.patient
-=end
-  
+ 
     if params[:person][:id] != '0' && (Person.find(params[:person][:id]).dead == 1 rescue false)
 
 			redirect_to :controller => :patients, :action => :show, :id => params[:person]
 		else
-
       related_person = Person.search_by_identifier(params[:identifier]).first.patient rescue nil     
-      dde_person = ANCService.search_by_identifier(params[:identifier]) if related_person.nil? and !params[:identifier].blank?
-      related_person = Person.search_by_identifier(params[:identifier]).first.patient rescue nil
-      params[:person][:id] = related_person.id if related_person
-       
-      if dde_person && !related_person.nil?
+      related_person = ANCService.search_by_identifier(params[:identifier]).first.patient rescue nil if related_person.nil? and !params[:identifier].blank?
+      params[:person][:id] = related_person.patient_id if related_person
+      
+      if !related_person.nil?
         print_and_redirect("/patients/national_id_label?patient_id=#{related_person.id}",
-          "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{person.id}&cat=#{params[:cat]}") and return if params[:cat] != 'mother'
+          "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{related_person.id}&cat=#{params[:cat]}") and return if params[:cat] != 'mother'
         print_and_redirect("/patients/national_id_label?patient_id=#{related_person.id}",
           "/patients/show/#{params[:person][:id]}?patient_id=#{related_person.id}&cat=#{params[:cat]}") and return if params[:cat] == 'mother'
       end
@@ -361,7 +354,7 @@ class PeopleController < ApplicationController
 			person = ANCService.create_from_form(params[:person])
 			if !person.nil?	
 				patient_identifier = PatientIdentifier.new
-				patient_identifier.type = PatientIdentifierType.find_by_name("National id").id
+				patient_identifier.type = PatientIdentifierType.find_by_name("National id")
 				patient_identifier.identifier = params[:identifier]
 				patient_identifier.patient = person.patient
 				patient_identifier.save!
@@ -370,7 +363,7 @@ class PeopleController < ApplicationController
 			person = ANCService.create_patient_from_dde(params) rescue nil
 			if !person.nil?
 				old_identifier = PatientIdentifier.new
-				old_identifier.type = PatientIdentifierType.find_by_name("Old Identification Number").id
+				old_identifier.type = PatientIdentifierType.find_by_name("Old Identification Number")
 				old_identifier.identifier = params[:identifier]
 				old_identifier.patient = person.patient
 				old_identifier.save!
@@ -561,11 +554,21 @@ class PeopleController < ApplicationController
   def add_batch
  
   end
- def duplicates
+  
+  def duplicates
     @duplicates = []
-    ANCService.search_by_identifier(params[:search_params][:identifier]).each do |person|
+    people = Person.person_search(params[:search_params])
+    people.each do |person|
       @duplicates << Person.get_patient(person)
+    end unless people == "found duplicate identifiers"
+
+    if create_from_dde_server
+      @remote_duplicates = []
+      Person.search_from_dde_by_identifier(params[:search_params][:identifier]).each do |person|
+        @remote_duplicates << Person.get_dde_person(person)
+      end
     end
+
     @selected_identifier = params[:search_params][:identifier]
     render :layout => 'menu'
   end
@@ -575,20 +578,28 @@ class PeopleController < ApplicationController
     print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", next_task(person.patient))
   end
 
-  def remote_duplicates
-    @primary_patient = Person.get_patient(Person.find(params[:patient_id]))
+ def remote_duplicates
+    if params[:patient_id]
+      @primary_patient = Person.get_patient(Person.find(params[:patient_id]))
+    else
+      @primary_patient = nil
+    end
+    
     @dde_duplicates = []
     if create_from_dde_server
       Person.search_from_dde_by_identifier(params[:identifier]).each do |person|
-		
         @dde_duplicates << Person.get_dde_person(person)
       end
+    end
+
+    if @primary_patient.blank? and @dde_duplicates.blank?
+      redirect_to :action => 'search',:identifier => params[:identifier] and return
     end
     render :layout => 'menu'
   end
 
-  def reassign_national_identifier	
 
+  def reassign_national_identifier	
 
     patient = Patient.find(params[:person_id])
     if create_from_dde_server

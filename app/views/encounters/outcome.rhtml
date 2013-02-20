@@ -36,11 +36,11 @@
         currentWeight = $('weight' + i).value;
         gender = $("baby_gender" + i).value;
         if (gender == "Male"){
-          maxi = 4.5;
-          mini = 2.5;
+          maxi = 4500.0;
+          mini = 2500.0;
         }else if (gender == "Female"){
-          maxi = 4.4;
-          mini = 2.4;
+          maxi = 4400.0;
+          mini = 2400.0;
         }
 
         var alertsRow = document.createElement("div");
@@ -119,7 +119,15 @@
     
 
     arr = ["Appearance", "Pulse", "Grimance", "Activity", "Respiration"]
-    arr_val = ['Blue, Pale', "Pink </br> Extreme blue", "Completely </br> pink",
+  /*
+    arr_val = ['Pale/blue', "Baby pink/</br>blue extremities", "Completely </br> pink",
+      "None", "Slow -</br>Below 100 bpm", "Above </br>100 bpm",
+      "Flaccid", "Some flexion </br> of Extremities", "Active Motion",
+      "None", "Grimance", "Vigorous </br>cry",
+      "Absent", "Slow - </br> irregular", "Good crying"];
+  */
+  // arr_labels = ["Color", "Heart Rate", "Muscle Tone", "Reflex Irritability", "Respiratory Effort"]
+   arr_val = ['Blue, Pale', "Pink </br> Extreme blue", "Completely </br> pink",
       "Absent", "Below </br>100 bpm", "Over </br>100 bpm",
       "Flaccid", "Some Flexion </br> of Extremities", "Active motion",
       "Absent", "Arms and legs</br> flexed", "Active movement",
@@ -227,11 +235,11 @@
     displayText = "";
     $('weight_for_age').value = currentWeight;   
     if ((currentWeight <= maxi) && (currentWeight >=mini)){
-      displayText = "<span class='normal'>" + currentWeight + "Kg - Normal Weight </span>";
+      displayText = "<span class='normal'>" + currentWeight + "g - Normal Weight </span>";
     } else if (currentWeight > maxi) {
-      displayText = "<span class='yellow_alert'>" + currentWeight + "Kg - Over Weight </span>";
+      displayText = "<span class='yellow_alert'>" + currentWeight + "g - Over Weight </span>";
     } else if (currentWeight < mini){
-      displayText = "<span class='red_alert'>" + currentWeight + "Kg - Under Weight</span>";
+      displayText = "<span class='red_alert'>" + currentWeight + "g - Under Weight</span>";
     }
     return displayText;
   }
@@ -332,11 +340,11 @@
 
       gender = $("baby_gender" + baby_num).value;
       if (gender == "Male"){
-        maxi = 4.5;
-        mini = 2.5;
+        maxi = 4500.0;
+        mini = 2500.0;
       }else if (gender == "Female"){
-        maxi = 4.4;
-        mini = 2.4;
+        maxi = 4400.0;
+        mini = 2400.0;
       }
       $("inputFrame" + tstCurrentPage).appendChild(div);
 
@@ -770,24 +778,24 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
     <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-    <%= touch_text_field_tag "WEIGHT (KG)", @patient, nil,
+    <%= touch_text_field_tag "BIRTH WEIGHT", @patient, nil,
       {	:id => "weight#{baby}",
       :field_type => 'number',
-      :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Weight (KG)",
+      :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Weight (Grams)",
       :tt_onLoad => "timedEvent = self.setInterval(function(){weightAlert()}, 100);",
       :tt_onUnLoad => "window.clearInterval(timedEvent); displaySummary='true';",
-      :min => number_with_precision(2.5, :precision => 1),
-      :max => number_with_precision(4.5, :precision => 1),
+      :min => number_with_precision(2500.0, :precision => 1),
+      :max => number_with_precision(4500.0, :precision => 1),
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
           "($('discharge_outcome').value.toUpperCase() == 'DELIVERED' && parseInt($('number_of_babies').value) > #{baby - 1}) /*|| " +
           "($('discharge_outcome').value.toUpperCase() == 'DISCHARGED' && parseInt($('number_of_babies').value) > #{baby - 1})*/"),
       :absoluteMin => 0,
-      :absoluteMax =>10,
+      :absoluteMax =>10000,
       :validationRule => "([0-9]+(\\.[0-9])?)|Unknown$",
       :validationMessage => "You must enter a number between 0 and 15 (for example: 54<b>.6</b>)",
       :tt_pageStyleClass => "unknownButton"} %>
 
-    <%= touch_text_field_tag "HEIGHT (CM)", @patient, nil,
+    <%= touch_text_field_tag "BIRTH LENGTH", @patient, nil,
       {	:id => "height#{baby}",
       :field_type => "number",
       :tt_onLoad => "$('clearButton').style.display = 'inline'; $('Unknown').style.display = 'block'; ",
@@ -803,7 +811,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
       :validationRule => "^([0-9]+)|Unknown$",
       :validationMessage => "You must enter numbers only (for example 157)",
       :tt_pageStyleClass => "unknownButton ",
-      :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Height (CM)" } %>
+      :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Length (CM)" } %>
    
       <% options = {
         :id => "appearance#{baby}"
