@@ -165,14 +165,12 @@ class PeopleController < ApplicationController
         end
       end
 
-      create_from_dde_server = CoreService.get_global_property_value('create.from.dde.server').to_s == "true" rescue false
-      if found_person
+     if found_person
 
         if create_from_dde_server
           patient = DDEService::Patient.new(found_person.patient)
-	
-          national_id_replaced = patient.check_old_national_id(params[:identifier]) rescue ""
-          if national_id_replaced.to_s == "true"
+	        national_id_replaced = patient.check_old_national_id(params[:identifier]) if found_person.patient.national_id.length != 6 
+          if national_id_replaced.to_s == "true" || params[:identifier] != found_person.patient.national_id
             print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", next_task(found_person.patient)) and return
           end
         end
@@ -198,8 +196,10 @@ class PeopleController < ApplicationController
     create_from_dde_server = CoreService.get_global_property_value('create.from.dde.server') rescue false
 
     (Person.search_from_remote(params) || []).each do |data|
-	  national_id = data["npid"]["value"] rescue nil
-      national_id = data["legacy_ids"] if national_id.blank?
+	  national_id = data["person"]["data"]["patient"]["identifiers"]["National id"] rescue nil
+      national_id = data["person"]["value"] if national_id.blank? rescue nil
+      national_id = data["person"]["data"]["patient"]["identifiers"]["old_identification_number"] if national_id.blank? rescue nil
+
       next if national_id.blank?
       results = PersonSearch.new(national_id)
       results.national_id = national_id
@@ -220,7 +220,7 @@ class PeopleController < ApplicationController
 
 
 		(@people || []).each do | person |
-			patient = Person.get_patient(person)
+			patient = Person.get_patient(person) rescue nil
       next if patient.blank?
 			results = PersonSearch.new(patient.national_id || patient.patient_id)
       results.national_id = patient.national_id
@@ -251,21 +251,31 @@ class PeopleController < ApplicationController
   # This method is just to allow the select box to submit, we could probably do this better
   def select
  
-    if params[:person][:id] != '0' && (Person.find(params[:person][:id]).dead == 1 rescue false)
+    if params[:person] && params[:person][:id] != '0' && (Person.find(params[:person][:id]).dead == 1 rescue false)
 
 			redirect_to :controller => :patients, :action => :show, :id => params[:person]
 		else
       related_person = Person.search_by_identifier(params[:identifier]).first.patient rescue nil     
       related_person = ANCService.search_by_identifier(params[:identifier]).first.patient rescue nil if related_person.nil? and !params[:identifier].blank?
+			params[:person] = Hash.new if !params[:person]
       params[:person][:id] = related_person.patient_id if related_person
       
       if !related_person.nil?
-        print_and_redirect("/patients/national_id_label?patient_id=#{related_person.id}",
+        if related_person.national_id.length != 6
+          dde_patient = DDEService::Patient.new(related_person)
+          national_id_replaced = dde_patient.check_old_national_id(related_person.national_id)
+          
+          if national_id_replaced.to_s == "true"
+            print_and_redirect("/patients/national_id_label?patient_id=#{related_person.id}",
           "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{related_person.id}&cat=#{params[:cat]}") and return if params[:cat] != 'mother'
-        print_and_redirect("/patients/national_id_label?patient_id=#{related_person.id}",
-          "/patients/show/#{params[:person][:id]}?patient_id=#{related_person.id}&cat=#{params[:cat]}") and return if params[:cat] == 'mother'
+            print_and_redirect("/patients/national_id_label?patient_id=#{related_person.id}",
+          "/patients/show/#{params[:person][:id]}?patient_id=#{related_person.id}&cat=#{params[:cat]}") and return if params[:cat] == 'mother'         
+          else
+            redirect_to "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{related_person.id}&cat=#{params[:cat]}" and return if params[:cat] != 'mother'
+            redirect_to "/patients/show/#{params[:person][:id]}?patient_id=#{related_person.id}&cat=#{params[:cat]}" and return if params[:cat] == 'mother'
+         end          
+        end
       end
-
 			redirect_to "/patients/show/#{params[:person][:id]}" and return if (!params[:person][:id].blank? &&
           params[:person][:id] != '0') && (params[:cat] and !params[:cat].blank? and params[:cat] == "mother")
 
@@ -561,20 +571,25 @@ class PeopleController < ApplicationController
     people.each do |person|
       @duplicates << Person.get_patient(person)
     end unless people == "found duplicate identifiers"
-
+ 
     if create_from_dde_server
       @remote_duplicates = []
       Person.search_from_dde_by_identifier(params[:search_params][:identifier]).each do |person|
         @remote_duplicates << Person.get_dde_person(person)
       end
     end
-
     @selected_identifier = params[:search_params][:identifier]
     render :layout => 'menu'
   end
  
   def reassign_dde_national_id
     person = DDEService.reassign_dde_identication(params[:dde_person_id],params[:local_person_id])
+
+	if params[:cat] && params[:session_patient_id]
+			url = "/relationships/new?patient_id=#{params[:session_patient_id]}&relation=#{person.id}&cat=#{params[:cat]}"
+			print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", url) and return
+	end
+	
     print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", next_task(person.patient))
   end
 
@@ -616,14 +631,29 @@ class PeopleController < ApplicationController
     npid = PatientIdentifier.find(:first,
            :conditions => ["patient_id = ? AND identifier = ? 
            AND voided = 0", patient.id,params[:identifier]])
-	if npid
-		npid.voided = 1
-		npid.void_reason = "Given another national ID"
-		npid.date_voided = Time.now()
-		npid.voided_by = current_user.id
-		npid.save
-    end
-    print_and_redirect("/patients/national_id_label?patient_id=#{patient.id}", next_task(patient))
+		if npid
+			npid.voided = 1
+			npid.void_reason = "Given another national ID"
+			npid.date_voided = Time.now()
+			npid.voided_by = current_user.id
+			npid.save
+   end
+
+		if params[:cat] && params[:session_patient_id]
+			url = "/relationships/new?patient_id=#{params[:session_patient_id]}&relation=#{patient.id}&cat=#{params[:cat]}"
+			print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", url) and return
+		end     
+		print_and_redirect("/patients/national_id_label?patient_id=#{patient.id}", next_task(patient))
+  end
+
+  def create_person_from_dde                                                    
+    person = DDEService.get_remote_person(params[:remote_person_id])                                                             
+		#raise person.to_yaml
+	if params[:cat] && params[:session_patient_id]
+			url = "/relationships/new?patient_id=#{params[:session_patient_id]}&relation=#{person.id}&cat=#{params[:cat]}"
+			print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", url) and return
+	end                    
+    print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", next_task(person.patient))
   end
   
   protected
