@@ -171,11 +171,13 @@ class PeopleController < ApplicationController
           patient = DDEService::Patient.new(found_person.patient)
 	        national_id_replaced = patient.check_old_national_id(params[:identifier]) if found_person.patient.national_id.length != 6 
           if national_id_replaced.to_s == "true" || params[:identifier] != found_person.patient.national_id
-            print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", next_task(found_person.patient)) and return
+						if params[:cat] && (params[:cat].downcase rescue "") != "mother" && params[:patient_id]	
+							print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{found_person.id }&cat=#{params[:cat]}") and return
+						end
+							print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", next_task(found_person.patient))  and return          
           end
         end
-
-				if (params[:cat].downcase rescue "") != "mother" && params[:patient_id]
+				if params[:cat] && (params[:cat].downcase rescue "") != "mother" && params[:patient_id]
 
           redirect_to "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{found_person.id
             }&cat=#{params[:cat]}" and return

@@ -191,9 +191,10 @@ module DDEService
   passed_national_id = (p["person"]["patient"]["identifiers"]["National id"])rescue nil
   passed_national_id = (p["person"]["value"]) if passed_national_id.blank? rescue nil
   
-  if passed_national_id.blank?
-    return [DDEService.get_remote_person(p["person"]["id"])]
-  end
+	 unless passed_national_id.blank?
+      [DDEService.get_remote_person(p["person"]["id"])]
+      return true
+   end
 
   person = {"person" => {
         "birthdate_estimated" => (self.person.birthdate_estimated rescue nil),
@@ -591,7 +592,7 @@ module DDEService
 
       uri = "http://#{@dde_server_username}:#{@dde_server_password}@#{@dde_server}/people.json/"
       received_params = RestClient.post(uri,passed_params)
-
+raise received_params.to_yaml
       national_id = JSON.parse(received_params)["npid"]["value"]
 
     else

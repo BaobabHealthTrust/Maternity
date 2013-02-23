@@ -791,13 +791,14 @@ class CohortController < ActionController::Base # < ApplicationController
 	else
 	 	patients = PatientReport.find(:all, :conditions => ["diagnosis regexp ? AND diagnosis_date >= ? AND diagnosis_date <= ?", 
 		check_field, startdate, enddate]).collect{|p| p.patient_id}.uniq
-	end
-	if check_field == "anaemia"
-		patients_like = PatientReport.find(:all, :conditions => ["diagnosis regexp ? AND diagnosis_date >= ? AND diagnosis_date <= ?", 
+
+		if check_field == "Anaemia"
+			patients_like = PatientReport.find(:all, :conditions => ["diagnosis regexp ? AND diagnosis_date >= ? AND diagnosis_date <= ?", 
         "anemia", startdate, enddate]).collect{|p| p.patient_id}.uniq
-		patients = patients.concat(patient_like)
-		patients.uniq!
+			patients = patients.concat(patients_like).uniq
+		end
 	end
+	
 	render :text => patients.to_json
 end
 
