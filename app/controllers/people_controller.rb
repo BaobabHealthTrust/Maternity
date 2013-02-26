@@ -374,7 +374,7 @@ class PeopleController < ApplicationController
 				patient_identifier.patient = person.patient
 				patient_identifier.save!
 			end
-		elsif params[:identifier].length == 13 && create_from_dde_server
+		elsif params[:identifier] && create_from_dde_server
 			person = ANCService.create_patient_from_dde(params) rescue nil
 			if !person.nil?
 				old_identifier = PatientIdentifier.new

@@ -115,8 +115,14 @@ div { -moz-user-select: none; }
 	<%end%>
     </td>
   </tr>
- <%end%>
-  <%
+ <%end
+ 
+    ( @duplicates || {} ).each do | patient |
+      if patient.national_id.length == 6
+     	 @remote_duplicates.delete_if{|x| x.national_id == patient.national_id}
+			end rescue nil
+     end
+  
     row_number = 0
     ( @remote_duplicates || {} ).each do | patient |
       if color == 'white'
