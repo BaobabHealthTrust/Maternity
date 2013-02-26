@@ -5,20 +5,59 @@ require 'barby/outputter/rmagick_outputter'
 class EncountersController < ApplicationController
 
   def create
-
 	  @patient = Patient.find(params[:encounter][:patient_id])
-    if((CoreService.get_global_property_value("create.from.dde.server") == true) && !@patient.nil?)
+    identifier = PatientIdentifier.find(:last, :conditions => ["patient_id = ? AND identifier_type = ?", @patient.id, PatientIdentifierType.find_by_name("National id")]).identifier rescue ""
+ 
+    if((CoreService.get_global_property_value("create.from.dde.server") == true) && !@patient.nil? && identifier.length != 6)
       dde_patient = DDEService::Patient.new(@patient)
       identifier = dde_patient.get_full_identifier("National id").identifier rescue nil
-      national_id_replaced = dde_patient.check_old_national_id(identifier)
-      if national_id_replaced
+      national_id_replaced = dde_patient.check_old_national_id(identifier) rescue nil
+      if national_id_replaced.to_s == "true"
         print_and_redirect("/patients/national_id_label?patient_id=#{@patient.id}", "/patients/show?patient_id=#{@patient.id}") and return
       end
     end
-    
-    if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME"
+		
+     if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME"	
+				
+				params["observations"].each do |obs|
+					if ((obs["concept_name"].upcase ==  "STATUS OF BABY") rescue false) 
+						obs.delete("value_coded_or_text") 
+					elsif ((obs["concept_name"].upcase == "BABY IDENTIFIER") rescue false)
+						obs.delete("value_coded_or_text")
+					end
+				end
+			@mother = MaternityService::Maternity.new(@patient) rescue nil
+			@children = @mother.kids
+			
+			params["baby_obs"].split("!").each do |bb_ob|
+				obs_value = bb_ob.split("--").last
+				baby_id = @children.collect{|child| child.person_b if ((PersonName.find_by_person_id(child.person_b).given_name + "  " + PersonName.find_by_person_id(child.person_b).family_name).to_s == bb_ob.split("--").first) }
 
+				baby_id = baby_id.reject {|b| !b }.first rescue nil
+				baby_concept_id = ConceptName.find_by_name("STATUS OF BABY").concept_id rescue nil
+				if not obs_value.blank? and not baby_id.blank? and not baby_concept_id.blank?
+					 params[:encounter][:encounter_datetime] = (params[:encounter][:encounter_datetime].to_date.strftime("%Y-%m-%d ") +
+			    Time.now.strftime("%H:%M")) rescue Time.now()
+					
+					baby_encounter = Encounter.new(params[:encounter])
+					baby_encounter.patient_id = baby_id
+					baby_encounter.save
+	
+
+					baby_ob = Observation.new
+					baby_ob.value_text = obs_value
+					baby_ob.person_id = baby_id
+					baby_ob.concept_id = baby_concept_id
+					baby_ob.encounter_id = baby_encounter.id
+					baby_ob.obs_datetime = params[:encounter][:encounter_datetime]
+					baby_ob.save
+
+				end	
+			end	rescue nil	
+
+				delivered = (params["observations"].collect{|o| o if !o["value_coded_or_text"].nil? and o["value_coded_or_text"].upcase == "DELIVERED"}.compact.length	 > 0)	
       baby_date_map = params[:baby_date_map].split("!") rescue nil
+
       if !baby_date_map.nil?
         baby_date_map.reject! { |b| b.empty? }
         count = 1
@@ -31,28 +70,72 @@ class EncountersController < ApplicationController
       end
     end
 
-    if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME"
-      delivered = params["observations"].collect{|o| o if !o["value_coded_or_text"].nil? and o["value_coded_or_text"].upcase == "DELIVERED"}.compact.length
+		if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME" && params[:owner]		
+			baby = MaternityService.extract_baby(params)
 
-      if delivered > 0
-        babies = MaternityService.extract_live_babies(params)
+			@patient = Patient.find(params["encounter"]["patient_id"]) # rescue nil
 
-        @patient = Patient.find(params["encounter"]["patient_id"]) # rescue nil
-        
-        @maternity_patient = MaternityService::Maternity.new(@patient)
+			@maternity_patient = MaternityService::Maternity.new(@patient)
 
-        babies.each do |baby|
-          # raise baby.to_yaml
-          @maternity_patient.create_baby(baby)
-        end
-      end
-    end
-    
+			baby.each do |baby|
+				# raise baby.to_yaml
+				relationship = @maternity_patient.create_baby(baby)
+				created_baby = Patient.find(relationship.person_b)
+				unless created_baby.blank?
+					#Save encounter and observations with baby's patient id
+					params[:encounter][:encounter_datetime] = (params[:encounter][:encounter_datetime].to_date.strftime("%Y-%m-%d ") +
+			    Time.now.strftime("%H:%M")) rescue Time.now()
+			
+					encounter = Encounter.new(params[:encounter])
+					encounter.patient_id = created_baby.patient_id
+					encounter.save
+
+					(params[:observations] || []).each do |observation|
+						# Check to see if any values are part of this observation
+						# This keeps us from saving empty observations
+
+						if !observation[:value_time].blank?
+							observation["value_datetime"] = Time.now.strftime("%Y-%m-%d ") + observation["value_time"]
+							observation.delete(:value_time)
+						elsif observation[:value_time]
+							observation.delete(:value_time)
+						end
+						
+						observation.delete(:patient_id) if observation[:patient_id]
+						observation.delete(:person_id)  if observation[:person_id]
+					
+						values = "coded_or_text group_id boolean coded drug datetime numeric modifier text".split(" ").map{|value_name|
+							observation["value_#{value_name}"] unless observation["value_#{value_name}"].blank? rescue nil
+						}.compact
+
+						next if values.length == 0
+						observation.delete(:value_text) 
+						observation[:encounter_id]    = encounter.id
+						observation[:person_id]     = encounter.patient_id
+						
+						Observation.create(observation) 
+					end
+				end
+
+			end
+
+			number_of_babies = params[:num_of_babies] rescue ""
+			number_of_babies = params[:number_of_babies].to_i rescue -1  if number_of_babies.blank?
+			number_of_babies = number_of_babies.to_i
+			
+			baby = params[:baby] rescue ""
+			baby = -1 if baby.blank?
+			baby = baby.to_i 
+					
+			redirect_to "/encounters/baby_outcome?patient_id=#{params[:patient_id]}&baby=#{baby}&number_of_babies=#{number_of_babies}"  and return if (params[:baby] && params[:number_of_babies] && number_of_babies >= baby) || (params["observations"].collect{|o| o if !o["value_coded_or_text"].nil? and o["value_coded_or_text"].upcase == "DELIVERED"}.compact.length > 0)
+		
+  		redirect_to "/patients/show/#{@patient.id}" and return
+		end
+
     params[:encounter][:encounter_datetime] = (params[:encounter][:encounter_datetime].to_date.strftime("%Y-%m-%d ") +
         Time.now.strftime("%H:%M")) rescue Time.now()
     
     encounter = Encounter.new(params[:encounter])
-    # encounter.encounter_datetime = session[:datetime] unless session[:datetime].blank? # not sure why this was put here. It's spoiling the dates
     encounter.save
 
     (params[:observations] || []).each do |observation|
@@ -82,13 +165,21 @@ class EncountersController < ApplicationController
     if referred_out
       redirect_to "/encounters/new/refer_out?patient_id=#{@patient.id}" and return
     end
+		if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME" 
+			num = params[:observations].collect{|o| o[:value_coded_or_text] if o[:concept_name].upcase == "NUMBER OF BABIES"}.compact.first rescue nil
+			
+			number_of_babies = num.to_i rescue nil unless num.blank?
+			if number_of_babies.blank? 
+				number_of_babies = params[:num_of_babies] rescue "" unless number_of_babies.blank?
+				number_of_babies = params[:number_of_babies].to_i rescue -1  if number_of_babies.blank?
+				number_of_babies = number_of_babies.to_i
+			end
 
-    # raise encounter.to_yaml
-    
-    # elsif encounter.patient.current_visit.encounters.active.collect{|e|
-  
+			redirect_to "/encounters/baby_outcome?patient_id=#{params[:patient_id]}&baby=0&number_of_babies=#{number_of_babies}"  and return if (params["observations"].collect{|o| o if !o["value_coded_or_text"].nil? and o["value_coded_or_text"].upcase == "DELIVERED"}.compact.length > 0)
 
-    if encounter.patient.current_visit.encounters.active.collect{|e|
+		end
+
+		if encounter.patient.current_visit.encounters.active.collect{|e|
         e.observations.collect{|o|
           o.answer_string if ["PATIENT DIED", "DISCHARGED", "REFERRED OUT"].include?(o.answer_string.to_s.upcase)         
         }.compact if e.type.name.upcase.eql?("UPDATE OUTCOME")
@@ -138,6 +229,15 @@ class EncountersController < ApplicationController
   end
 
   def new
+	
+		@patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil    
+		@mother = MaternityService::Maternity.new(@patient) rescue nil
+		@children = @mother.kids		
+		@children_names = @children.collect{|child| PersonName.find_by_person_id(child.person_b).given_name + "  " + 				PersonName.find_by_person_id(child.person_b).family_name if Person.find(child.person_b).age == 0}
+		@children_names = @children_names.concat(["Other"]) unless (@children_names.length < 1 rescue false)
+    session[:auto_load_forms] = true
+#raise @children_names.to_yaml
+
     @facility_outcomes =  JSON.parse(GlobalProperty.find_by_property("facility.outcomes").property_value) rescue {}
     #raise @facility_outcomes.to_yaml
     @new_hiv_status = params[:new_hiv_status]
@@ -840,12 +940,16 @@ class EncountersController < ApplicationController
 
   end
 
-  def print_discharge_note
+	def print_discharge_note
     if params[:encounter_id]
       print_and_redirect("/encounters/label/?encounter_id=#{params[:encounter_id]}", 
         "/patients/end_visit?patient_id=#{ params[:patient_id] }")
     else
       redirect_to "/people/index"
     end
-  end  
+ end  
+ 
+	def baby_outcome
+		@patient = Patient.find(params[:patient_id])
+	end
 end

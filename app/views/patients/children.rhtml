@@ -1,0 +1,147 @@
+<html>
+  <head>
+    <title></title>
+    <style type="text/css">
+      body {
+        font-family: "Nimbus Sans L", "Arial Narrow", sans-serif;
+        -moz-user-select:none;
+      }
+
+      #stats {
+        width:100%;
+        border:1px solid #eee;
+        margin:10px;
+        margin-top: 0px;
+        background:white;
+      }
+      #stats td, #stats th {
+					-moz-user-select:none;
+        }
+      .odd {
+        background-color: #eeeef7;
+				border-radius: 8px;
+      }
+      .even {
+        background-color: #fff;
+				border-radius: 8px;
+      }
+
+      #table_div {
+        overflow:auto;
+        height: 300px;
+        background-color: white;
+        border: solid 1px #eee;
+        border-width: 1px;
+        }
+
+     ul{
+        margin-top: 5px;
+        margin-bottom: 5px;
+        padding-left: 0px;
+      }
+      li{
+        color: black;
+				background-color: #eeeef7;
+        list-style: none;
+        padding-left: 10px;
+        padding-right: 5px;
+        margin-top: 3px;
+        margin-bottom: 3px;
+        font-family:"Nimbus Sans L","Arial Narrow",sans-serif;
+      }   
+		.concept {
+				text-align: left;
+				padding-left: 10px;				
+		}
+		.obs {
+				text-align: left;
+				padding-left: 10px;
+				
+				}	
+			
+			
+
+    </style>
+
+  </head>
+  <body>
+    <div id="content" style="background-color: #fff; border-top: 1px #fff solid; margin-top: 0px;">
+
+     
+
+      <table id="stats" style="margin-bottom: 0px; margin-top: -160px;"  cellpadding="5">
+        <tr style="color: #fff; background-color: gray;">
+          <th style="width: 32%;">CHILD NAME</th>
+          <th style="">DETAILS</th>
+        </tr>
+        <tr>
+          <td colspan="3">
+            <div style="height: 300px; overflow: hidden; border: 1px solid #ccc;">
+              <table width="100%" cellpadding="5">
+                <tr>
+                  <td style="width: 32%; text-align: left;
+                      vertical-align: top; font-size: 1.3em; color: #1f3b5e;">
+
+                    <div style="width: 100%; height: 220px; overflow: auto;"> 
+                 			<% i = 0%>
+                      <% (@children_names).each do |name| %>
+											
+                      <div style="width: 85%; display: table; border-spacing: 0px; margin-left :15px;">
+                                                   
+                            <div id= "<%=i%>"  class = "<%= (i%2 == 1)? 'odd' : 'even'%>" onclick = "displayText('<%=name%>'); updateColor('<%=i%>')" style="display: table-cell; vertical-align: middle; cursor: pointer; padding: 5px; ">
+ 																 <%= "<span>" + name + "<br><i style = 'font-size: 0.9em'>Born "  + @child_date_map["#{name}"] + "</span></i>"%>
+														<%i += 1%>
+                            </div>                         
+
+                        </div>
+                      <% end %>
+											
+                    </div>
+
+                  </td>
+                    <td style="border-left: 1px dotted">
+                    <div id  = "display" style="-moz-border-radius: 10px; width: 96%; height: 270px; overflow: auto;">
+                      
+                    </div>
+                  </td>
+                </tr>
+
+              </table>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <script type="text/javascript">
+			var mapping = {}
+			var total = 0
+			<% @output.each do |child|%>
+				total = total + 1
+				var child_name = "<%=child.to_s.split("<table").first%>"
+				var child_encounters = "<table" + "<%=child.to_s.split("<table").last%>"
+				mapping[child_name] = child_encounters
+			<%end%>
+			
+		
+		function __$(id){
+        return document.getElementById(id);
+      }
+		function displayText(name){
+				__$("display").innerHTML = mapping[name]
+		}
+		function updateColor(id){	
+			
+				for(i=0; i < total; i++){
+						if (i%2 == 1){
+						__$(i).style.backgroundColor = "#eeeef7";
+						}else{
+						__$(i).style.backgroundColor = "#fff";
+						}
+				}
+					__$(id).style.backgroundColor = "#DCDCDC";
+		}
+   
+    </script>
+  </body>
+</html>

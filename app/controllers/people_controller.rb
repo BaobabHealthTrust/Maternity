@@ -169,7 +169,8 @@ class PeopleController < ApplicationController
 
         if create_from_dde_server
           patient = DDEService::Patient.new(found_person.patient)
-	        national_id_replaced = patient.check_old_national_id(params[:identifier]) if found_person.patient.national_id.length != 6 
+	        national_id_replaced = patient.check_old_national_id(params[:identifier]) if found_person.patient.national_id.length != 6
+
           if national_id_replaced.to_s == "true" || params[:identifier] != found_person.patient.national_id
 						if params[:cat] && (params[:cat].downcase rescue "") != "mother" && params[:patient_id]	
 							print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{found_person.id }&cat=#{params[:cat]}") and return
@@ -243,10 +244,14 @@ class PeopleController < ApplicationController
       @search_results.delete_if{|x,y| x == results.national_id}
       @patients << results
 		end
-    
+
+	#redundant 
+ 
+
 		(@search_results || {}).each do |npid , data |
       @patients << data
     end
+
 
   end
  
@@ -268,10 +273,10 @@ class PeopleController < ApplicationController
           national_id_replaced = dde_patient.check_old_national_id(related_person.national_id)
           
           if national_id_replaced.to_s == "true"
-            print_and_redirect("/patients/national_id_label?patient_id=#{related_person.id}",
+             print_and_redirect("/patients/national_id_label?patient_id=#{related_person.id}",
           "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{related_person.id}&cat=#{params[:cat]}") and return if params[:cat] != 'mother'
             print_and_redirect("/patients/national_id_label?patient_id=#{related_person.id}",
-          "/patients/show/#{params[:person][:id]}?patient_id=#{related_person.id}&cat=#{params[:cat]}") and return if params[:cat] == 'mother'         
+          "/patients/show/#{params[:person][:id]}?patient_id=#{related_person.id}&cat=#{params[:cat]}") and return if params[:cat] == 'mother'      
           else
             redirect_to "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{related_person.id}&cat=#{params[:cat]}" and return if params[:cat] != 'mother'
             redirect_to "/patients/show/#{params[:person][:id]}?patient_id=#{related_person.id}&cat=#{params[:cat]}" and return if params[:cat] == 'mother'

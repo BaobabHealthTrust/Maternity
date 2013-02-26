@@ -11,7 +11,7 @@ class PatientsController < ApplicationController
     if((CoreService.get_global_property_value("create.from.dde.server") == true) && !@patient.nil? && identifier.length != 6)
       dde_patient = DDEService::Patient.new(@patient)
       identifier = dde_patient.get_full_identifier("National id").identifier rescue nil
-      national_id_replaced = dde_patient.check_old_national_id(identifier)
+      national_id_replaced = dde_patient.check_old_national_id(identifier) rescue nil
       if national_id_replaced.to_s == "true"
         print_and_redirect("/patients/national_id_label?patient_id=#{@patient.id}", "/patients/show?patient_id=#{@patient.id}") and return
       end
@@ -998,6 +998,77 @@ class PatientsController < ApplicationController
     end
     redirect_to "/patients/birth_report?person_id=#{params[:person_id]}&patient_id=#{params[:patient_id]}"
   end
-  
+
+	def children
+    @super_user = false
+    @clinician  = false
+    @doctor     = false
+    @regstration_clerk  = false
+
+    @user = User.find(session[:user_id])
+    @user_privilege = @user.user_roles.collect{|x|x.role.downcase}
+
+    if @user_privilege.include?("superuser")
+      @super_user = true
+    elsif @user_privilege.include?("clinician")
+      @clinician  = true
+    elsif @user_privilege.include?("doctor")
+      @doctor     = true
+    elsif @user_privilege.include?("regstration_clerk")
+      @regstration_clerk  = true
+    end
+
+    @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil    
+		@mother = MaternityService::Maternity.new(@patient) rescue nil
+
+		@children = @mother.kids		
+		
+		@children_names = @children.collect{|child| PersonName.find_by_person_id(child.person_b).given_name + "  " + 				PersonName.find_by_person_id(child.person_b).family_name }
+		
+		@child_date_map = Hash.new
+		@children.each do |child|
+			name =  PersonName.find_by_person_id(child.person_b).given_name + "  " + PersonName.find_by_person_id(child.person_b).family_name
+			@child_date_map["#{name}"] = Person.find(child.person_b).birthdate.strftime("%d/%b/%Y")
+		end
+		
+		@encounter_map = Hash.new
+
+		@children.each do |child|
+				name =  PersonName.find_by_person_id(child.person_b).given_name + "  " +		PersonName.find_by_person_id(child.person_b).family_name
+			 @encounter_map["#{name}"] = Hash.new
+
+			 Patient.find(child.person_b).encounters.active.each do |enc|
+					 enc_name = enc.name
+					 @encounter_map["#{name}"]["#{enc_name}"] = Hash.new
+					 enc.observations.each do |o|
+							concept = ConceptName.find_by_concept_id(o.concept_id).name
+							@encounter_map["#{name}"]["#{enc_name}"]["#{concept}"] = o.answer_string
+						end
+			end
+		end
+		
+		#Lazy bones never build interfaces in HTML only, Baby encounters come here
+		@output = Hash.new
+		
+		@children_names.each do |cd|
+			@display_text = ""
+			@encounter_map["#{cd}"].each do |enc_name|
+			@display_text += "<table style='font-size: 1.2em; width: 100%;'><tr style='font-size: 0.8em; color: white; background: gray;'><th>" + enc_name.first + "</th><th>" + "</th></tr>" 
+			enc = enc_name.first
+			cycle = 0
+			@encounter_map["#{cd}"]["#{enc}"].each do |concept|
+					if cycle%2 == 1				
+					@display_text  += "<tr class = 'odd'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
+					else
+					@display_text  += "<tr class = 'even'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
+					end
+					cycle += 1					
+				end
+			@display_text += "</table>"		 
+		#raise display_text.to_yaml
+			end
+		@output["#{cd}"] = @display_text
+		end
+	 end
 end
 

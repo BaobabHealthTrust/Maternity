@@ -39,7 +39,7 @@ pos = 1
     }
 
     try {
-      people[<%= pos %>]["Home District"] = "<%=h person.home_district -%>";
+      people[<%= pos %>]["Home District"] = "<%=h person.home_district.squish rescue nil -%>";
     }catch(e){
       people[<%= pos %>]["Home District"] = null;
     }

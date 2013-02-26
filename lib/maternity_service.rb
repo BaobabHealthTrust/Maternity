@@ -291,18 +291,31 @@ module MaternityService
     end
 
     def create_baby(params)
-      if !params["DATE OF DELIVERY"].nil? && !params["GENDER OF CONTACT"].nil? &&
-          (!params["BABY OUTCOME"].nil? && params["BABY OUTCOME"].upcase == "ALIVE")       
-      
-        baby = {
+
+      if !params["DATE OF DELIVERY"].blank? && !params["GENDER OF CONTACT"].blank?    
+				last_name = PersonName.find_by_person_id(self.husband).family_name  rescue nil        
+   			last_name = ANCService::ANC.new(self.patient).last_name rescue nil  if last_name.blank?
+				#choose a temporary first name  for the baby
+				children = self.kids
+				first_name = "Baby-" + (children.length + 1).to_s
+				
+				#Check for duplicate names
+				child_names =PersonName.find(:all, :conditions => ["person_id IN (?)", children.collect{|child| child.person_b}]).collect{|name|
+					name.given_name rescue nil}.uniq
+				
+				if child_names.include?(first_name)
+					first_name = first_name +"_"+ Date.today.year.to_s + "/" + Date.today.month.to_s + "/" + Date.today.day.to_s
+				end
+
+	       baby = {
           "patient"=>{
             "identifiers"=>{
               "diabetes_number"=> ""             
             }
           },
           "names"=>{
-            "family_name"=>"Unknown",
-            "given_name"=>"Unknown"
+            "family_name"=>last_name,
+            "given_name"=> first_name
           },
           "addresses"=>{
             "city_village"=>nil,
@@ -320,21 +333,42 @@ module MaternityService
           "birth_month"=>(params["DATE OF DELIVERY"].to_date rescue Date.today).month,
           "birth_day"=>(params["DATE OF DELIVERY"].to_date rescue Date.today).day
         }
-
-        create_from_dde_server = CoreService.get_global_property_value('create.from.dde.server').to_s == "true" rescue false
+			  create_from_dde_server = CoreService.get_global_property_value('create.from.dde.server').to_s == "true" rescue false
         
         person = ANCService.create_patient_from_dde_baby(baby) if create_from_dde_server
-
         if person.blank?
           person = Person.create_from_form(baby)
         end
-        
+				
+				#Just Check in case the baby is no more
+        if params["BABY OUTCOME"].downcase == "alive"
+					person.dead = false
+				else
+					person.dead = true
+				end
+					person.save
+
+				#A baby with a name must be extra beautiful
+				name = PersonName.find_by_person_id(person.person_id)
+				unless name.blank?
+					name.given_name = first_name
+					name.family_name = last_name
+					name.save
+				else
+					PersonName.create(:person_id => person.person_id,
+						:given_name => first_name,
+						:family_name => last_name
+					)
+				end
+				
+				#Not these days, serial numbers just good as well
         id_type = PatientIdentifierType.find_by_name("Serial Number").patient_identifier_type_id
         serial_num = SerialNumber.find(:first, :conditions => ["national_id IS NULL"])
 
         PatientIdentifier.create(:patient_id => person.patient.patient_id,
           :identifier => serial_num.serial_number,
-          :identifier_type => id_type) if serial_num and !person.blank?
+          :identifier_type => id_type
+					) if serial_num and !person.blank?
         
         serial_num.national_id = person.patient.national_id
         serial_num.date_assigned = Date.today
@@ -343,7 +377,8 @@ module MaternityService
         person.patient.national_id_label
 
         child_type = RelationshipType.find_by_a_is_to_b("Mother").relationship_type_id
-
+				
+				#Who was born without a mother, we map this baby to its mother
         Relationship.create(
           # :creator => User.first.id,
           :person_a => self.patient.id,
@@ -521,5 +556,34 @@ module MaternityService
 
     result.delete_if{|r| r["BABY OUTCOME"].downcase != "alive"} rescue []
   end
+
+	  def self.extract_baby(params)
+    babies = params["observations"].collect{|o|
+      o if ((!o["value_coded_or_text"].blank? ||
+            !o["value_datetime"].blank?) &&
+          (o["concept_name"].upcase == "BABY OUTCOME" ||
+            o["concept_name"].downcase == "gender of contact" ||
+            o["concept_name"].upcase == "DATE OF DELIVERY"))
+    }.compact
+
+    result = []
+    
+    i = 0
+
+    babies.each{|o|
+      result << {} if result[i/3].nil?
+      result[i/3][o["concept_name"].upcase] = (
+        case o["concept_name"]
+        when "DATE OF DELIVERY":
+            o["value_datetime"]
+        else
+	          o["value_coded_or_text"]
+        end)
+      i += 1
+    }
+	result
+
+  end
+
 
 end
