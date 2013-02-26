@@ -100,9 +100,9 @@ table{
     and the selected patient are different...
     */
 		<%	if params[:cat] && params[:session_patient_id]%>
-				document.location = "/people/select?identifier=" + national_id + "&cat=<%=params[:cat]%>&patient_id=<%=params[:session_patient_id]%>"
+				document.location = "/people/search?identifier=" + national_id + "&cat=<%=params[:cat]%>&patient_id=<%=params[:session_patient_id]%>"
 			<%else%>
-	    	 document.location = "/people/select?identifier=" + national_id;
+	    	 document.location = "/people/search?identifier=" + national_id;
 			<%end%>	   
   }
 
