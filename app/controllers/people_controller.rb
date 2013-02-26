@@ -384,7 +384,7 @@ class PeopleController < ApplicationController
 				old_identifier.save!
 			end
 		else
-		 	redirect_to "/clinic" and return
+		 	redirect_to "/" and return
 		end
 		if params[:encounter]
 			encounter = Encounter.new(params[:encounter])
