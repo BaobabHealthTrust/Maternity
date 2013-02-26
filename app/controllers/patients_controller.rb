@@ -9,7 +9,7 @@ class PatientsController < ApplicationController
 	identifier = PatientIdentifier.find(:last, :conditions => ["patient_id = ? AND identifier_type = ?", @patient.id, PatientIdentifierType.find_by_name("National id")]).identifier rescue ""
  
     if((CoreService.get_global_property_value("create.from.dde.server") == true) && !@patient.nil? && identifier.length != 6)
-      dde_patient = DDEService::Patient.new(@patient)
+			dde_patient = DDEService::Patient.new(@patient)
       identifier = dde_patient.get_full_identifier("National id").identifier rescue nil
       national_id_replaced = dde_patient.check_old_national_id(identifier) rescue nil
       if national_id_replaced.to_s == "true"

@@ -169,9 +169,9 @@ class PeopleController < ApplicationController
 
         if create_from_dde_server
           patient = DDEService::Patient.new(found_person.patient)
+ 
 	        national_id_replaced = patient.check_old_national_id(params[:identifier]) if found_person.patient.national_id.length != 6
-
-          if national_id_replaced.to_s == "true" || params[:identifier] != found_person.patient.national_id
+			    if national_id_replaced.to_s == "true" || params[:identifier] != found_person.patient.national_id
 						if params[:cat] && (params[:cat].downcase rescue "") != "mother" && params[:patient_id]	
 							print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{found_person.id }&cat=#{params[:cat]}") and return
 						end
@@ -264,15 +264,18 @@ class PeopleController < ApplicationController
       related_person = ANCService.search_by_identifier(params[:identifier]).first.patient rescue nil if related_person.nil? and !params[:identifier].blank?
 			params[:person] = Hash.new if !params[:person]
       params[:person][:id] = related_person.patient_id if related_person
-      
-      if !related_person.nil?
-        if related_person.national_id.length != 6
+    
+      if !related_person.blank?
+        if params[:identifier].length != 6
           dde_patient = DDEService::Patient.new(related_person)
+		
           national_id_replaced = dde_patient.check_old_national_id(related_person.national_id)
-          
-          if national_id_replaced.to_s == "true"
+			
+          if national_id_replaced.to_s == "true" || params[:identifier] != related_person.national_id
+
              print_and_redirect("/patients/national_id_label?patient_id=#{related_person.id}",
           "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{related_person.id}&cat=#{params[:cat]}") and return if params[:cat] != 'mother'
+
             print_and_redirect("/patients/national_id_label?patient_id=#{related_person.id}",
           "/patients/show/#{params[:person][:id]}?patient_id=#{related_person.id}&cat=#{params[:cat]}") and return if params[:cat] == 'mother'      
           else
@@ -281,6 +284,7 @@ class PeopleController < ApplicationController
          end          
         end
       end
+
 			redirect_to "/patients/show/#{params[:person][:id]}" and return if (!params[:person][:id].blank? &&
           params[:person][:id] != '0') && (params[:cat] and !params[:cat].blank? and params[:cat] == "mother")
 
@@ -363,7 +367,7 @@ class PeopleController < ApplicationController
 
 
   def create
-#raise params.to_yaml
+
 	if !params[:identifier].empty? 
 		if params[:identifier].length == 6 
 			person = ANCService.create_from_form(params[:person])
