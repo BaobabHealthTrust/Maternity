@@ -199,8 +199,9 @@ class PeopleController < ApplicationController
     create_from_dde_server = CoreService.get_global_property_value('create.from.dde.server') rescue false
 
     (Person.search_from_remote(params) || []).each do |data|
-	  national_id = data["person"]["data"]["patient"]["identifiers"]["National id"] rescue nil
+	 		national_id = data["person"]["data"]["patient"]["identifiers"]["National id"] rescue nil
       national_id = data["person"]["value"] if national_id.blank? rescue nil
+      national_id = data["npid"]["value"] if national_id.blank? rescue nil
       national_id = data["person"]["data"]["patient"]["identifiers"]["old_identification_number"] if national_id.blank? rescue nil
 
       next if national_id.blank?
@@ -244,9 +245,6 @@ class PeopleController < ApplicationController
       @search_results.delete_if{|x,y| x == results.national_id}
       @patients << results
 		end
-
-	#redundant 
- 
 
 		(@search_results || {}).each do |npid , data |
       @patients << data
@@ -590,7 +588,7 @@ class PeopleController < ApplicationController
   end
  
   def reassign_dde_national_id
-    person = DDEService.reassign_dde_identication(params[:dde_person_id],params[:local_person_id])
+    person = DDEService.reassign_dde_identification(params[:dde_person_id],params[:local_person_id])
 
 	if params[:cat] && params[:session_patient_id]
 			url = "/relationships/new?patient_id=#{params[:session_patient_id]}&relation=#{person.id}&cat=#{params[:cat]}"
