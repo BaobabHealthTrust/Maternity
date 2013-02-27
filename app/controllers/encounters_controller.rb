@@ -29,7 +29,7 @@ class EncountersController < ApplicationController
 			@mother = MaternityService::Maternity.new(@patient) rescue nil
 			@children = @mother.kids
 			
-			params["baby_obs"].split("!").each do |bb_ob|
+			(params["baby_obs"].split("!") rescue []).each do |bb_ob|
 				obs_value = bb_ob.split("--").last
 				baby_id = @children.collect{|child| child.person_b if ((PersonName.find_by_person_id(child.person_b).given_name + "  " + PersonName.find_by_person_id(child.person_b).family_name).to_s == bb_ob.split("--").first) }
 
