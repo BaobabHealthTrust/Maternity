@@ -293,7 +293,7 @@ module MaternityService
     def create_baby(params)
 
       if !params["DATE OF DELIVERY"].blank? && !params["GENDER OF CONTACT"].blank?    
-				last_name = PersonName.find_by_person_id(self.husband).family_name  rescue nil        
+				last_name = PersonName.find_by_person_id(self.husband.person_b).family_name  rescue nil        
    			last_name = ANCService::ANC.new(self.patient).last_name rescue nil  if last_name.blank?
 				#choose a temporary first name  for the baby
 				children = self.kids
