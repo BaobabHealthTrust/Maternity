@@ -4,7 +4,7 @@ class PatientsController < ApplicationController
   before_filter :find_patient, :except => [:void]
   
   def show
-    # raise link_to_anc.to_yaml
+   
     @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil
 	identifier = PatientIdentifier.find(:last, :conditions => ["patient_id = ? AND identifier_type = ?", @patient.id, PatientIdentifierType.find_by_name("National id")]).identifier rescue ""
  
@@ -32,11 +32,12 @@ class PatientsController < ApplicationController
     
     @last_location = @patient.encounters.find(:last).location_id rescue nil
     @last_visit_closed = !last_visit.end_date.nil? rescue true
-    
-    if ((session[:location_id] != @last_location)  || @last_visit_closed) && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : true)
-      params[:skip_check] = false
-      redirect_to "/encounters/new/admit_patient?patient_id=#{@patient.id}" and return
-    end
+    unless params[:forced_pass] && params[:forced_pass] == true
+    		if ((session[:location_id] != @last_location)  || @last_visit_closed) && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : true)
+      	params[:skip_check] = false
+      	redirect_to "/encounters/new/admit_patient?patient_id=#{@patient.id}" and return
+    	end
+		end
 
 
     #find the user priviledges
@@ -96,8 +97,6 @@ class PatientsController < ApplicationController
 
     @link_to_anc = link_to_anc
     
-    # raise @encounter_names.include?("Refer patient out?".upcase).to_yaml
-
     @past_treatments = @patient.visit_treatments
     session[:auto_load_forms] = false if params[:auto_load_forms] == 'false'
     session[:outcome_updated] = true if !outcome.nil?
@@ -782,8 +781,8 @@ class PatientsController < ApplicationController
   end
 
   def general_demographics
-    @children = @maternity_patient.children rescue []
-    
+
+    @children = @maternity_patient.kids rescue []
     render :layout => false
   end
 
@@ -1026,9 +1025,13 @@ class PatientsController < ApplicationController
 		@children_names = @children.collect{|child| PersonName.find_by_person_id(child.person_b).given_name + "  " + 				PersonName.find_by_person_id(child.person_b).family_name }
 		
 		@child_date_map = Hash.new
+		@gender = Hash.new
 		@children.each do |child|
 			name =  PersonName.find_by_person_id(child.person_b).given_name + "  " + PersonName.find_by_person_id(child.person_b).family_name
-			@child_date_map["#{name}"] = Person.find(child.person_b).birthdate.strftime("%d/%b/%Y")
+			cc_person = Person.find(child.person_b)
+			@child_date_map["#{name}"] = cc_person.birthdate.strftime("%d/%b/%Y")
+			@gender["#{name}"] = "female" if cc_person.gender.match(/F/i)
+			@gender["#{name}"] = "male"  if !cc_person.gender.match(/F/i)
 		end
 		
 		@encounter_map = Hash.new
@@ -1039,7 +1042,7 @@ class PatientsController < ApplicationController
 
 			 Patient.find(child.person_b).encounters.active.each do |enc|
 					 enc_name = enc.name
-					 @encounter_map["#{name}"]["#{enc_name}"] = Hash.new
+					 @encounter_map["#{name}"]["#{enc_name}"] = Hash.new if !@encounter_map["#{name}"]["#{enc_name}"]
 					 enc.observations.each do |o|
 							concept = ConceptName.find_by_concept_id(o.concept_id).name
 							@encounter_map["#{name}"]["#{enc_name}"]["#{concept}"] = o.answer_string
@@ -1058,14 +1061,14 @@ class PatientsController < ApplicationController
 			cycle = 0
 			@encounter_map["#{cd}"]["#{enc}"].each do |concept|
 					if cycle%2 == 1				
-					@display_text  += "<tr class = 'odd'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
+					@display_text  += "<tr class = 'odd'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
 					else
-					@display_text  += "<tr class = 'even'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
+					@display_text  += "<tr class = 'even'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
 					end
 					cycle += 1					
 				end
 			@display_text += "</table>"		 
-		#raise display_text.to_yaml
+		
 			end
 		@output["#{cd}"] = @display_text
 		end

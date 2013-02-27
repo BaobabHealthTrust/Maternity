@@ -282,6 +282,12 @@ module MaternityService
           self.patient.id, RelationshipType.find(:first,
             :conditions => ["a_is_to_b = ? AND b_is_to_a = ?", "Mother", "Child"]).id]) rescue []
     end
+	
+		def live_kids
+			Relationship.find(:all, :conditions => ["person_a = ? AND relationship = ? AND voided = 0",
+          self.patient.id, RelationshipType.find(:first,
+            :conditions => ["a_is_to_b = ? AND b_is_to_a = ?", "Mother", "Child"]).id]).collect{|baby| baby if Person.find_by_person_id(baby.person_b).dead == false}.delete_if{|x| x.blank?}
+		end
 
     def babies_ever
       PatientReport.find(:all,

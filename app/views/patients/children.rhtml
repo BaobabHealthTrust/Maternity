@@ -90,8 +90,8 @@
 											
                       <div style="width: 85%; display: table; border-spacing: 0px; margin-left :15px;">
                                                    
-                            <div id= "<%=i%>"  class = "<%= (i%2 == 1)? 'odd' : 'even'%>" onclick = "displayText('<%=name%>'); updateColor('<%=i%>')" style="display: table-cell; vertical-align: middle; cursor: pointer; padding: 5px; ">
- 																 <%= "<span>" + name + "<br><i style = 'font-size: 0.9em'>Born "  + @child_date_map["#{name}"] + "</span></i>"%>
+                          <img style='vertical-align:middle;padding-top:20px;' src="/images/<%=@gender[name]%>.gif" /> <div id= "<%=i%>"  class = "<%= (i%2 == 1)? 'odd' : 'even'%>" onclick = "displayText('<%=name%>'); updateColor('<%=i%>')" style="display: table-cell; vertical-align: middle; cursor: pointer; padding: 5px; ">
+ 																<%= "<span style='font-size:0.9em;'>" + name + "<br><i style = 'font-size: 0.8em'>Born "  + @child_date_map["#{name}"] + "</span></i>"%>
 														<%i += 1%>
                             </div>                         
 

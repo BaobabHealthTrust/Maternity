@@ -51,9 +51,15 @@ class EncountersController < ApplicationController
 					baby_ob.encounter_id = baby_encounter.id
 					baby_ob.obs_datetime = params[:encounter][:encounter_datetime]
 					baby_ob.save
+				
+					if baby_ob.answer_string.strip.downcase != "alive"
+							person = Person.find(baby_id)
+							person.dead = true
+							person.save
+					end	
 
 				end	
-			end	rescue nil	
+			end	
 
 				delivered = (params["observations"].collect{|o| o if !o["value_coded_or_text"].nil? and o["value_coded_or_text"].upcase == "DELIVERED"}.compact.length	 > 0)	
       baby_date_map = params[:baby_date_map].split("!") rescue nil
