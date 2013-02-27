@@ -5,11 +5,11 @@
 </style>
 <script>
   <!--
-  var tt_cancel_destination = "/patients/show/<%= @patient.id%>?auto_load_forms=false"
+  var tt_cancel_destination = "/patients/show/<%= @patient.id%>?auto_load_forms=false&skip_check=true"
 
   function checkSelection(){
     if(__$("touchscreenInput" + tstCurrentPage).value == "No"){
-      document.forms[0].action = "/patients/show/<%= params[:patient_id] %>?skip_check=true&forced_pass=true"
+      document.forms[0].action = "/patients/show/<%= params[:patient_id] %>?skip_check=true"
     } else {
       document.forms[0].action = "/encounters/create"
     }

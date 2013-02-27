@@ -32,14 +32,12 @@ class PatientsController < ApplicationController
     
     @last_location = @patient.encounters.find(:last).location_id rescue nil
     @last_visit_closed = !last_visit.end_date.nil? rescue true
-    unless params[:forced_pass] && params[:forced_pass] == true
+   
     		if ((session[:location_id] != @last_location)  || @last_visit_closed) && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : true)
       	params[:skip_check] = false
       	redirect_to "/encounters/new/admit_patient?patient_id=#{@patient.id}" and return
     	end
-		end
-
-
+	
     #find the user priviledges
     @super_user = false
     @clinician  = false
