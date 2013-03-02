@@ -20,11 +20,11 @@
   </head>
   <body>
 <% if CoreService.get_global_property_value("extended_diagnoses_report").to_s == "true" %>
-    <iframe id="main" src="/cohort/<%= (@reportType.to_i == 2 ? "diagnoses_report_extended" : "report") %>?start_date=<%= @start_date %>+<%= @start_time %>&end_date=<%= @end_date 
+    <iframe id="main" src="/cohort/<%= (@reportType.to_i == 2 ? "diagnoses_report_extended" :  (@reportType.to_i == 3 ? "baby_matrix": "report")) %>?start_date=<%= @start_date %>+<%= @start_time %>&end_date=<%= @end_date 
           %>+<%= @end_time %>&reportType=<%= @reportType %>"></iframe>
 <% else %>
 
- <iframe id="main" src="/cohort/<%= (@reportType.to_i == 2 ? "diagnoses_report" : "report") %>?start_date=<%= @start_date %>+<%= @start_time %>&end_date=<%= @end_date 
+ <iframe id="main" src="/cohort/<%= (@reportType.to_i == 2 ? "diagnoses_report" : (@reportType.to_i == 3 ? "baby_matrix": "report")) %>?start_date=<%= @start_date %>+<%= @start_time %>&end_date=<%= @end_date 
           %>+<%= @end_time %>&reportType=<%= @reportType %>"></iframe>
 
 <% end %>

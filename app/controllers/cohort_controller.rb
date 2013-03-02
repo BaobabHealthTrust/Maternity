@@ -820,5 +820,13 @@ end
     # raise @patients.to_yaml
     render :layout => false
   end
+
+	def baby_matrix
+			render :layout => false
+	end
+	
+	def baby_matrix_printable
+			render :layout => false
+	end
   
 end
