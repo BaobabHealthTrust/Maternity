@@ -35,6 +35,14 @@ class EncountersController < ApplicationController
 
 				baby_id = baby_id.reject {|b| !b }.first rescue nil
 				baby_concept_id = ConceptName.find_by_name("STATUS OF BABY").concept_id rescue nil
+
+				if !baby_id.blank? && (Person.find(baby_id).dead == true)
+
+					obs_value = Observation.find(:last, :order => ["date_created"], :conditions => ["person_id =? AND concept_id = ?", 
+						baby_id, ConceptName.find_by_name("BABY OUTCOME").concept_id]).answer_string	
+										
+				end rescue nil
+
 				if not obs_value.blank? and not baby_id.blank? and not baby_concept_id.blank?
 					 params[:encounter][:encounter_datetime] = (params[:encounter][:encounter_datetime].to_date.strftime("%Y-%m-%d ") +
 			    Time.now.strftime("%H:%M")) rescue Time.now()
@@ -46,6 +54,7 @@ class EncountersController < ApplicationController
 
 					baby_ob = Observation.new
 					baby_ob.value_text = obs_value
+					baby_ob.value_coded = ConceptName.find_by_name(obs_value).concept_id rescue nil
 					baby_ob.person_id = baby_id
 					baby_ob.concept_id = baby_concept_id
 					baby_ob.encounter_id = baby_encounter.id

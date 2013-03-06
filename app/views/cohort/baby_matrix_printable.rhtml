@@ -3,7 +3,7 @@
 
 	<style>
 			table {
-				height:100%;
+				height:98%;
 				width:100%;	
 				border-style: 1px solid gray;	
 				border-width:  1px 1px 1px 0px;
@@ -77,9 +77,21 @@
 				max-height: 60px;
 				vertical-align: top;								
 			}
+			a:link {
+        color: #000;
+        text-decoration: none;
+      }
+		#title{
+				text-align: center;
+				vertical-align: middle;
+				font-weight: bold;
+				width: 100%;
+				height: 95%;
+				font-size: 1.1em;
+	}
 	</style>
-
-	<body>
+	<body >
+		<div id = "title"><span style ="font-size: 1.3em;">BABIES MATRIX</span> <br><span>(Adapted to Capture Data Quality)</span><div>
 		<table cellspacing="0">				
 			<tr class="top-margin">
 				<td id ="weight1">Birthweight</td>
@@ -102,55 +114,102 @@
 			</tr>
 			
 			<tr class ="data-row">
-				<td class = "margin"><br><=1499</td>
-				<td style="background: rgb(140, 180, 255);"  class = "data">0</td>
-				<td style="background: rgb(140, 180, 255);"  class = "data">0</td>
-				<td style="background: rgb(140, 180, 255);"  class = "data">0</td>
-				<td class = "data">0</td>
-				<td class = "data">0</td>
-				<td class = "data">0</td>
+				<td class = "margin" style="vertical-align:top;"><br><=1499</td>
+				<td id = "lessorequal1499_macerated" style="background: rgb(140, 180, 255);"  class = "data">0</td>
+				<td id = "lessorequal1499_fresh" style="background: rgb(140, 180, 255);"  class = "data">0</td>
+				<td id = "lessorequal1499_predischarge" style="background: rgb(140, 180, 255);"  class = "data">0</td>
+				<td id = "lessorequal1499_aliveatdischarge" class = "data">0</td>
+				<td id = "lessorequal1499_missingoutcomes" class = "data">0</td>
+				<td id = "lessorequal1499_total" class = "data">0</td>
 			</tr>
 		
 			<tr class ="data-row">
-				<td class = "margin"><br>1500-2499</td>
-				<td style="background: #FF6600;" class = "data">0</td>
-				<td style="background: #FF0000;" class = "data">0</td>
-				<td style="background:#66CC66;" class = "data">0</td>
-				<td class = "data">0</td>
-				<td class = "data">0</td>
-				<td class = "data">0</td>
+				<td class = "margin" style="vertical-align:top;"><br>1500-2499</td>
+				<td id = "1500-2499_macerated" style="background: #FF6600;" class = "data">0</td>
+				<td id = "1500-2499_fresh" style="background: #FF0000;" class = "data">0</td>
+				<td id = "1500-2499_predischarge" style="background:#66CC66;" class = "data">0</td>
+				<td id = "1500-2499_aliveatdischarge" class = "data">0</td>
+				<td id = "1500-2499_missingoutcomes" class = "data">0</td>
+				<td id = "1500-2499_total" class = "data">0</td>
 			</tr>
 	
 			<tr class ="data-row">
-				<td class = "margin"><br>>=2500</td>
-				<td style="background: #FF6600;" class = "data">0</div></td>
-				<td style="background:#FF0000;" class = "data">0</td>
-				<td style="background:#66CC66;" class = "data">0</td>
-				<td class = "data">0</td>
-				<td class = "data">0</td>
-				<td class = "data">0</td>
+				<td class = "margin" style="vertical-align:top;"><br>>=2500</td>
+				<td id = "greaterorequal2500_macerated" style="background: #FF6600;" class = "data">0</div></td>
+				<td id = "greaterorequal2500_fresh" style="background:#FF0000;" class = "data">0</td>
+				<td id = "greaterorequal2500_predischarge" style="background:#66CC66;" class = "data">0</td>
+				<td id = "greaterorequal2500_aliveatdischarge" class = "data">0</td>
+				<td id = "greaterorequal2500_missingoutcomes" class = "data">0</td>
+				<td id = "greaterorequal2500_total" class = "data">0</td>
 			</tr>
 
 			<tr class ="data-row">
 				<td class = "margin">Missing<br>Weights</td>
-				<td class = "data">0</td>
-				<td class = "data">0</td>
-				<td class = "data">0</td>
-				<td class = "data">0</td>
-				<td class = "data">0</td>
-				<td class = "data">0</td>
+				<td id = "missingweights_macerated" class = "data">0</td>
+				<td id = "missingweights_fresh" class = "data">0</td>
+				<td id = "missingweights_predischarge" class = "data">0</td>
+				<td id = "missingweights_aliveatdischarge" class = "data">0</td>
+				<td id = "missingweights_missingoutcomes" class = "data">0</td>
+				<td id = "missingweights_total" class = "data">0</td>
 			</tr>
 
 			<tr class ="data-row">
-				<td style ="vertical-align:top;"class = "margin"><br>Total</td>
-				<td class = "data">0</td>
-				<td class = "data">0</td>
-				<td class = "data">0</td>
-				<td class = "data">0</td>
-				<td class = "data">0</td>
-				<td class = "data">0</td>
+				<td style ="vertical-align:top;" class = "margin"><br>Total</td>
+				<td id = "total_macerated" class = "data">0</td>
+				<td id = "total_fresh" class = "data">0</td>
+				<td id = "total_predischarge" class = "data">0</td>
+				<td id = "total_aliveatdischarge" class = "data">0</td>
+				<td id = "total_missingoutcomes" class = "data">0</td>
+				<td id = "total_total" class = "data">0</td>
 			</tr>
 			
 		</table>
+		
+		<script>
+			ajaxifyFields();
+			function ajaxifyFields(){
+				cells = document.getElementsByClassName("data");
+				for (i = 0; i < cells.length; i ++){				
+					if (typeof(cells[i].id) != "undefined" && cells[i].id){
+						url = "/cohort/matrix_q?field=" + cells[i].id + "&start_date=<%=params[:start_date]%>&end_date=<%=params[:end_date]%>";
+						ajaxRequest(cells[i].id, url);
+					}
+				}
+			}
+			
+			function __$(id){
+				return document.getElementById(id)
+			}
+
+			function ajaxRequest(id, aUrl){
+				
+				if (__$(id) && __$(id) != "undefined"){
+					var httpRequest = new XMLHttpRequest();
+       				httpRequest.onreadystatechange = function() {
+
+									if (httpRequest.readyState == 4 && httpRequest.status == 200) {
+          						var result = httpRequest.responseText; 
+											var babies = JSON.parse(result);	
+											//alert( id + " : " + babies)						
+											 if(babies.length > 0){
+			
+													__$(id).innerHTML = "<form id='frm" + id + "' method='post' action='matrix_decompose'>" +
+               					 "<input type='hidden' value='" + babies + "' name='patients' />" + 
+               						"<a href=\"javascript:document.getElementById('frm" + id + "').submit()\">" + 
+               						babies.length + "</a></form>";
+
+												}else{
+													__$(id).innerHTML = babies.length
+												}
+         					}       			
+        			}
+					try {
+         	 	httpRequest.open('GET', aUrl, true);
+          	httpRequest.send(null);
+        	} catch(e){}
+				}
+			}
+		</script>
+
 	</body>
 </html>

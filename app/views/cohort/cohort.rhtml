@@ -20,16 +20,16 @@
   </head>
   <body>
 <% if CoreService.get_global_property_value("extended_diagnoses_report").to_s == "true" %>
-    <iframe id="main" src="/cohort/<%= (@reportType.to_i == 2 ? "diagnoses_report_extended" :  (@reportType.to_i == 3 ? "baby_matrix": "report")) %>?start_date=<%= @start_date %>+<%= @start_time %>&end_date=<%= @end_date 
+    <iframe id="main" src="/cohort/<%= (@reportType.to_i == 2 ? "diagnoses_report_extended" :  (@reportType.to_i == 3 ? "baby_matrix_printable": "report")) %>?start_date=<%= @start_date %>+<%= @start_time %>&end_date=<%= @end_date 
           %>+<%= @end_time %>&reportType=<%= @reportType %>"></iframe>
 <% else %>
 
- <iframe id="main" src="/cohort/<%= (@reportType.to_i == 2 ? "diagnoses_report" : (@reportType.to_i == 3 ? "baby_matrix": "report")) %>?start_date=<%= @start_date %>+<%= @start_time %>&end_date=<%= @end_date 
+ <iframe id="main" src="/cohort/<%= (@reportType.to_i == 2 ? "diagnoses_report" : (@reportType.to_i == 3 ? "baby_matrix_printable": "report")) %>?start_date=<%= @start_date %>+<%= @start_time %>&end_date=<%= @end_date 
           %>+<%= @end_time %>&reportType=<%= @reportType %>"></iframe>
 
 <% end %>
 
-    <div style="z-index:11;bottom:0px; height: 82px; width: 100%; left: 0px;
+    <div id = 'foter' style="z-index:11;bottom:0px; height: 82px; width: 100%; left: 0px;
          right: -66px; position: absolute; background-color: #333333; padding: 0px;">
       <button onclick="window.location = '/cohort_report';" class="button navButton red"
               id="cancelButton" style="position: absolute; z-index: 100; margin-top: 10px;"><span>Cancel</span>

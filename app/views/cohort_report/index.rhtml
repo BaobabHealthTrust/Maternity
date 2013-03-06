@@ -16,13 +16,13 @@
     <form id="frmReport" action="/cohort/cohort" method="post">
       
       <input type="text" field_type="date" id="start_date" name="start_date" value="" helpText="Select Start Date:" />
-
-      <input type="text" field_type="advancedTime" id="start_date" name="start_time" value="" helpText="Select Start Time:" />
-
+			<% unless !@reportType.nil? && @reportType.to_i == 3%>
+      	<input type="text" field_type="advancedTime" id="start_date" name="start_time" value="" helpText="Select Start Time:" />
+			<%end%>
       <input type="text" field_type="date" id="end_date" name="end_date" value="" helpText="Select End Date:" />
-
-      <input type="text" field_type="advancedTime" id="start_date" name="end_time" value="" helpText="Select End Time:" />
-
+			<% unless !@reportType.nil? && @reportType.to_i == 3 %>
+      	<input type="text" field_type="advancedTime" id="start_date" name="end_time" value="" helpText="Select End Time:" />
+			<%end%>
       <% if @reportType.nil? %>
 
         <select id="reportType" name="reportType" helpText="Select Report Type:" >
