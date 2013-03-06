@@ -11,10 +11,10 @@
       #num {display: none;}
     </style>
   </head>
-  <body>    
+  <body >    
 
     <form id="frmReport" action="/cohort/cohort" method="post">
-      
+     
       <input type="text" field_type="date" id="start_date" name="start_date" value="" helpText="Select Start Date:" />
 			<% unless !@reportType.nil? && @reportType.to_i == 3%>
       	<input type="text" field_type="advancedTime" id="start_date" name="start_time" value="" helpText="Select Start Time:" />

@@ -77,10 +77,7 @@
 				max-height: 60px;
 				vertical-align: top;								
 			}
-			a:link {
-        color: #000;
-        text-decoration: none;
-      }
+			
 		#title{
 				text-align: center;
 				vertical-align: middle;
@@ -191,12 +188,9 @@
           						var result = httpRequest.responseText; 
 											var babies = JSON.parse(result);	
 											//alert( id + " : " + babies)						
-											 if(babies.length > 0){
-			
-													__$(id).innerHTML = "<form id='frm" + id + "' method='post' action='matrix_decompose'>" +
-               					 "<input type='hidden' value='" + babies + "' name='patients' />" + 
-               						"<a href=\"javascript:document.getElementById('frm" + id + "').submit()\">" + 
-               						babies.length + "</a></form>";
+											 if(babies.length > 0){		
+													
+													__$(id).innerHTML = "<span style = 'cursor:pointer;' onclick = 'redirect(\"" + babies +"\")'>" + babies.length + "</span>"
 
 												}else{
 													__$(id).innerHTML = babies.length
@@ -208,6 +202,10 @@
           	httpRequest.send(null);
         	} catch(e){}
 				}
+			}
+			
+			function redirect(array){			
+				window.parent.location = "/cohort/matrix_decompose?patients=" + array;
 			}
 		</script>
 

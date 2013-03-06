@@ -119,10 +119,10 @@
                       Patient ID
                     </div>
                     <div class="headerCell">
-                      Patient Name
+                      Baby Name
                     </div>
-                    <div class="headerCell">
-                      Date Registered
+										<div class="headerCell">
+                      Mother Name
                     </div>
                     <div class="headerCell">
                       Date Of Birth
@@ -130,9 +130,7 @@
                     <div class="headerCell">
                       Encounters
                     </div>
-					<div class="headerCell">
-                      Admission Diagnosis
-                    </div>
+										
                   </div>
 
                   <% (@patients || []).each do |patient| %>
@@ -143,9 +141,9 @@
                       <div class="cell" style="vertical-align: middle;">
                         <%= patient.person.name rescue "" %>
                       </div>
-                      <div class="cell" style="vertical-align: middle;">
-                        <%= patient.date_created.strftime("%d/%b/%Y") rescue "" %>
-                      </div>
+											<div class="cell" style="vertical-align: middle;">
+												<%= Person.find(patient.person.mother.person_a).name %>
+											</div>
                       <div class="cell"  style="vertical-align: middle;">
                         <%= patient.person.birthdate_formatted rescue "" %>
                       </div>
@@ -158,21 +156,7 @@
                             </div>
                           </div>
                         </div>
-                      </div>
-					<div class="cell">
-                        <ul type="none">
-                          <%  encounter_type = EncounterType.find_by_name("DIAGNOSIS")%>
-                          <%  encounter = Encounter.find(:last, :conditions => ['patient_id = ? AND encounter_type = ?',
-                              patient.id, encounter_type.id], :order => [:date_created], :include => [:observations]) if encounter_type%>
-
-                          <%  diagnoses = Observation.find(:all, :conditions => ['person_id = ? AND encounter_id = ?',
-                              patient.id, encounter.id]).collect{|obs|  obs.answer_string}.uniq rescue ['none']%>
-
-                          <% diagnoses.each do |diag|%>
-                            <li> <%=truncate(diag, :limit => 10, :separator => " ")%> </li>
-                          <%end %>
-                        </ul>
-                      </div>
+                      </div>						
                     </div>
                   <% end %>
                 </div>
@@ -181,7 +165,7 @@
           </tr>
         </table>
       </div>
-      <div id="nav" onload ="foter">
+      <div id="nav">
         <button  class="green" style="float: right; margin: 10px; width: 150px;" onclick="back()">
           <span>
             Finish

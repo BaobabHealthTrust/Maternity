@@ -1956,11 +1956,11 @@ module ANCService
 
       person.birthdate_estimated = 1 if params["birthdate_estimated"] == 'true'
       person.save
-    end
+    end rescue nil
 
-    person.update_attributes(person_params) if !person_params.empty?
-    person.names.first.update_attributes(names_params) if names_params
-    person.addresses.first.update_attributes(address_params) if address_params
+    person.update_attributes(person_params) rescue nil if !person_params.empty? 
+    person.names.first.update_attributes(names_params) rescue nil if names_params
+    person.addresses.first.update_attributes(address_params) rescue nil if address_params
 
     #update or add new person attribute
     person_attribute_params.each{|attribute_type_name, attribute|

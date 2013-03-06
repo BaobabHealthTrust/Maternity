@@ -198,7 +198,7 @@ class CohortController < ActionController::Base # < ApplicationController
 
   def print_cohort
     # raise request.env["HTTP_HOST"].to_yaml
-    
+   
     @selSelect = params[:selSelect] rescue ""
     @day =  params[:day] rescue ""
     @selYear = params[:selYear] rescue ""
@@ -212,11 +212,14 @@ class CohortController < ActionController::Base # < ApplicationController
 
     if params
       link = ""
-      if CoreService.get_global_property_value("extended_diagnoses_report").to_s == "true"
-      link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report_extended" : "report") }" + 
+
+
+
+     if CoreService.get_global_property_value("extended_diagnoses_report").to_s == "true"
+      link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report_extended" : (@reportType.to_i == 3 ? "baby_matrix_printable" : "report")) }" + 
         "?start_date=#{@start_date}+#{@start_time}&end_date=#{@end_date}+#{@end_time}&reportType=#{@reportType}"
       else
-	link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report" : "report") }" + 
+	link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report" :  (@reportType.to_i == 3 ? "baby_matrix_printable" : "report"))}" + 
         "?start_date=#{@start_date}+#{@start_time}&end_date=#{@end_date}+#{@end_time}&reportType=#{@reportType}"
       end
       #t1 = Thread.new{
@@ -815,27 +818,22 @@ end
   end
 
   def decompose
-    @patients = Patient.find(:all, :conditions => ["patient_id IN (?)", params[:patients].split(",")]).uniq
-    
-    # raise @patients.to_yaml
-    render :template => '/cohort/decompose'
+		@patients = Patient.find(:all, :conditions => ["patient_id IN (?)", params[:patients].split(",")]).uniq
+		render :layout => false
   end
 
 	
   def matrix_decompose
-    @patients = Patient.find(:all, :conditions => ["patient_id IN (?)", params[:patients].split(",")]).uniq
-    
-    # raise @patients.to_yaml
-    render :template => '/cohort/decompose'
+		@patients = Patient.find(:all, :conditions => ["patient_id IN (?)", params[:patients].split(",")]).uniq
+		render :layout => false
   end
 
-	def baby_matrix			
-			render :layout => false
+	def baby_matrix	
+		render :layout => false
 	end
 	
-	def baby_matrix_printable
-			
-			render :layout => false
+	def baby_matrix_printable			
+		render :layout => false
 	end
 	
 	def matrix_q
