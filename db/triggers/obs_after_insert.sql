@@ -40,10 +40,10 @@ BEGIN
   		INSERT INTO patient_report (patient_id, outcome, outcome_date, obs_datetime, obs_id) VALUES(new.person_id, @mode, new.obs_datetime, new.obs_datetime, new.obs_id);
 	END IF;
 	
-	IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "ADMISSION SECTION" LIMIT 1) THEN
+	IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "ADMISSION TIME" LIMIT 1) THEN
 		SET @ward = (SELECT name FROM location WHERE location_id = new.location_id);	
 
-  		INSERT INTO patient_report (patient_id, admission_ward, admission_date, obs_datetime, obs_id) VALUES(new.person_id, @ward, new.obs_datetime, new.value_datetime, new.obs_id);
+  		INSERT INTO patient_report (patient_id, admission_ward, admission_date, obs_datetime, obs_id) VALUES(new.person_id, @ward, new.value_datetime, new.value_datetime, new.obs_id);
 	END IF;
 	
 	IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "DIAGNOSIS" LIMIT 1) THEN
