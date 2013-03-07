@@ -151,55 +151,7 @@ class Person < ActiveRecord::Base
 
     return people
     
-    # temp removed
-    # AND (person_name.family_name2 LIKE ? OR person_name_code.family_name2_code LIKE ? OR person_name.family_name2 IS NULL )"    
-    #  params[:family_name2],
-    #  (params[:family_name2] || '').soundex,
-
-
-
-
-    # CODE below is TODO, untested and NOT IN USE
-    #    people = []
-    #    people = PatientIdentifier.find_all_by_identifier(params[:identifier]).map{|id| id.patient.person} unless params[:identifier].blank?
-    #    if people.size == 1
-    #      return people
-    #    elsif people.size >2
-    #      filtered_by_family_name_and_gender = []
-    #      filtered_by_family_name = []
-    #      filtered_by_gender = []
-    #      people.each{|person|
-    #        gender_match = person.gender == params[:gender] unless params[:gender].blank?
-    #        filtered_by_gender.push person if gender_match
-    #        family_name_match = person.first.names.collect{|name|name.family_name.soundex}.include? params[:family_name].soundex
-    #        filtered_by_family_name.push person if gender_match?
-    #        filtered_by_family_name_and_gender.push person if family_name_match? and gender_match?
-    #      }
-    #      return filtered_by_family_name_and_gender unless filtered_by_family_name_and_gender.empty?
-    #      return filtered_by_family_name unless filtered_by_family_name.empty?
-    #      return filtered_by_gender unless filtered_by_gender.empty?
-    #      return people
-    #    else
-    #    return people if people.size == 1
-    #    people = Person.find(:all, :include => [{:names => [:person_name_code]}, :patient], :conditions => [
-    #    "gender = ? AND \
-    #     person.voided = 0 AND \
-    #     (patient.voided = 0 OR patient.voided IS NULL) AND \
-    #     (person_name.given_name LIKE ? OR person_name_code.given_name_code LIKE ?) AND \
-    #     (person_name.family_name LIKE ? OR person_name_code.family_name_code LIKE ?)",
-    #    params[:gender],
-    #    params[:given_name],
-    #    (params[:given_name] || '').soundex,
-    #    params[:family_name],
-    #    (params[:family_name] || '').soundex
-    #    ]) if people.blank?
-    #
-    # temp removed
-    # AND (person_name.family_name2 LIKE ? OR person_name_code.family_name2_code LIKE ? OR person_name.family_name2 IS NULL )"    
-    #  params[:family_name2],
-    #  (params[:family_name2] || '').soundex,
-
-  end
+   end
  def self.search_by_identifier(identifier)
     identifier = identifier.gsub("-","").strip
     found_people = PatientIdentifier.find_all_by_identifier(identifier)
@@ -1095,9 +1047,9 @@ def self.get_birthdate_formatted(birthdate,birthdate_estimated)
         gender,
         given_name,
         family_name
-      ]) if people.blank?
+      ]) rescue nil if people.blank?
 
-    if people.length < 15
+    if people && people.length < 15
       matching_people = people.collect{| person |
                               person.person_id
                           }
@@ -1110,8 +1062,8 @@ def self.get_birthdate_formatted(birthdate,birthdate_estimated)
         (given_name || '').soundex,
         (family_name || '').soundex,
         matching_people
-      ], :order => "person_name.given_name ASC, person_name_code.family_name_code ASC")
-      people = people + people_like
+      ], :order => "person_name.given_name ASC, person_name_code.family_name_code ASC") rescue nil
+      people = people + people_like rescue nil
     end
     return people
   end
