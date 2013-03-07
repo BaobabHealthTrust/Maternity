@@ -30,9 +30,7 @@ class PatientsController < ApplicationController
       end
     end
    
-    @not_registration = @patient.encounters.collect{|enc|
-      enc.name if enc.date_created >= 7.days.ago
-    }.include?("REGISTRATION")
+    @at_registration_desk = (Location.find(session[:location_id]).name.downcase == "registration") rescue  nil
 
 	
     @last_location = Encounter.find(:last, :order => ["date_created"], 
@@ -40,13 +38,10 @@ class PatientsController < ApplicationController
 	
     @last_visit_closed = !last_visit.end_date.nil? rescue true
    
-    if @not_registration && ((session[:location_id] != @last_location)  || @last_visit_closed) && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : true)
+    if !@at_registration_desk && ((session[:location_id] != @last_location)  || @last_visit_closed) && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : true)
       params[:skip_check] = false
       redirect_to "/encounters/new/admit_patient?patient_id=#{@patient.id}" and return
-    end
-    
-    redirect_to "/encounters/new/registration?patient_id=#{@patient.id}&skip_check=true" and return if !@not_registration
-    #find the user priviledges
+    end  
     
     @super_user = false
     @clinician  = false
