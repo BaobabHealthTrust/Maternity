@@ -6,7 +6,7 @@ class PatientsController < ApplicationController
   def show
    
     @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil
-	identifier = PatientIdentifier.find(:last, :conditions => ["patient_id = ? AND identifier_type = ?", @patient.id, PatientIdentifierType.find_by_name("National id")]).identifier rescue ""
+    identifier = PatientIdentifier.find(:last, :conditions => ["patient_id = ? AND identifier_type = ?", @patient.id, PatientIdentifierType.find_by_name("National id")]).identifier rescue ""
  
     if((CoreService.get_global_property_value("create.from.dde.server") == true) && !@patient.nil? && identifier.length != 6)
 			dde_patient = DDEService::Patient.new(@patient)
@@ -29,18 +29,25 @@ class PatientsController < ApplicationController
         session["patient_anc_map"][@patient.id] = AncConnection::PatientIdentifier.search_by_identifier(@maternity_patient.national_id).id
       end
     end
-    
+   
+    @not_registration = @patient.encounters.collect{|enc|
+      enc.name if enc.date_created >= 7.days.ago
+    }.include?("REGISTRATION")
+
+	
     @last_location = Encounter.find(:last, :order => ["date_created"], 
-				:conditions => ["patient_id =? AND encounter_type = ? AND date_created >= ?", @patient.patient_id, EncounterType.find_by_name("ADMIT PATIENT").id, 2.days.ago]).location_id  rescue nil
+      :conditions => ["patient_id =? AND encounter_type = ? AND date_created >= ?", @patient.patient_id, EncounterType.find_by_name("ADMIT PATIENT").id, 2.days.ago]).location_id  rescue nil
 	
     @last_visit_closed = !last_visit.end_date.nil? rescue true
    
-    		if ((session[:location_id] != @last_location)  || @last_visit_closed) && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : true)
-      	params[:skip_check] = false
-      	redirect_to "/encounters/new/admit_patient?patient_id=#{@patient.id}" and return
-    	end
-	
+    if @not_registration && ((session[:location_id] != @last_location)  || @last_visit_closed) && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : true)
+      params[:skip_check] = false
+      redirect_to "/encounters/new/admit_patient?patient_id=#{@patient.id}" and return
+    end
+    
+    redirect_to "/encounters/new/registration?patient_id=#{@patient.id}&skip_check=true" and return if !@not_registration
     #find the user priviledges
+    
     @super_user = false
     @clinician  = false
     @doctor     = false
@@ -814,21 +821,21 @@ class PatientsController < ApplicationController
 
     unless @serial_number
       id_type = PatientIdentifierType.find_by_name("Serial Number").patient_identifier_type_id
-        serial_num = SerialNumber.find(:first, :conditions => ["national_id IS NULL"])
+      serial_num = SerialNumber.find(:first, :conditions => ["national_id IS NULL"])
 
-        PatientIdentifier.create(:patient_id => @person.id,
-          :identifier => serial_num.serial_number,
-          :creator => session[:user_id],
-          :location_id => session[:facility],
-          :identifier_type => id_type) if serial_num and !@person.blank?
+      PatientIdentifier.create(:patient_id => @person.id,
+        :identifier => serial_num.serial_number,
+        :creator => session[:user_id],
+        :location_id => session[:facility],
+        :identifier_type => id_type) if serial_num and !@person.blank?
 
-        serial_num.national_id = @person.national_id
-        serial_num.date_assigned = Date.today
-        serial_num.save
+      serial_num.national_id = @person.national_id
+      serial_num.date_assigned = Date.today
+      serial_num.save
 
-        @serial_number = PatientIdentifier.find(:first, :conditions => ["patient_id = ? AND identifier_type = ?",
-        @person.id,
-        PatientIdentifierType.find_by_name("Serial Number").id]).identifier rescue "?"
+      @serial_number = PatientIdentifier.find(:first, :conditions => ["patient_id = ? AND identifier_type = ?",
+          @person.id,
+          PatientIdentifierType.find_by_name("Serial Number").id]).identifier rescue "?"
 
     end
     
@@ -1037,16 +1044,16 @@ class PatientsController < ApplicationController
 		@encounter_map = Hash.new
 
 		@children.each do |child|
-				name =  PersonName.find_by_person_id(child.person_b).given_name + "  " +		PersonName.find_by_person_id(child.person_b).family_name
-			 @encounter_map["#{name}"] = Hash.new
+      name =  PersonName.find_by_person_id(child.person_b).given_name + "  " +		PersonName.find_by_person_id(child.person_b).family_name
+      @encounter_map["#{name}"] = Hash.new
 
-			 Patient.find(child.person_b).encounters.active.each do |enc|
-					 enc_name = enc.name
-					 @encounter_map["#{name}"]["#{enc_name}"] = Hash.new if !@encounter_map["#{name}"]["#{enc_name}"]
-					 enc.observations.each do |o|
-							concept = ConceptName.find_by_concept_id(o.concept_id).name
-							@encounter_map["#{name}"]["#{enc_name}"]["#{concept}"] = o.answer_string
-						end
+      Patient.find(child.person_b).encounters.active.each do |enc|
+        enc_name = enc.name
+        @encounter_map["#{name}"]["#{enc_name}"] = Hash.new if !@encounter_map["#{name}"]["#{enc_name}"]
+        enc.observations.each do |o|
+          concept = ConceptName.find_by_concept_id(o.concept_id).name
+          @encounter_map["#{name}"]["#{enc_name}"]["#{concept}"] = o.answer_string
+        end
 			end
 		end
 		
@@ -1056,22 +1063,22 @@ class PatientsController < ApplicationController
 		@children_names.each do |cd|
 			@display_text = ""
 			@encounter_map["#{cd}"].each do |enc_name|
-			@display_text += "<table style='font-size: 1.2em; width: 100%;'><tr style='font-size: 0.8em; color: white; background: gray;'><th>" + enc_name.first + "</th><th>" + "</th></tr>" 
-			enc = enc_name.first
-			cycle = 0
-			@encounter_map["#{cd}"]["#{enc}"].each do |concept|
+        @display_text += "<table style='font-size: 1.2em; width: 100%;'><tr style='font-size: 0.8em; color: white; background: gray;'><th>" + enc_name.first + "</th><th>" + "</th></tr>"
+        enc = enc_name.first
+        cycle = 0
+        @encounter_map["#{cd}"]["#{enc}"].each do |concept|
 					if cycle%2 == 1				
-					@display_text  += "<tr class = 'odd'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
+            @display_text  += "<tr class = 'odd'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
 					else
-					@display_text  += "<tr class = 'even'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
+            @display_text  += "<tr class = 'even'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
 					end
 					cycle += 1					
 				end
-			@display_text += "</table>"		 
+        @display_text += "</table>"
 		
 			end
-		@output["#{cd}"] = @display_text
+      @output["#{cd}"] = @display_text
 		end
-	 end
+  end
 end
 

@@ -535,7 +535,7 @@
     "DELIVERED IN THEATRE",
     "DELIVERED IN ANTENATAL WARD"] %>
   <% @mode_of_delivery = ["", "Forceps delivery", "Breech delivery"] %>
-  <% @main_outcomes = @main_outcomes - ["Admitted"] %>
+  <% @main_outcomes = @main_outcomes - ["Admitted"]%>
 
   <% @main_outcomes = @main_outcomes - ["Discharged"] if !@location.upcase.include?("POST") && !@location.upcase.include?("ANTE") %>
 
