@@ -4,9 +4,6 @@ CREATE TRIGGER `obs_after_update` AFTER UPDATE
 ON `obs`
 FOR EACH ROW
 BEGIN
-		
-		SET @last_location = (SELECT location )
-
   	IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "BABY OUTCOME" LIMIT 1) AND new.voided = 1 THEN
 		SET @outcome = (SELECT name FROM concept_name WHERE concept_name_id = new.value_coded_name_id);	
 
