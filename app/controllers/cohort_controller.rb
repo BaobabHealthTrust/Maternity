@@ -931,12 +931,12 @@ end
 	def lessorequal1499_predischarge(startdate = Time.now, enddate = Time.now)
 			babies = []
 
-			@values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death'].collect{
+			@values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Dead'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@values_coded = "'" + @values.join("','") + "'"
 
-			@concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+			@concepts = ['STATUS OF BABY'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 
@@ -1092,12 +1092,12 @@ end
 	def from1500to2499_predischarge(startdate = Time.now, enddate = Time.now)
 			babies = []
 
-			@values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death'].collect{
+			@values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Dead'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@values_coded = "'" + @values.join("','") + "'"
 
-			@concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+			@concepts = ['STATUS OF BABY'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@concepts_coded = "'" + @concepts.join("','") + "'"
@@ -1251,12 +1251,12 @@ end
 	def greaterorequal2500_predischarge(startdate = Time.now, enddate = Time.now)
 			babies = []
 
-			@values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death'].collect{
+			@values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death','Dead'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@values_coded = "'" + @values.join("','") + "'"
 
-			@concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+			@concepts = ['STATUS OF BABY'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@concepts_coded = "'" + @concepts.join("','") + "'"
@@ -1411,12 +1411,12 @@ end
 	def missingweights_predischarge(startdate = Time.now, enddate = Time.now)
 			babies = []
 
-			@values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death'].collect{
+			@values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Dead'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@values_coded = "'" + @values.join("','") + "'"
 
-			@concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+			@concepts = ['STATUS OF BABY'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@concepts_coded = "'" + @concepts.join("','") + "'"
@@ -1566,12 +1566,12 @@ end
 	def total_predischarge(startdate = Time.now, enddate = Time.now)
 			babies = []
 
-			@values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death'].collect{
+			@values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Dead'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@values_coded = "'" + @values.join("','") + "'"
 
-			@concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+			@concepts = ['STATUS OF BABY'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@concepts_coded = "'" + @concepts.join("','") + "'"

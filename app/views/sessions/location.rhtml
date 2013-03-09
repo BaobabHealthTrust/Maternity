@@ -9,11 +9,11 @@
   }
 
   function inform() {
-    $('infoBar'+tstCurrentPage).innerHTML = "<%= welcome_message %>";
+    __$('infoBar'+tstCurrentPage).innerHTML = "<%= welcome_message %>";
   }
 
   function updateUserProperty(){
-    var aUrl = "/user/add_update_property?username="+ tstUsername + "&property=last_login_location&property_value=" + $('ward').value;
+    var aUrl = "/user/add_update_property?username="+ tstUsername + "&property=last_login_location&property_value=" + __$('ward').value;
     var xmlhttp = new XMLHttpRequest();
     xmlhttp.open('GET', aUrl, true);
     xmlhttp.send(null);
@@ -21,7 +21,7 @@
   }
 
   function updateNextButton() {
-    $('nextButton').setAttribute("onmousedown", "updateUserProperty(); gotoNextPage();");
+    __$('nextButton').setAttribute("onmousedown", "updateUserProperty(); gotoNextPage();");
   }
 
   setTimeout("initVars()", 300);
