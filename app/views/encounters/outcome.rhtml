@@ -1050,7 +1050,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
           "($('discharge_outcome').value.toUpperCase() == 'DISCHARGED' && parseInt($('number_of_babies').value) > #{baby - 1})")
     }%>
     <%= hidden_field_tag("observations[][concept_name]", "STATUS OF BABY") %>
-    <%= select_tag("observations[][value_coded_or_text]", options_for_select(@baby_outcome), options)%>
+    <%= select_tag("observations[][value_coded_or_text]", options_for_select(["Alive", "Dead"]), options)%>
     <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
     <%= hidden_field_tag("observations[][obs_datetime]",
       (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M"),
