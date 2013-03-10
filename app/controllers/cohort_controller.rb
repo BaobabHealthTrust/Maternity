@@ -904,7 +904,7 @@ end
 	def lessorequal1499(startdate = Time.now, enddate = Time.now, field = 'blank')
 			babies = []
 
-			@concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+			@concepts = ['BABY OUTCOME'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@concepts_coded = "'" + @concepts.join("','") + "'"
@@ -931,7 +931,7 @@ end
 	def lessorequal1499_predischarge(startdate = Time.now, enddate = Time.now)
 			babies = []
 
-			@values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Dead'].collect{
+			@values = ['Dead'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@values_coded = "'" + @values.join("','") + "'"
@@ -948,7 +948,7 @@ end
 				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
 				AND o.concept_id IN (#{@concepts_coded})
 				AND o.voided = 0
-				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death'))").each do |data| 
+				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Dead'))").each do |data|
 
 
 				weight = Observation.find(:last, 
@@ -999,7 +999,7 @@ end
 				}
 			@values_coded = "'" + @values.join("','") + "'"
 
-			@concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+			@concepts = ['BABY OUTCOME'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@concepts_coded = "'" + @concepts.join("','") + "'"
@@ -1092,7 +1092,7 @@ end
 	def from1500to2499_predischarge(startdate = Time.now, enddate = Time.now)
 			babies = []
 
-			@values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Dead'].collect{
+			@values = ['Dead'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@values_coded = "'" + @values.join("','") + "'"
@@ -1108,7 +1108,7 @@ end
 				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
 				AND o.concept_id IN (#{@concepts_coded})
 				AND o.voided = 0
-				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death'))").each do |data| 
+				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Dead'))").each do |data|
 
 				weight = Observation.find(:last, 
 					:conditions => ["person_id = ? AND concept_id = ?", 
@@ -1158,7 +1158,7 @@ end
 				}
 			@values_coded = "'" + @values.join("','") + "'"
 
-			@concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+			@concepts = ['BABY OUTCOME'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@concepts_coded = "'" + @concepts.join("','") + "'"
@@ -1251,7 +1251,7 @@ end
 	def greaterorequal2500_predischarge(startdate = Time.now, enddate = Time.now)
 			babies = []
 
-			@values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death','Dead'].collect{
+			@values = ['Dead'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@values_coded = "'" + @values.join("','") + "'"
@@ -1267,7 +1267,7 @@ end
 				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
 				AND o.concept_id IN (#{@concepts_coded})
 				AND o.voided = 0
-				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death'))").each do |data| 
+				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Dead'))").each do |data|
 
 
 				weight = Observation.find(:last, 
@@ -1318,7 +1318,7 @@ end
 				}
 			@values_coded = "'" + @values.join("','") + "'"
 
-			@concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+			@concepts = ['BABY OUTCOME'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@concepts_coded = "'" + @concepts.join("','") + "'"
@@ -1354,6 +1354,7 @@ end
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@values_coded = "'" + @values.join("','") + "'"
+      
 
 			@concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
@@ -1364,7 +1365,7 @@ end
 				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
 				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
 				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
-				AND o.voided = 0
+				AND o.voided = 0       
 				AND o.concept_id IN (#{@concepts_coded})").each do |data| 
 
 					weight = Observation.find(:last, 
@@ -1411,7 +1412,7 @@ end
 	def missingweights_predischarge(startdate = Time.now, enddate = Time.now)
 			babies = []
 
-			@values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Dead'].collect{
+			@values = ['Dead'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@values_coded = "'" + @values.join("','") + "'"
@@ -1427,7 +1428,7 @@ end
 				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
 				AND o.concept_id IN (#{@concepts_coded})
 				AND o.voided = 0
-				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death'))").each do |data| 
+				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Dead'))").each do |data|
 
 				weight = Observation.find(:last, 
 					:conditions => ["person_id = ? AND concept_id = ?", 
@@ -1477,7 +1478,7 @@ end
 				}
 			@values_coded = "'" + @values.join("','") + "'"
 
-			@concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+			@concepts = ['BABY OUTCOME'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@concepts_coded = "'" + @concepts.join("','") + "'"
@@ -1566,7 +1567,7 @@ end
 	def total_predischarge(startdate = Time.now, enddate = Time.now)
 			babies = []
 
-			@values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Dead'].collect{
+			@values = ['Dead'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@values_coded = "'" + @values.join("','") + "'"
@@ -1582,7 +1583,7 @@ end
 				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
 				AND o.concept_id IN (#{@concepts_coded})
 				AND o.voided = 0
-				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death'))").each do |data| 
+				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Dead'))").each do |data|
 
 
 					babies << data.person_b 					
@@ -1624,7 +1625,7 @@ end
 				}
 			@values_coded = "'" + @values.join("','") + "'"
 
-			@concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+			@concepts = ['BABY OUTCOME'].collect{
 					|val| ConceptName.find_by_name(val).concept_id
 				}
 			@concepts_coded = "'" + @concepts.join("','") + "'"
