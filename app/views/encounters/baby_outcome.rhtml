@@ -732,6 +732,8 @@
   <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
   <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
 
+   <%= hidden_field_tag("skip_check", "true") %>
+
   <%= submit_tag "Finish" %>
 
 </form>
