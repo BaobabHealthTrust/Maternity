@@ -30,7 +30,7 @@ class PatientsController < ApplicationController
       end
     end
    
-    @at_registration_desk = (Location.find(session[:location_id]).name.downcase == "registration") rescue  nil
+    @at_registration_desk = (['registration', 'labour ward'].include?(Location.find(session[:location_id]).name.downcase))  rescue  nil
     @is_registered = @patient.encounters.collect{|enc|
       enc.name.upcase if enc.date_created >= 7.days.ago
     }.include?("REGISTRATION")
@@ -46,7 +46,7 @@ class PatientsController < ApplicationController
       redirect_to "/encounters/new/admit_patient?patient_id=#{@patient.id}" and return
     end  
 
-    redirect_to "/encounters/new/registration?patient_id=#{@patient.id}" and return  if !@is_registered && @at_registration_desk
+    redirect_to "/encounters/new/registration?patient_id=#{@patient.id}" and return  if !@is_registered
     @super_user = false
     @clinician  = false
     @doctor     = false
