@@ -20,54 +20,54 @@
     $('inputFrame'+tstCurrentPage).innerHTML = "";
     //These values pulled from the tt_onLoad bit in the third form...
   
-      headers = ["    ", "WEIGHT", "APGAR"];
-      var alertsTable = document.createElement("div");
-      alertsTable.id = "alertsTable";
-      var alertsHeaderRow = document.createElement("div");
-      alertsHeaderRow.setAttribute("class", "alertsHeaderRow");
-      for (j = 0; j < headers.length; j++){
-        var alertsHeader = document.createElement("div");
-        alertsHeader.setAttribute("class", "alertsHeader");        
-        alertsHeader.innerHTML = headers[j];
-        alertsHeaderRow.appendChild(alertsHeader);
-      }
-      alertsTable.appendChild(alertsHeaderRow);
+    headers = ["    ", "WEIGHT", "APGAR"];
+    var alertsTable = document.createElement("div");
+    alertsTable.id = "alertsTable";
+    var alertsHeaderRow = document.createElement("div");
+    alertsHeaderRow.setAttribute("class", "alertsHeaderRow");
+    for (j = 0; j < headers.length; j++){
+      var alertsHeader = document.createElement("div");
+      alertsHeader.setAttribute("class", "alertsHeader");
+      alertsHeader.innerHTML = headers[j];
+      alertsHeaderRow.appendChild(alertsHeader);
+    }
+    alertsTable.appendChild(alertsHeaderRow);
       
-      for (i = 1; i <= parseInt(document.getElementById("number_of_babies").value); i++){
-        currentWeight = $('weight' + i).value;
-        gender = $("baby_gender" + i).value;
-        if (gender == "Male"){
-          maxi = 4500.0;
-          mini = 2500.0;
-        }else if (gender == "Female"){
-          maxi = 4400.0;
-          mini = 2400.0;
-        }
+    for (i = 1; i <= parseInt(document.getElementById("number_of_babies").value); i++){
+      currentWeight = $('weight' + i).value;
+      gender = $("baby_gender" + i).value;
+      if (gender == "Male"){
+        maxi = 4500.0;
+        mini = 2500.0;
+      }else if (gender == "Female"){
+        maxi = 4400.0;
+        mini = 2400.0;
+      }
 
-        var alertsRow = document.createElement("div");
-        alertsRow.setAttribute("class", "alertsRow");
-        // add the left title of the table row
-        var alertsTitle = document.createElement("div");
-        alertsTitle.setAttribute("class", "alertsTitle");       
-        alertsTitle.innerHTML = "<span>BABY " + i + "<span>";
-        alertsRow.appendChild(alertsTitle);
-        // add cell figures
+      var alertsRow = document.createElement("div");
+      alertsRow.setAttribute("class", "alertsRow");
+      // add the left title of the table row
+      var alertsTitle = document.createElement("div");
+      alertsTitle.setAttribute("class", "alertsTitle");
+      alertsTitle.innerHTML = "<span>BABY " + i + "<span>";
+      alertsRow.appendChild(alertsTitle);
+      // add cell figures
      
-        var alertsCell = document.createElement("div");
-        alertsCell.setAttribute("class", "alertsCell");
-        alertsCell.innerHTML = showWeightForAge(i);
-        alertsRow.appendChild(alertsCell);
+      var alertsCell = document.createElement("div");
+      alertsCell.setAttribute("class", "alertsCell");
+      alertsCell.innerHTML = showWeightForAge(i);
+      alertsRow.appendChild(alertsCell);
 
-        var alertsCell2 = document.createElement("div");
-        alertsCell2.setAttribute("class", "alertsCell");
-        alertsCell2.innerHTML = showApgarScore(i);
-        alertsRow.appendChild(alertsCell2);
+      var alertsCell2 = document.createElement("div");
+      alertsCell2.setAttribute("class", "alertsCell");
+      alertsCell2.innerHTML = showApgarScore(i);
+      alertsRow.appendChild(alertsCell2);
         
-        //add row to table
-        alertsTable.appendChild(alertsRow);
-      }     
-      $('inputFrame'+tstCurrentPage).appendChild(alertsTable);
-      displayText = "";
+      //add row to table
+      alertsTable.appendChild(alertsRow);
+    }
+    $('inputFrame'+tstCurrentPage).appendChild(alertsTable);
+    displayText = "";
    
   }
   function showApgarScore(n){
@@ -120,15 +120,15 @@
     
 
     arr = ["Appearance", "Pulse", "Grimance", "Activity", "Respiration"]
-  /*
+    /*
     arr_val = ['Pale/blue', "Baby pink/</br>blue extremities", "Completely </br> pink",
       "None", "Slow -</br>Below 100 bpm", "Above </br>100 bpm",
       "Flaccid", "Some flexion </br> of Extremities", "Active Motion",
       "None", "Grimance", "Vigorous </br>cry",
       "Absent", "Slow - </br> irregular", "Good crying"];
-  */
-  // arr_labels = ["Color", "Heart Rate", "Muscle Tone", "Reflex Irritability", "Respiratory Effort"]
-   arr_val = ['Blue, Pale', "Pink </br> Extreme blue", "Completely </br> pink",
+     */
+    // arr_labels = ["Color", "Heart Rate", "Muscle Tone", "Reflex Irritability", "Respiratory Effort"]
+    arr_val = ['Blue, Pale', "Pink </br> Extreme blue", "Completely </br> pink",
       "Absent", "Below </br>100 bpm", "Over </br>100 bpm",
       "Flaccid", "Some Flexion </br> of Extremities", "Active motion",
       "Absent", "Arms and legs</br> flexed", "Active movement",
@@ -516,18 +516,18 @@
 </style>
 
 <form id='outcome' action="/encounters/create" method='post'>
-	<% unless params[:baby].blank? || params[:baby].to_i <= 0
-			baby = params[:baby].to_i 
-		 else
-			baby = 1
-		 end	
+  <% unless params[:baby].blank? || params[:baby].to_i <= 0
+    baby = params[:baby].to_i
+  else
+    baby = 1
+  end
 
-	%>
+%>
   <%= hidden_field_tag "cat", "baby" %>
-	<%= hidden_field_tag "owner", "baby" %>
-	<%= hidden_field_tag "patient_id", params[:patient_id] %>
-	<%= hidden_field_tag "number_of_babies", params[:number_of_babies] %>
-	<%= hidden_field_tag("baby",  baby.to_i + 1)%>
+  <%= hidden_field_tag "owner", "baby" %>
+  <%= hidden_field_tag "patient_id", params[:patient_id] %>
+  <%= hidden_field_tag "number_of_babies", params[:number_of_babies] %>
+  <%= hidden_field_tag("baby",  baby.to_i + 1)%>
   <%= hidden_field_tag "encounter[patient_id]", @patient.id %>
   <% @presentation = [""] + Concept.find_by_name("PRESENTATION").concept_answers.collect{|c| c.name} %>
   <% @baby_outcome = [""] + Concept.find_by_name("BABY OUTCOME").concept_answers.collect{|c| c.name} %>
@@ -538,11 +538,11 @@
     "DELIVERED IN THEATRE",
     "DELIVERED IN ANTENATAL WARD"] %>
   <% @mode_of_delivery = ["", "Forceps delivery", "Breech delivery"] %>
- 
+
   <% @delivery_mode = [""] + Concept.find_by_name("DELIVERY MODE").concept_answers.collect{|c| c.name} %>
-  
- <%= hidden_field_tag "encounter[encounter_type_name]", "UPDATE OUTCOME" %>
- <%= hidden_field_tag "encounter[encounter_datetime]",
+
+  <%= hidden_field_tag "encounter[encounter_type_name]", "UPDATE OUTCOME" %>
+  <%= hidden_field_tag "encounter[encounter_datetime]",
     (session[:datetime] ? session[:datetime].to_time : (session[:datetime] ? session[:datetime].to_time :
         DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
   <%= hidden_field_tag "encounter[provider_id]", session[:user_id] %>
@@ -566,170 +566,171 @@
   }
 %>
 
-	   <% options = {
-      :id => "time_of_delivery",
-      :field_type => 'advancedTime',
-      :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Time of Delivery",
-      :tt_onLoad => "baby_num = #{baby}"
-    }%>
-    <%= hidden_field_tag("observations[][concept_name]",  "TIME OF DELIVERY")%>
-    <%= text_field_tag("observations[][value_time]",   nil, options)%>
-    <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
-          session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+  <% options = {
+    :id => "time_of_delivery",
+    :field_type => 'advancedTime',
+    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Time of Delivery",
+    :tt_onLoad => "baby_num = #{baby}"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]",  "TIME OF DELIVERY")%>
+  <%= text_field_tag("observations[][value_time]",   nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-    <% options = {
-      :id => "date_of_delivery",
-      :field_type => 'date',
-      :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Date of Delivery",
-      :tt_onUnLoad => "calculateBabyOutcomeDate(#{baby})"      
-    }%>
-    <%= hidden_field_tag("observations[][concept_name]",  "DATE OF DELIVERY")%>
-    <%= text_field_tag("observations[][value_datetime]",   nil, options)%>
-    <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
-          session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+  <% options = {
+    :id => "date_of_delivery",
+    :field_type => 'date',
+    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Date of Delivery",
+    :tt_onUnLoad => "calculateBabyOutcomeDate(#{baby})"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]",  "DATE OF DELIVERY")%>
+  <%= text_field_tag("observations[][value_datetime]",   nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-    <% options = {
-      :id => "presentation#{baby}",
-      :field_type => 'text',
-      :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Presentation"      
-    }%>
-    <%= hidden_field_tag("observations[][concept_name]", "PRESENTATION") %>
-    <%= select_tag("observations[][value_coded_or_text]", options_for_select(@presentation), options)%>
-    <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+  <% options = {
+    :id => "presentation#{baby}",
+    :field_type => 'text',
+    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Presentation"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "PRESENTATION") %>
+  <%= select_tag("observations[][value_coded_or_text]", options_for_select(@presentation), options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-    <% options = {
-      :id => "baby_outcome",
-      :field_type => 'text',
-      :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Delivery Outcome"
-		}%>
-   
-    <%= hidden_field_tag("observations[][concept_name]", "BABY OUTCOME") %>
-    <%= select_tag("observations[][value_coded_or_text]", options_for_select(@baby_outcome), options)%>
-    <%= hidden_field_tag("observations[][obs_datetime]",
-      (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M"),
-      {
-        :id => "baby_outcome_date"
-      }) %>
+  <% options = {
+    :id => "baby_outcome",
+    :field_type => 'text',
+    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Delivery Outcome"
+  }%>
 
-		  <% options = {
-      :id => "delivery_mode",
-      :field_type => 'text',
-      :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Delivery Mode"      
-    }%>
+  <%= hidden_field_tag("observations[][concept_name]", "BABY OUTCOME") %>
+  <%= select_tag("observations[][value_coded_or_text]", options_for_select(@baby_outcome), options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]",
+    (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M"),
+    {
+      :id => "baby_outcome_date"
+    }) %>
 
-    <%= hidden_field_tag("observations[][concept_name]", "DELIVERY MODE") %>
-    <%= select_tag("observations[][value_coded_or_text]", options_for_select(@delivery_mode.uniq), options)%>
-    <%= hidden_field_tag("observations[][obs_datetime]",
-      (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M"),
-      {
-        :id => "baby_delivery_mode_date"
-      }) %> 
+  <% options = {
+    :id => "delivery_mode",
+    :field_type => 'text',
+    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Delivery Mode"
+  }%>
+
+  <%= hidden_field_tag("observations[][concept_name]", "DELIVERY MODE") %>
+  <%= select_tag("observations[][value_coded_or_text]", options_for_select(@delivery_mode.uniq), options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]",
+    (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M"),
+    {
+      :id => "baby_delivery_mode_date"
+    }) %>
 
 
-    <% options = {
-      :id => "baby_gender#{baby}",
-      :field_type => 'text',
-      :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Gender"  
-		}%>   
-    <%= hidden_field_tag("observations[][concept_name]", "GENDER OF CONTACT") %>
-    <%= select_tag("observations[][value_coded_or_text]", options_for_select(["", "Male", "Female"]), options)%>
-    <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>    
-    
-      <% options = {
-        :id => "appearance"
-      }%>
-      <%= hidden_field_tag("observations[][concept_name]", "APPEARANCE")%>
-      <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
-      <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
-            session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+  <% options = {
+    :id => "baby_gender#{baby}",
+    :field_type => 'text',
+    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Gender"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "GENDER OF CONTACT") %>
+  <%= select_tag("observations[][value_coded_or_text]", options_for_select(["", "Male", "Female"]), options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-      <% options = {
-        :id => "pulse"
-      }%>
-      <%= hidden_field_tag("observations[][concept_name]", "PULSE")%>
-      <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
-      <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
-            session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+  <% options = {
+    :id => "appearance"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "APPEARANCE")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-      <% options = {
-        :id => "grimance"
-      }%>
-      <%= hidden_field_tag("observations[][concept_name]", "GRIMANCE")%>
-      <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
-      <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
-            session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+  <% options = {
+    :id => "pulse"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "PULSE")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-      <% options = {
-        :id => "activity"
-      }%>
-      <%= hidden_field_tag("observations[][concept_name]", "ACTIVITY")%>
-      <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
-      <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
-            session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+  <% options = {
+    :id => "grimance"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "GRIMANCE")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-      <% options = {
-        :id => "respiration"
-      }%>
-      <%= hidden_field_tag("observations[][concept_name]", "RESPIRATION")%>
-      <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
-      <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
-            session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+  <% options = {
+    :id => "activity"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "ACTIVITY")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-      <% options =  {
-        :id => "apgar",
-        :field_type => 'number',
-        :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: 1<sup>st</sup>Minute APGAR",       
-        :absoluteMin => 0,
-        :absoluteMax => 10,
-        :tt_onLoad => "showApgarControl(#{baby})",
-        :tt_pageStyleClass => "NoKeyboard"
-      } %>
+  <% options = {
+    :id => "respiration"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "RESPIRATION")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-			<%= text_field_tag("observations[][value_numeric]", nil, options ) %>
-  		<%= hidden_field_tag("observations[][value_text]", nil) %>
- 			<%= hidden_field_tag("observations[][concept_name]", "APGAR") %>
-  		<%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
-  		<%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
-			
-			 <% options =  {	:id => "weight",
-      :field_type => 'number',
-      :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Weight (Grams)",
-      :tt_onLoad => "timedEvent = self.setInterval(function(){weightAlert()}, 100);",
-      :tt_onUnLoad => "window.clearInterval(timedEvent);",
-      :min => number_with_precision(2500.0, :precision => 1),
-      :max => number_with_precision(4500.0, :precision => 1),     
-      :absoluteMin => 0,
-      :absoluteMax =>10000,
-      :validationRule => "([0-9]+(\\.[0-9])?)|Unknown$",
-      :validationMessage => "You must enter a number between 0 and 15 (for example: 54<b>.6</b>)",
-      :tt_pageStyleClass => "unknownButton"} %>
+  <% options =  {
+    :id => "apgar",
+    :field_type => 'number',
+    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: 1<sup>st</sup>Minute APGAR",
+    :absoluteMin => 0,
+    :absoluteMax => 10,
+    :condition => "__$('baby_outcome').value.toUpperCase().trim() == 'ALIVE'",
+    :tt_onLoad => "showApgarControl(#{baby})",
+    :tt_pageStyleClass => "NoKeyboard"
+  } %>
 
-		<%= text_field_tag("observations[][value_numeric]", nil, options ) %>
-  	<%= hidden_field_tag("observations[][value_text]", nil) %>
- 		<%= hidden_field_tag("observations[][concept_name]", "BIRTH WEIGHT") %>
-  	<%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
-  	<%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
+  <%= text_field_tag("observations[][value_numeric]", nil, options ) %>
+  <%= hidden_field_tag("observations[][value_text]", nil) %>
+  <%= hidden_field_tag("observations[][concept_name]", "APGAR") %>
+  <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
 
-    <% options =  {	
-			:id => "height",
-      :field_type => 'number',
-      :tt_onLoad => "$('clearButton').style.display = 'inline'; $('Unknown').style.display = 'block'; ",
-      :tt_onUnLoad => "$('Unknown').style.display = 'block'; ",
-      :min => number_with_precision(15, :precision => 1),
-      :max => number_with_precision(60, :precision => 1),
-      :absoluteMin => 0,
-      :absoluteMax => 100,
-      :units => 'cm',     
-      :validationRule => "^([0-9]+)|Unknown$",
-      :validationMessage => "You must enter numbers only (for example 157)",
-      :tt_pageStyleClass => "unknownButton ",
-      :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Length (CM)" } %>
+  <% options =  {	:id => "weight",
+    :field_type => 'number',
+    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Weight (Grams)",
+    :tt_onLoad => "timedEvent = self.setInterval(function(){weightAlert()}, 100);",
+    :tt_onUnLoad => "window.clearInterval(timedEvent);",
+    :min => number_with_precision(2500.0, :precision => 1),
+    :max => number_with_precision(4500.0, :precision => 1),
+    :absoluteMin => 0,
+    :absoluteMax =>10000,
+    :validationRule => "([0-9]+(\\.[0-9])?)|Unknown$",
+    :validationMessage => "You must enter a number between 0 and 15 (for example: 54<b>.6</b>)",
+    :tt_pageStyleClass => "unknownButton"} %>
 
-			<%= text_field_tag("observations[][value_numeric]", nil, options ) %>
-  		<%= hidden_field_tag("observations[][value_text]", nil) %>
- 			<%= hidden_field_tag("observations[][concept_name]", "BIRTH LENGTH") %>
-  		<%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
-  		<%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
+  <%= text_field_tag("observations[][value_numeric]", nil, options ) %>
+  <%= hidden_field_tag("observations[][value_text]", nil) %>
+  <%= hidden_field_tag("observations[][concept_name]", "BIRTH WEIGHT") %>
+  <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
+
+  <% options =  {
+    :id => "height",
+    :field_type => 'number',
+    :tt_onLoad => "$('clearButton').style.display = 'inline'; $('Unknown').style.display = 'block'; ",
+    :tt_onUnLoad => "$('Unknown').style.display = 'block'; ",
+    :min => number_with_precision(15, :precision => 1),
+    :max => number_with_precision(60, :precision => 1),
+    :absoluteMin => 0,
+    :absoluteMax => 100,
+    :units => 'cm',
+    :validationRule => "^([0-9]+)|Unknown$",
+    :validationMessage => "You must enter numbers only (for example 157)",
+    :tt_pageStyleClass => "unknownButton ",
+    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Length (CM)" } %>
+
+  <%= text_field_tag("observations[][value_numeric]", nil, options ) %>
+  <%= hidden_field_tag("observations[][value_text]", nil) %>
+  <%= hidden_field_tag("observations[][concept_name]", "BIRTH LENGTH") %>
+  <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
 
   <%= submit_tag "Finish" %>
 
