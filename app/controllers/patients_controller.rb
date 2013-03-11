@@ -911,9 +911,22 @@ class PatientsController < ApplicationController
 
     uri = CoreService.get_global_property_value("birth_registration_url") rescue nil
 
-    result = RestClient.post(uri, data) rescue "birth report couldnt be sent"
-    
-    if ((result.downcase rescue "") == "baby added") and params[:update].nil?
+    @patient =  Patient.find(params[:id]) || Patient.find(params[:person_id]) rescue nil
+    @anc_patient = ANCService::ANC.new(@patient) rescue nil
+
+    hospital_date = @anc_patient.get_attribute("Hospital Date")
+    health_center = @anc_patient.get_attribute("Health Center")
+    health_district = @anc_patient.get_attribute("Health District")
+    provider_title = @anc_patient.get_attribute("Provider Title")
+    provider_name = @anc_patient.get_attribute("Provider Name")
+
+    @provider_details_available = true if (hospital_date and health_center and health_district and provider_title and provider_name)
+    if @provider_details_available
+        result = RestClient.post(uri, data) rescue "birth report couldnt be sent"
+    end
+    if !@provider_details_available
+      flash[:error] = "Provider Details Incomplete"
+    elsif ((result.downcase rescue "") == "baby added") and params[:update].nil?
       flash[:error] = "Birth Report Sent"
       BirthReport.create(:person_id => params[:id])
     else
