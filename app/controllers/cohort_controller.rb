@@ -1032,7 +1032,30 @@ class CohortController < ActionController::Base # < ApplicationController
     render :text => babies.uniq.to_json
 	end
 
-	def lessorequal1499_missingoutcomes(startdate = Time.now, enddate = Time.now)
+  def lessorequal1499_alive_predischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}'
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}'
+				AND o.concept_id = (SELECT concept_id FROM concept_name WHERE name = 'BABY OUTCOME')
+				AND o.voided = 0
+        AND (SELECT COUNT(*) FROM obs WHERE person_id = r.person_b AND voided = 0
+            AND concept_id = (SELECT concept_id FROM concept_name WHERE name = 'STATUS OF BABY' LIMIT 1)) = 0
+				AND o.value_coded IN (SELECT concept_id FROM concept_name WHERE name = 'Alive')").each do |data|
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight and (weight <= 1499)
+    end
+
+    babies.delete_if{|baby| baby.blank? }
+    babies
+	end
+  
+  def lessorequal1499_missingoutcomes(startdate = Time.now, enddate = Time.now)
     babies = []
 
     @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
@@ -1067,9 +1090,9 @@ class CohortController < ActionController::Base # < ApplicationController
             baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
     }
     render :text => babies.uniq.to_json
-	end
+  end
 
-	def lessorequal1499_total(startdate = Time.now, enddate = Time.now)
+  def lessorequal1499_total(startdate = Time.now, enddate = Time.now)
     babies = []
 
     @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
@@ -1092,18 +1115,20 @@ class CohortController < ActionController::Base # < ApplicationController
       weight = Observation.find(:last,
         :conditions => ["person_id = ? AND concept_id = ?",
           data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
-
       babies << data.person_b if weight and (weight <= 1499)
     end
 
+    alive_without_discharge = lessorequal1499_alive_predischarge(startdate, enddate) rescue []
+   
     babies.delete_if{|baby|
       baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
             baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
     }
+    babies = babies - alive_without_discharge
     render :text => babies.uniq.to_json
-	end
+  end
 
-	def from1500to2499(startdate = Time.now, enddate = Time.now, field = 'blank')
+  def from1500to2499(startdate = Time.now, enddate = Time.now, field = 'blank')
     babies = []
 
     @concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
@@ -1128,7 +1153,7 @@ class CohortController < ActionController::Base # < ApplicationController
 
     babies.delete_if{|baby| baby.blank?}
     render :text => babies.uniq.to_json
-	end
+  end
 
   def from1500to2499_neonatal(startdate = Time.now, enddate = Time.now)
     babies = []
@@ -1166,9 +1191,9 @@ class CohortController < ActionController::Base # < ApplicationController
     }
 
     babies
-	end
+  end
 
-	def from1500to2499_predischarge(startdate = Time.now, enddate = Time.now)
+  def from1500to2499_predischarge(startdate = Time.now, enddate = Time.now)
     babies = []
 
     @values = ['Dead'].collect{
@@ -1203,9 +1228,32 @@ class CohortController < ActionController::Base # < ApplicationController
     neo = from1500to2499_neonatal(startdate, enddate)
     babies = babies.concat(neo)
     render :text => babies.uniq.to_json
-	end
+  end
 
-	def from1500to2499_aliveatdischarge(startdate = Time.now, enddate = Time.now)
+  def from1500to2499_alive_predischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}'
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}'
+				AND o.concept_id = (SELECT concept_id FROM concept_name WHERE name = 'BABY OUTCOME')
+				AND o.voided = 0
+        AND (SELECT COUNT(*) FROM obs WHERE person_id = r.person_b AND voided = 0
+            AND concept_id = (SELECT concept_id FROM concept_name WHERE name = 'STATUS OF BABY' LIMIT 1)) = 0
+				AND o.value_coded IN (SELECT concept_id FROM concept_name WHERE name = 'Alive')").each do |data|
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight and (weight > 1499) and (weight <= 2499)
+    end
+
+    babies.delete_if{|baby| baby.blank? }
+    babies
+	end
+  
+  def from1500to2499_aliveatdischarge(startdate = Time.now, enddate = Time.now)
     babies = []
 			
     Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
@@ -1228,9 +1276,9 @@ class CohortController < ActionController::Base # < ApplicationController
             baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
     }
     render :text => babies.uniq.to_json
-	end
+  end
 
-	def from1500to2499_missingoutcomes(startdate = Time.now, enddate = Time.now)
+  def from1500to2499_missingoutcomes(startdate = Time.now, enddate = Time.now)
     babies = []
 
     @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
@@ -1265,9 +1313,9 @@ class CohortController < ActionController::Base # < ApplicationController
             baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
     }
     render :text => babies.uniq.to_json
-	end
+  end
 
-	def from1500to2499_total(startdate = Time.now, enddate = Time.now)
+  def from1500to2499_total(startdate = Time.now, enddate = Time.now)
     babies = []
 
     @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
@@ -1294,14 +1342,17 @@ class CohortController < ActionController::Base # < ApplicationController
       babies << data.person_b if weight and (weight > 1499) and (weight <= 2499)
     end
 
+    alive_without_discharge = from1500to2499_alive_predischarge(startdate, enddate) rescue []
+    babies = babies - alive_without_discharge
+
     babies.delete_if{|baby|
       baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
             baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
     }
     render :text => babies.uniq.to_json
-	end
+  end
 	
-	def greaterorequal2500(startdate = Time.now, enddate = Time.now, field = 'blank')
+  def greaterorequal2500(startdate = Time.now, enddate = Time.now, field = 'blank')
     babies = []
 
     @concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
@@ -1326,7 +1377,7 @@ class CohortController < ActionController::Base # < ApplicationController
 
     babies.delete_if{|baby| baby.blank?}
     render :text => babies.uniq.to_json
-	end
+  end
 
   def greaterorequal2500_neonatal(startdate = Time.now, enddate = Time.now)
     babies = []
@@ -1364,9 +1415,9 @@ class CohortController < ActionController::Base # < ApplicationController
     }
 
     babies
-	end
+  end
 
-	def greaterorequal2500_predischarge(startdate = Time.now, enddate = Time.now)
+  def greaterorequal2500_predischarge(startdate = Time.now, enddate = Time.now)
     babies = []
 
     @values = ['Dead'].collect{
@@ -1403,9 +1454,9 @@ class CohortController < ActionController::Base # < ApplicationController
     neo = greaterorequal2500_neonatal(startdate, enddate)
     babies = babies.concat(neo)
     render :text => babies.uniq.to_json
-	end
+  end
 
-	def greaterorequal2500_aliveatdischarge(startdate = Time.now, enddate = Time.now)
+  def greaterorequal2500_aliveatdischarge(startdate = Time.now, enddate = Time.now)
     babies = []
 			
     Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
@@ -1428,9 +1479,9 @@ class CohortController < ActionController::Base # < ApplicationController
             baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
     }
     render :text => babies.uniq.to_json
-	end
+  end
 
-	def greaterorequal2500_missingoutcomes(startdate = Time.now, enddate = Time.now)
+  def greaterorequal2500_missingoutcomes(startdate = Time.now, enddate = Time.now)
     babies = []
 
     @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
@@ -1465,9 +1516,31 @@ class CohortController < ActionController::Base # < ApplicationController
             baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
     }
     render :text => babies.uniq.to_json
-	end
+  end
 
-	def greaterorequal2500_total(startdate = Time.now, enddate = Time.now)
+  def greaterorequal2500_alive_predischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}'
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}'
+				AND o.concept_id = (SELECT concept_id FROM concept_name WHERE name = 'BABY OUTCOME')
+				AND o.voided = 0
+        AND (SELECT COUNT(*) FROM obs WHERE person_id = r.person_b AND voided = 0
+            AND concept_id = (SELECT concept_id FROM concept_name WHERE name = 'STATUS OF BABY' LIMIT 1)) = 0
+				AND o.value_coded IN (SELECT concept_id FROM concept_name WHERE name = 'Alive')").each do |data|
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+      babies << data.person_b if weight and (weight >= 2500)
+    end
+
+    babies.delete_if{|baby| baby.blank? }
+    babies
+	end
+  
+  def greaterorequal2500_total(startdate = Time.now, enddate = Time.now)
     babies = []
 
     @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
@@ -1495,14 +1568,17 @@ class CohortController < ActionController::Base # < ApplicationController
       babies << data.person_b if weight and (weight > 2499)
     end
 
+    alive_without_discharge = greaterorequal2500_alive_predischarge(startdate, enddate) rescue []
+    babies = babies - alive_without_discharge
+    
     babies.delete_if{|baby|
       baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
             baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
     }
     render :text => babies.uniq.to_json
-	end
+  end
 
-	def missingweights(startdate = Time.now, enddate = Time.now, field = 'blank')
+  def missingweights(startdate = Time.now, enddate = Time.now, field = 'blank')
     babies = []
 
     @concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
@@ -1527,7 +1603,7 @@ class CohortController < ActionController::Base # < ApplicationController
 
     babies.delete_if{|baby| baby.blank?}
     render :text => babies.uniq.to_json
-	end
+  end
 
   def missingweights_neonatal(startdate = Time.now, enddate = Time.now)
     babies = []
@@ -1565,9 +1641,9 @@ class CohortController < ActionController::Base # < ApplicationController
     }
 
     babies
-	end
+  end
    
-	def missingweights_predischarge(startdate = Time.now, enddate = Time.now)
+  def missingweights_predischarge(startdate = Time.now, enddate = Time.now)
     babies = []
 
     @values = ['Dead'].collect{
@@ -1602,9 +1678,9 @@ class CohortController < ActionController::Base # < ApplicationController
     neo = missingweights_neonatal(startdate, enddate) rescue []
     babies = babies.concat(neo)
     render :text => babies.uniq.to_json
-	end
+  end
 
-	def missingweights_aliveatdischarge(startdate = Time.now, enddate = Time.now)
+  def missingweights_aliveatdischarge(startdate = Time.now, enddate = Time.now)
     babies = []
 			
     Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
@@ -1627,9 +1703,9 @@ class CohortController < ActionController::Base # < ApplicationController
             baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
     }
     render :text => babies.uniq.to_json
-	end
+  end
 
-	def missingweights_missingoutcomes(startdate = Time.now, enddate = Time.now)
+  def missingweights_missingoutcomes(startdate = Time.now, enddate = Time.now)
     babies = []
 
     @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
@@ -1664,9 +1740,32 @@ class CohortController < ActionController::Base # < ApplicationController
             baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
     }
     render :text => babies.uniq.to_json
-	end
+  end
 
-	def missingweights_total(startdate = Time.now, enddate = Time.now)
+
+  def missingweights_alive_predischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}'
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}'
+				AND o.concept_id = (SELECT concept_id FROM concept_name WHERE name = 'BABY OUTCOME')
+				AND o.voided = 0
+        AND (SELECT COUNT(*) FROM obs WHERE person_id = r.person_b AND voided = 0
+            AND concept_id = (SELECT concept_id FROM concept_name WHERE name = 'STATUS OF BABY' LIMIT 1)) = 0
+				AND o.value_coded IN (SELECT concept_id FROM concept_name WHERE name = 'Alive')").each do |data|
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+      babies << data.person_b if weight.blank?
+    end
+    
+    babies.delete_if{|baby| baby.blank? }
+    babies
+	end
+  
+  def missingweights_total(startdate = Time.now, enddate = Time.now)
     babies = []
 
     @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
@@ -1693,14 +1792,16 @@ class CohortController < ActionController::Base # < ApplicationController
       babies << data.person_b if weight.blank?
     end
 
+    alive_without_discharge = missingweights_alive_predischarge(startdate, enddate)
+    babies  = babies - alive_without_discharge
     babies.delete_if{|baby|
       baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
             baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
     }
     render :text => babies.uniq.to_json
-	end
+  end
 	
-	def total(startdate = Time.now, enddate = Time.now, field = 'blank')
+  def total(startdate = Time.now, enddate = Time.now, field = 'blank')
     babies = []
 
     @concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
@@ -1721,7 +1822,7 @@ class CohortController < ActionController::Base # < ApplicationController
 
     babies.delete_if{|baby| baby.blank?}
     render :text => babies.uniq.to_json
-	end
+  end
 
   def total_neonatal(startdate = Time.now, enddate = Time.now)
     babies = []
@@ -1750,7 +1851,7 @@ class CohortController < ActionController::Base # < ApplicationController
         :conditions => ["person_id = ? AND concept_id = ?",
           data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
 
-      babies << data.person_b 
+      babies << data.person_b
     end
 
     babies.delete_if{|baby|
@@ -1759,9 +1860,9 @@ class CohortController < ActionController::Base # < ApplicationController
     }
 
     babies
-	end
+  end
 
-	def total_predischarge(startdate = Time.now, enddate = Time.now)
+  def total_predischarge(startdate = Time.now, enddate = Time.now)
     babies = []
 
     @values = ['Dead'].collect{
@@ -1790,12 +1891,12 @@ class CohortController < ActionController::Base # < ApplicationController
       baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
             baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
     }
-    neo = total_neonatal(startdate, enddate)
+    neo = total_neonatal(startdate, enddate) rescue []
     babies = babies.concat(neo)
     render :text => babies.uniq.to_json
-	end
+  end
 
-	def total_aliveatdischarge(startdate = Time.now, enddate = Time.now)
+  def total_aliveatdischarge(startdate = Time.now, enddate = Time.now)
     babies = []
 			
     Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
@@ -1813,9 +1914,9 @@ class CohortController < ActionController::Base # < ApplicationController
             baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
     }
     render :text => babies.uniq.to_json
-	end
+  end
 
-	def total_missingoutcomes(startdate = Time.now, enddate = Time.now)
+  def total_missingoutcomes(startdate = Time.now, enddate = Time.now)
     babies = []
 
     @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
@@ -1846,9 +1947,28 @@ class CohortController < ActionController::Base # < ApplicationController
       baby.blank?
     }
     render :text => babies.uniq.to_json
-	end
+  end
 
-	def total_total(startdate = Time.now, enddate = Time.now)
+   def total_alive_predischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}'
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}'
+				AND o.concept_id = (SELECT concept_id FROM concept_name WHERE name = 'BABY OUTCOME')
+				AND o.voided = 0
+        AND (SELECT COUNT(*) FROM obs WHERE person_id = r.person_b AND voided = 0
+            AND concept_id = (SELECT concept_id FROM concept_name WHERE name = 'STATUS OF BABY' LIMIT 1)) = 0
+				AND o.value_coded IN (SELECT concept_id FROM concept_name WHERE name = 'Alive')").each do |data|
+
+     babies << data.person_b
+    end
+
+    babies.delete_if{|baby| baby.blank? }
+    babies
+	end
+ 
+  def total_total(startdate = Time.now, enddate = Time.now)
     babies = []
 
     @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
@@ -1872,11 +1992,14 @@ class CohortController < ActionController::Base # < ApplicationController
       babies << data.person_b
     end
 
+    alive_without_discharge = total_alive_predischarge(startdate, enddate)
+    babies = babies - alive_without_discharge
+
     babies.delete_if{|baby|
       baby.blank?
     }
 
     render :text => babies.uniq.to_json
-	end
+  end
 
 end
