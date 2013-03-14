@@ -1277,7 +1277,7 @@ module ANCService
     end
 
     def current_district
-      "#{self.person.addresses.last.address2}" rescue nil
+      "#{self.person.addresses.last.state_province}" rescue nil
     end
 
     def current_address
@@ -1285,7 +1285,7 @@ module ANCService
     end
 
     def home_district
-      "#{self.person.addresses.last.subregion}" rescue nil
+      "#{self.person.addresses.last.address2}" rescue nil
     end
 
     def home_ta

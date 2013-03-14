@@ -50,7 +50,7 @@ pos = 1
       people[<%= pos %>]["Ancestral Traditional Authority(T/A)"] = null;
     }
     try {
-      people[<%= pos %>]["Current Residence"] = "" //"<%#=h person.current_residence -%>";
+      people[<%= pos %>]["Current Residence"] = "<%=h person.current_residence -%>";
     }catch(e){
       people[<%= pos %>]["Current Residence"] = null;
     }
@@ -103,12 +103,13 @@ end -%>
       "relation",
       "birthdate",
       "birthdate_estimated",
-      "state_province",
+      "home_district",
       "city_village",
       "county_district",
       "occupation",
       "cell_phone_number",
-      "national_id"
+      "national_id",
+      "state_province"
     ]
 
     createControlAndAssignValue("remote", "remote", "true");
@@ -224,8 +225,8 @@ end -%>
   }
 
   function makeRemoteButton(){
-    <%link_dde_server = (CoreService.get_global_property_value('create.from.dde.server').to_s == "true") rescue false%>
-    <% if link_dde_server && false %>
+<%link_dde_server = (CoreService.get_global_property_value('create.from.dde.server').to_s == "true") rescue false%>
+<% if link_dde_server && false %>
       __$("backButton").innerHTML = "<span>Remote Search</span>";
       __$('backButton').setAttribute("onmousedown","search_remote();");
       __$('backButton').style.display = "block";
@@ -375,9 +376,9 @@ end -%>
   <% unless (params[:gender].blank? || params[:given_name].blank? || params[:family_name].blank?) && (params[:identifier].blank?) %>
     <% form_tag "select", :method => :post do %>
       <% if @patient.blank? %>
-       
-          <label for="person">No people were found:</label>
-                
+
+        <label for="person">No people were found:</label>
+
       <% else -%>
         <% if @relation.blank? %>
           <label for="person">Select the person from the following</label>
