@@ -2108,8 +2108,10 @@ module ANCService
     passed_params = {"person"=>
         {"data" =>
           {"addresses"=>
-            {"state_province"=> address_params["address2"],
-            "address2"=> address_params["address1"],
+            {"state_province"=> address_params["state_province"],
+            "address2"=> address_params["address2"],
+            "address1"=> address_params["address1"],
+            "neighborhood_cell"=> address_params["neighborhood_cell"],
             "city_village"=> address_params["city_village"],
             "county_district"=> address_params["county_district"]
           },
@@ -2199,7 +2201,7 @@ module ANCService
         elsif day.blank? || day == "Unknown" || day == 0
           birthdate = Date.new(year.to_i,month_i,15)
           birthdate_estimated = 1
-        else
+        elseJL854W
           birthdate = Date.new(year.to_i,month_i,day.to_i)
           birthdate_estimated = 0
         end
@@ -2211,8 +2213,10 @@ module ANCService
     passed_params = {"person"=>
         {"data" =>
           {"addresses"=>
-            {"state_province"=> address_params["address2"],
-            "address2"=> address_params["address1"],
+            {"state_province"=> address_params["state_province"],
+            "address2"=> address_params["address2"],
+            "address1"=> address_params["address1"],
+            "neighborhood_cell"=> address_params["neighborhood_cell"],
             "city_village"=> address_params["city_village"],
             "county_district"=> address_params["county_district"]
           },
