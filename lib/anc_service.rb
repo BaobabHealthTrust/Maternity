@@ -168,8 +168,8 @@ module ANCService
     
       @obstetrics = {}
       search_set = ["YEAR OF BIRTH", "PLACE OF BIRTH", "BIRTHPLACE", "PREGNANCY", "GESTATION", "LABOUR DURATION",
-      "METHOD OF DELIVERY", "CONDITION AT BIRTH", "BIRTH WEIGHT", "ALIVE",
-      "AGE AT DEATH", "UNITS OF AGE OF CHILD", "PROCEDURE DONE"]
+        "METHOD OF DELIVERY", "CONDITION AT BIRTH", "BIRTH WEIGHT", "ALIVE",
+        "AGE AT DEATH", "UNITS OF AGE OF CHILD", "PROCEDURE DONE"]
       current_level = 0
     
       Encounter.find(:all, :conditions => ["encounter_type = ? AND patient_id = ?", 
@@ -1709,19 +1709,19 @@ module ANCService
     }
 
     server = CoreService.get_global_property_value("remote_servers.parent")
-       begin
+    begin
 			output = RestClient.post("http://#{server}/people/create_remote", known_demographics)
 
-      rescue Timeout::Error
-        return 'timeout'
-      rescue
-        return 'creation failed'
-      end
+    rescue Timeout::Error
+      return 'timeout'
+    rescue
+      return 'creation failed'
+    end
 
-      output if output and output.match(/person/)
+    output if output and output.match(/person/)
       
 
-   	 output ? JSON.parse(output) : nil
+    output ? JSON.parse(output) : nil
   end
 
   def self.person_search(params)
@@ -2064,7 +2064,7 @@ module ANCService
 		patient_params = params["person"]["patient"] rescue []
     birthday_params = params["person"] rescue []
 
-      params_to_process = params.reject{|key,value|
+    params_to_process = params.reject{|key,value|
       key.match(/identifiers|addresses|patient|names|relation|cell_phone_number|home_phone_number|office_phone_number|agrees_to_be_visited_for_TB_therapy|agrees_phone_text_for_TB_therapy/)
     }
 		birthday_params = params_to_process["person"].reject{|key,value| key.match(/gender/) }
@@ -2107,160 +2107,159 @@ module ANCService
 
     passed_params = {"person"=>
         {"data" =>
-          {"addresses"=>
-            {"state_province"=> address_params["state_province"],
-            "address2"=> address_params["address2"],
-            "address1"=> address_params["address1"],
-            "neighborhood_cell"=> address_params["neighborhood_cell"],
-            "city_village"=> address_params["city_village"],
-            "county_district"=> address_params["county_district"]
-          },
-          "attributes"=>
-            {"occupation"=> params["person"]["occupation"],
-            "cell_phone_number" => params["person"]["cell_phone_number"] },
-          "patient"=>
-            {"identifiers"=>
-              {"diabetes_number"=>""}},
-          "gender"=> person_params["gender"],
-          "birthdate"=> birthdate,
-          "birthdate_estimated"=> birthdate_estimated ,
-          "names"=>{"family_name"=> names_params["family_name"],
-            "given_name"=> names_params["given_name"]
-          }}}}
+          {"state_province"=> address_params["state_province"],
+          "address2"=> address_params["address2"],
+          "address1"=> address_params["address1"],
+          "neighborhood_cell"=> address_params["neighborhood_cell"],
+          "city_village"=> address_params["city_village"],
+          "county_district"=> address_params["county_district"]
+        },
+        "attributes"=>
+          {"occupation"=> params["person"]["occupation"],
+          "cell_phone_number" => params["person"]["cell_phone_number"] },
+        "patient"=>
+          {"identifiers"=>
+            {"diabetes_number"=>""}},
+        "gender"=> person_params["gender"],
+        "birthdate"=> birthdate,
+        "birthdate_estimated"=> birthdate_estimated ,
+        "names"=>{"family_name"=> names_params["family_name"],
+          "given_name"=> names_params["given_name"]
+        }}}
 
-    if !params["remote"]
+  if !params["remote"]
 
-      @dde_server = CoreService.get_global_property_value("dde_server_ip").to_s # rescue ""
+    @dde_server = CoreService.get_global_property_value("dde_server_ip").to_s # rescue ""
 
-      @dde_server_username = CoreService.get_global_property_value("dde_server_username").to_s # rescue ""
+    @dde_server_username = CoreService.get_global_property_value("dde_server_username").to_s # rescue ""
 
-      @dde_server_password = CoreService.get_global_property_value("dde_server_password").to_s # rescue ""
+    @dde_server_password = CoreService.get_global_property_value("dde_server_password").to_s # rescue ""
 
-      uri = "http://#{@dde_server_username}:#{@dde_server_password}@#{@dde_server}/people.json/"
+    uri = "http://#{@dde_server_username}:#{@dde_server_password}@#{@dde_server}/people.json/"
 
-      recieved_params = RestClient.post(uri,passed_params)
+    recieved_params = RestClient.post(uri,passed_params)
 
-      national_id = JSON.parse(recieved_params)["npid"]["value"]
-    else
-      national_id = params["person"]["patient"]["identifiers"]["National_id"]
-    end
-
-	  person = self.create_from_form(params[:person])
-    identifier_type = PatientIdentifierType.find_by_name("National id") || PatientIdentifierType.find_by_name("Unknown id")
-    person.patient.patient_identifiers.create("identifier" => national_id,
-      "identifier_type" => identifier_type.patient_identifier_type_id) unless national_id.blank?
-    return person
+    national_id = JSON.parse(recieved_params)["npid"]["value"]
+  else
+    national_id = params["person"]["patient"]["identifiers"]["National_id"]
   end
 
-  def self.create_patient_from_dde_baby(params)
+  person = self.create_from_form(params[:person])
+  identifier_type = PatientIdentifierType.find_by_name("National id") || PatientIdentifierType.find_by_name("Unknown id")
+  person.patient.patient_identifiers.create("identifier" => national_id,
+      "identifier_type" => identifier_type.patient_identifier_type_id) unless national_id.blank?
+  return person
+end
+
+def self.create_patient_from_dde_baby(params)
     
-    if params.has_key?('person')
-      params = params['person']
-    end
+  if params.has_key?('person')
+    params = params['person']
+  end
 
-	  address_params = params["addresses"] rescue []
-		names_params = params["names"] rescue []
-		patient_params = params["patient"] rescue []
-    birthday_params = params.reject{|key,value| !key.match(/birth_|age_estimate/) } rescue []
-		params_to_process = params.reject{|key,value|
-      key.match(/identifiers|addresses|patient|names|relation|cell_phone_number|home_phone_number|office_phone_number|agrees_to_be_visited_for_TB_therapy|agrees_phone_text_for_TB_therapy/)
-    }
-		birthday_params = params_to_process.reject{|key,value| key.match(/gender/) }
-		person_params = params_to_process.reject{|key,value| key.match(/birth_|age_estimate|occupation/) }
+  address_params = params["addresses"] rescue []
+  names_params = params["names"] rescue []
+  patient_params = params["patient"] rescue []
+  birthday_params = params.reject{|key,value| !key.match(/birth_|age_estimate/) } rescue []
+  params_to_process = params.reject{|key,value|
+    key.match(/identifiers|addresses|patient|names|relation|cell_phone_number|home_phone_number|office_phone_number|agrees_to_be_visited_for_TB_therapy|agrees_phone_text_for_TB_therapy/)
+  }
+  birthday_params = params_to_process.reject{|key,value| key.match(/gender/) }
+  person_params = params_to_process.reject{|key,value| key.match(/birth_|age_estimate|occupation/) }
 
-    # person_params << birthday_params
+  # person_params << birthday_params
     
-    person_params["birth_year"] = birthday_params["birth_year"]
-    person_params["birth_month"] = birthday_params["birth_month"]
-    person_params["birth_day"] = birthday_params["birth_day"]
+  person_params["birth_year"] = birthday_params["birth_year"]
+  person_params["birth_month"] = birthday_params["birth_month"]
+  person_params["birth_day"] = birthday_params["birth_day"]
 
-    # raise person_params.to_yaml
+  # raise person_params.to_yaml
 
-		if person_params["gender"].to_s == "Female"
-      person_params["gender"] = 'F'
-		elsif person_params["gender"].to_s == "Male"
-      person_params["gender"] = 'M'
-		end
+  if person_params["gender"].to_s == "Female"
+    person_params["gender"] = 'F'
+  elsif person_params["gender"].to_s == "Male"
+    person_params["gender"] = 'M'
+  end
 
-		unless birthday_params.empty?
-		  if birthday_params["birth_year"] == "Unknown"
-			  birthdate = Date.new(Date.today.year - birthday_params["age_estimate"].to_i, 7, 1)
+  unless birthday_params.empty?
+    if birthday_params["birth_year"] == "Unknown"
+      birthdate = Date.new(Date.today.year - birthday_params["age_estimate"].to_i, 7, 1)
+      birthdate_estimated = 1
+    else
+      year = birthday_params["birth_year"]
+      month = birthday_params["birth_month"]
+      day = birthday_params["birth_day"]
+
+      month_i = (month || 0).to_i
+      month_i = Date::MONTHNAMES.index(month) if month_i == 0 || month_i.blank?
+      month_i = Date::ABBR_MONTHNAMES.index(month) if month_i == 0 || month_i.blank?
+
+      if month_i == 0 || month == "Unknown"
+        birthdate = Date.new(year.to_i,7,1)
         birthdate_estimated = 1
-		  else
-			  year = birthday_params["birth_year"]
-        month = birthday_params["birth_month"]
-        day = birthday_params["birth_day"]
-
-        month_i = (month || 0).to_i
-        month_i = Date::MONTHNAMES.index(month) if month_i == 0 || month_i.blank?
-        month_i = Date::ABBR_MONTHNAMES.index(month) if month_i == 0 || month_i.blank?
-
-        if month_i == 0 || month == "Unknown"
-          birthdate = Date.new(year.to_i,7,1)
-          birthdate_estimated = 1
-        elsif day.blank? || day == "Unknown" || day == 0
-          birthdate = Date.new(year.to_i,month_i,15)
-          birthdate_estimated = 1
-        elseJL854W
-          birthdate = Date.new(year.to_i,month_i,day.to_i)
-          birthdate_estimated = 0
-        end
-		  end
-    else
-      birthdate_estimated = 0
-		end
-
-    passed_params = {"person"=>
-        {"data" =>
-          {"addresses"=>
-            {"state_province"=> address_params["state_province"],
-            "address2"=> address_params["address2"],
-            "address1"=> address_params["address1"],
-            "neighborhood_cell"=> address_params["neighborhood_cell"],
-            "city_village"=> address_params["city_village"],
-            "county_district"=> address_params["county_district"]
-          },
-          "attributes"=>
-            {"occupation"=> params["occupation"],
-            "cell_phone_number" => params["cell_phone_number"] },
-          "patient"=>
-            {"identifiers"=>
-              {"diabetes_number"=>""}},
-          "gender"=> person_params["gender"],
-          "birthdate"=> birthdate,
-          "birthdate_estimated"=> birthdate_estimated ,
-          "names"=>{"family_name"=> names_params["family_name"],
-            "given_name"=> names_params["given_name"]
-          }}}}
-
-    if !params["remote"]
-
-      @dde_server = CoreService.get_global_property_value("dde_server_ip").to_s # rescue ""
-
-      @dde_server_username = CoreService.get_global_property_value("dde_server_username").to_s # rescue ""
-
-      @dde_server_password = CoreService.get_global_property_value("dde_server_password").to_s # rescue ""
-
-      uri = "http://#{@dde_server_username}:#{@dde_server_password}@#{@dde_server}/people.json/"
-
-      recieved_params = RestClient.post(uri,passed_params)
-
-      national_id = JSON.parse(recieved_params)["npid"]["value"]
-    else
-      national_id = params["patient"]["identifiers"]["National_id"]
+      elsif day.blank? || day == "Unknown" || day == 0
+        birthdate = Date.new(year.to_i,month_i,15)
+        birthdate_estimated = 1
+      else
+        birthdate = Date.new(year.to_i,month_i,day.to_i)
+        birthdate_estimated = 0
+      end
     end
-
-    # raise person_params.to_yaml
-    
-    person_params["patient"] = {"identifiers" => national_id}
-
-	  person = self.create_from_form(person_params)
-
-    # raise person.to_yaml
-
-    identifier_type = PatientIdentifierType.find_by_name("National id") || PatientIdentifierType.find_by_name("Unknown id")
-    person.patient.patient_identifiers.create("identifier" => national_id,
-      "identifier_type" => identifier_type.patient_identifier_type_id) unless national_id.blank?
-    return person
+  else
+    birthdate_estimated = 0
   end
+
+  passed_params = {"person"=>
+      {"data" =>
+        {"addresses"=>
+          {"state_province"=> address_params["state_province"],
+          "address2"=> address_params["address2"],
+          "address1"=> address_params["address1"],
+          "neighborhood_cell"=> address_params["neighborhood_cell"],
+          "city_village"=> address_params["city_village"],
+          "county_district"=> address_params["county_district"]
+        },
+        "attributes"=>
+          {"occupation"=> params["occupation"],
+          "cell_phone_number" => params["cell_phone_number"] },
+        "patient"=>
+          {"identifiers"=>
+            {"diabetes_number"=>""}},
+        "gender"=> person_params["gender"],
+        "birthdate"=> birthdate,
+        "birthdate_estimated"=> birthdate_estimated ,
+        "names"=>{"family_name"=> names_params["family_name"],
+          "given_name"=> names_params["given_name"]
+        }}}}
+
+  if !params["remote"]
+
+    @dde_server = CoreService.get_global_property_value("dde_server_ip").to_s # rescue ""
+
+    @dde_server_username = CoreService.get_global_property_value("dde_server_username").to_s # rescue ""
+
+    @dde_server_password = CoreService.get_global_property_value("dde_server_password").to_s # rescue ""
+
+    uri = "http://#{@dde_server_username}:#{@dde_server_password}@#{@dde_server}/people.json/"
+
+    recieved_params = RestClient.post(uri,passed_params)
+
+    national_id = JSON.parse(recieved_params)["npid"]["value"]
+  else
+    national_id = params["patient"]["identifiers"]["National_id"]
+  end
+
+  # raise person_params.to_yaml
+    
+  person_params["patient"] = {"identifiers" => national_id}
+
+  person = self.create_from_form(person_params)
+
+  # raise person.to_yaml
+
+  identifier_type = PatientIdentifierType.find_by_name("National id") || PatientIdentifierType.find_by_name("Unknown id")
+  person.patient.patient_identifiers.create("identifier" => national_id,
+      "identifier_type" => identifier_type.patient_identifier_type_id) unless national_id.blank?
+  return person
+end
 end

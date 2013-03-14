@@ -52,8 +52,7 @@ class EncountersController < ApplicationController
 					baby_encounter.save
 	
 
-					baby_ob = Observation.new
-					baby_ob.value_text = obs_value
+					baby_ob = Observation.new				
 					baby_ob.value_coded = ConceptName.find_by_name(obs_value).concept_id rescue nil
 					baby_ob.person_id = baby_id
 					baby_ob.concept_id = baby_concept_id
