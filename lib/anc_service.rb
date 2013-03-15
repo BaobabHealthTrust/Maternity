@@ -2058,7 +2058,7 @@ module ANCService
   end
 
   def self.create_patient_from_dde(params)
-
+		old_identifier = params["identifier"] rescue nil
 	  address_params = params["person"]["addresses"] rescue []
 		names_params = params["person"]["names"] rescue []
 		patient_params = params["person"]["patient"] rescue []
@@ -2105,27 +2105,27 @@ module ANCService
       birthdate_estimated = 0
 		end
 
-    passed_params = {"person"=>
-        {"data" =>
-          {"state_province"=> address_params["state_province"],
-          "address2"=> address_params["address2"],
-          "address1"=> address_params["address1"],
-          "neighborhood_cell"=> address_params["neighborhood_cell"],
-          "city_village"=> address_params["city_village"],
-          "county_district"=> address_params["county_district"]
-        },
-        "attributes"=>
-          {"occupation"=> params["person"]["occupation"],
-          "cell_phone_number" => params["person"]["cell_phone_number"] },
-        "patient"=>
-          {"identifiers"=>
-            {"diabetes_number"=>""}},
-        "gender"=> person_params["gender"],
-        "birthdate"=> birthdate,
-        "birthdate_estimated"=> birthdate_estimated ,
-        "names"=>{"family_name"=> names_params["family_name"],
-          "given_name"=> names_params["given_name"]
-        }}}
+    passed_params = {"person"=> 
+        {"data" => 
+          {"addresses"=> 
+            {"state_province"=> address_params["state_province"],
+            "address2"=> address_params["address2"],
+            "address1"=> address_params["address1"],
+            "neighborhood_cell"=> address_params["neighborhood_cell"],
+            "city_village"=> address_params["city_village"],
+            "county_district"=> address_params["county_district"]
+          }, 
+          "attributes"=> 
+            {"occupation"=> params["person"]["occupation"], 
+            "cell_phone_number" => params["person"]["cell_phone_number"] },
+          "patient"=> 
+            {"identifiers"=> {"old_identification_number"=> old_identifier}},
+          "gender"=> person_params["gender"], 
+          "birthdate"=> birthdate, 
+          "birthdate_estimated"=> birthdate_estimated , 
+          "names"=>{"family_name"=> names_params["family_name"], 
+            "given_name"=> names_params["given_name"]
+          }}}}
 
   if !params["remote"]
 
