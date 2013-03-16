@@ -17,15 +17,15 @@ class EncountersController < ApplicationController
       end
     end
 		
-     if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME"	
+    if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME"
 				
-				params["observations"].each do |obs|
-					if ((obs["concept_name"].upcase ==  "STATUS OF BABY") rescue false) 
-						obs.delete("value_coded_or_text") 
-					elsif ((obs["concept_name"].upcase == "BABY IDENTIFIER") rescue false)
-						obs.delete("value_coded_or_text")
-					end
-				end
+      params["observations"].each do |obs|
+        if ((obs["concept_name"].upcase ==  "STATUS OF BABY") rescue false)
+          obs.delete("value_coded_or_text")
+        elsif ((obs["concept_name"].upcase == "BABY IDENTIFIER") rescue false)
+          obs.delete("value_coded_or_text")
+        end
+      end
 			@mother = MaternityService::Maternity.new(@patient) rescue nil
 			@children = @mother.kids
 			
@@ -39,13 +39,13 @@ class EncountersController < ApplicationController
 				if !baby_id.blank? && (Person.find(baby_id).dead == true)
 
 					obs_value = Observation.find(:last, :order => ["date_created"], :conditions => ["person_id =? AND concept_id = ?", 
-						baby_id, ConceptName.find_by_name("BABY OUTCOME").concept_id]).answer_string	
+              baby_id, ConceptName.find_by_name("BABY OUTCOME").concept_id]).answer_string
 										
 				end rescue nil
 
 				if not obs_value.blank? and not baby_id.blank? and not baby_concept_id.blank?
-					 params[:encounter][:encounter_datetime] = (params[:encounter][:encounter_datetime].to_date.strftime("%Y-%m-%d ") +
-			    Time.now.strftime("%H:%M")) rescue Time.now()
+          params[:encounter][:encounter_datetime] = (params[:encounter][:encounter_datetime].to_date.strftime("%Y-%m-%d ") +
+              Time.now.strftime("%H:%M")) rescue Time.now()
 					
 					baby_encounter = Encounter.new(params[:encounter])
 					baby_encounter.patient_id = baby_id
@@ -54,6 +54,7 @@ class EncountersController < ApplicationController
 
 					baby_ob = Observation.new				
 					baby_ob.value_coded = ConceptName.find_by_name(obs_value).concept_id rescue nil
+          baby_ob.value_text = obs_value
 					baby_ob.person_id = baby_id
 					baby_ob.concept_id = baby_concept_id
 					baby_ob.encounter_id = baby_encounter.id
@@ -61,15 +62,15 @@ class EncountersController < ApplicationController
 					baby_ob.save
 				
 					if baby_ob.answer_string.strip.downcase != "alive"
-							person = Person.find(baby_id)
-							person.dead = true
-							person.save
+            person = Person.find(baby_id)
+            person.dead = true
+            person.save
 					end	
 
 				end	
 			end	
 
-				delivered = (params["observations"].collect{|o| o if !o["value_coded_or_text"].nil? and o["value_coded_or_text"].upcase == "DELIVERED"}.compact.length	 > 0)	
+      delivered = (params["observations"].collect{|o| o if !o["value_coded_or_text"].nil? and o["value_coded_or_text"].upcase == "DELIVERED"}.compact.length	 > 0)
       baby_date_map = params[:baby_date_map].split("!") rescue nil
 
       if !baby_date_map.nil?
@@ -98,7 +99,7 @@ class EncountersController < ApplicationController
 				unless created_baby.blank?
 					#Save encounter and observations with baby's patient id
 					params[:encounter][:encounter_datetime] = (params[:encounter][:encounter_datetime].to_date.strftime("%Y-%m-%d ") +
-			    Time.now.strftime("%H:%M")) rescue Time.now()
+              Time.now.strftime("%H:%M")) rescue Time.now()
 			
 					encounter = Encounter.new(params[:encounter])
 					encounter.patient_id = created_baby.patient_id
@@ -220,7 +221,7 @@ class EncountersController < ApplicationController
       redirect_to "/people" and return
     end
     if delivered && delivered > 0
-     redirect_to "/patients/show/#{@patient.id}" and return
+      redirect_to "/patients/show/#{@patient.id}" and return
     end
     if params[:next_url]
 
@@ -250,7 +251,7 @@ class EncountersController < ApplicationController
 		@children_names = @children.collect{|child| PersonName.find_by_person_id(child.person_b).given_name + "  " + 				PersonName.find_by_person_id(child.person_b).family_name if Person.find(child.person_b).age == 0}
 		@children_names = @children_names.concat(["Other"]) unless (@children_names.length < 1 rescue false)
     session[:auto_load_forms] = true
-#raise @children_names.to_yaml
+    #raise @children_names.to_yaml
 
     @facility_outcomes =  JSON.parse(GlobalProperty.find_by_property("facility.outcomes").property_value) rescue {}
     #raise @facility_outcomes.to_yaml
@@ -814,7 +815,7 @@ class EncountersController < ApplicationController
         elsif o.concept.name.name.upcase.include?("TIME")
           @encounters[o.concept.name.name.upcase] = o.value_datetime.strftime("%H:%M")
         else
-	 name = o.concept.name.name.upcase.gsub('"', "").strip
+          name = o.concept.name.name.upcase.gsub('"', "").strip
           @encounters[name] = o.answer_string
         end
       }
@@ -879,7 +880,7 @@ class EncountersController < ApplicationController
       (@encounters["SHOULDER"] ? @encounters["SHOULDER"] : "") rescue ""
   
     if @encounters["PRESENTATION"] && @encounters["PRESENTATION"].upcase == "BREECH"
-	@position = @encounters["BREECH DELIVERY"] if  @encounters["BREECH DELIVERY"].downcase.match("sacro")
+      @position = @encounters["BREECH DELIVERY"] if  @encounters["BREECH DELIVERY"].downcase.match("sacro")
     end
 
     if (@encounters["ARV START DATE"].match("/") rescue false)
@@ -916,22 +917,22 @@ class EncountersController < ApplicationController
         current_printer = ward.split(":")[1] if ward.split(":")[0].upcase == location
       } rescue []
      
-       t1 = Thread.new{
-          Kernel.system "wkhtmltopdf -s A4 http://" +
-            request.env["HTTP_HOST"] + "\"/encounters/observations_printable/" +
-            @patient.id.to_s + "?patient_id=#{@patient.id}&ret=#{params[:ret]}"+ "\" /tmp/output-" + session[:user_id].to_s + ".pdf \n"
-        } 
+      t1 = Thread.new{
+        Kernel.system "wkhtmltopdf -s A4 http://" +
+          request.env["HTTP_HOST"] + "\"/encounters/observations_printable/" +
+          @patient.id.to_s + "?patient_id=#{@patient.id}&ret=#{params[:ret]}"+ "\" /tmp/output-" + session[:user_id].to_s + ".pdf \n"
+      }
 
-        t2 = Thread.new{
-          sleep(5)
-          Kernel.system "lp #{(!current_printer.blank? ? '-d ' + current_printer.to_s : "")} /tmp/output-" +
-            session[:user_id].to_s + ".pdf\n"
-        }
+      t2 = Thread.new{
+        sleep(5)
+        Kernel.system "lp #{(!current_printer.blank? ? '-d ' + current_printer.to_s : "")} /tmp/output-" +
+          session[:user_id].to_s + ".pdf\n"
+      }
 
-        t3 = Thread.new{
-          sleep(10)
-          Kernel.system "rm /tmp/output-" + session[:user_id].to_s + ".pdf\n"
-        }
+      t3 = Thread.new{
+        sleep(10)
+        Kernel.system "rm /tmp/output-" + session[:user_id].to_s + ".pdf\n"
+      }
 
     
     end
@@ -961,7 +962,7 @@ class EncountersController < ApplicationController
     else
       redirect_to "/people/index"
     end
- end  
+  end
  
 	def baby_outcome
 		@patient = Patient.find(params[:patient_id])
