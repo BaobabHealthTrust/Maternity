@@ -143,7 +143,7 @@ class EncountersController < ApplicationController
 					
 			redirect_to "/encounters/baby_outcome?patient_id=#{params[:patient_id]}&baby=#{baby}&number_of_babies=#{number_of_babies}"  and return if (params[:baby] && params[:number_of_babies] && number_of_babies >= baby) || (params["observations"].collect{|o| o if !o["value_coded_or_text"].nil? and o["value_coded_or_text"].upcase == "DELIVERED"}.compact.length > 0)
 		
-  		redirect_to "/patients/show/#{@patient.id}" and return
+  		redirect_to "/patients/show/#{@patient.id}&skip_check=true" and return
 		end
 
     params[:encounter][:encounter_datetime] = (params[:encounter][:encounter_datetime].to_date.strftime("%Y-%m-%d ") +
