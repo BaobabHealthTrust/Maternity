@@ -36,11 +36,13 @@ class EncountersController < ApplicationController
 				baby_id = baby_id.reject {|b| !b }.first rescue nil
 				baby_concept_id = ConceptName.find_by_name("STATUS OF BABY").concept_id rescue nil
 
-				if !baby_id.blank? && (Person.find(baby_id).dead == true)
+				if !baby_id.blank? && (Person.find(baby_id).dead == true) 
 
-					obs_value = Observation.find(:last, :order => ["date_created"], :conditions => ["person_id =? AND concept_id = ?", 
+					birth_outcome = Observation.find(:last, :order => ["date_created"], :conditions => ["person_id =? AND concept_id = ?",
               baby_id, ConceptName.find_by_name("BABY OUTCOME").concept_id]).answer_string
-										
+
+					obs_value = birth_outcome if not birth_outcome.match(/Alive/i)
+					
 				end rescue nil
 
 				if not obs_value.blank? and not baby_id.blank? and not baby_concept_id.blank?
@@ -163,7 +165,7 @@ class EncountersController < ApplicationController
       elsif observation[:value_time]
         observation.delete(:value_time)
       end
-      
+   
       values = "coded_or_text group_id boolean coded drug datetime numeric modifier text".split(" ").map{|value_name|
         observation["value_#{value_name}"] unless observation["value_#{value_name}"].blank? rescue nil
       }.compact
@@ -172,9 +174,10 @@ class EncountersController < ApplicationController
       observation.delete(:value_text) unless observation[:value_coded_or_text].blank?
       observation[:encounter_id]    = encounter.id
       # observation[:obs_datetime]    = (encounter.encounter_datetime.to_date.strftime("%Y-%m-%d ") + Time.now.strftime("%H:%M")) rescue Time.now()
-      observation[:person_id]     ||= encounter.patient_id
+      observation[:person_id]     ||= encounter.patient_id      
       # observation[:location_id]     ||= encounter.location_id
-      Observation.create(observation) # rescue nil
+      Observation.create(observation)  #rescue nil
+     
     end
     referred_out = (params["observations"].collect{|o| o if !o["value_coded_or_text"].nil? and o["value_coded_or_text"].upcase == "REFERRED OUT"}.compact.length > 0) rescue false;
     if referred_out
@@ -247,9 +250,11 @@ class EncountersController < ApplicationController
 	
 		@patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil    
 		@mother = MaternityService::Maternity.new(@patient) rescue nil
-		@children = @mother.kids		
-		@children_names = @children.collect{|child| PersonName.find_by_person_id(child.person_b).given_name + "  " + 				PersonName.find_by_person_id(child.person_b).family_name if Person.find(child.person_b).age == 0}
+		@children = @mother.kids
+    
+    @children_names = @children.collect{|child| PersonName.find_by_person_id(child.person_b).given_name + "  " + 				PersonName.find_by_person_id(child.person_b).family_name if child.date_created > 1.month.ago}
 		@children_names = @children_names.concat(["Other"]) unless (@children_names.length < 1 rescue false)
+    
     session[:auto_load_forms] = true
     #raise @children_names.to_yaml
 
@@ -326,7 +331,11 @@ class EncountersController < ApplicationController
     search_string         = (params[:search_string] || '').upcase
 
     diagnosis_concepts    = Concept.find_by_name(procedure).concept_members_names.sort.uniq rescue []
-
+    if params[:procedure].humanize.match(/Incision And Drainage/i)
+      range = ConceptName.find(:all, :conditions => ["name = 'Incision And Drainage'"]).collect{|c| c.concept_id} rescue []
+      c_answer = ConceptAnswer.find(:all, :conditions => ["concept_id IN (?)", range])
+      diagnosis_concepts = c_answer.collect{|d| ConceptName.find_by_concept_id(d.answer_concept).name}
+    end
     @results = diagnosis_concepts.collect{|e| e if e.downcase.include?(search_string.downcase)}
     
     render :text => "<li>" + @results.join("</li><li>") + "</li>"

@@ -139,13 +139,14 @@ IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "BILATERAL
 
 
 
-	IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "ADMISSION SECTION" LIMIT 1) AND COALESCE(new.value_modifier, '') != '' THEN
-			SET @ward = (SELECT name FROM location WHERE location_id = new.value_modifier LIMIT 1);		
+	IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "ADMISSION SECTION" LIMIT 1) AND COALESCE(new.comments, '') != '' THEN
+			SET @ward = (SELECT name FROM location WHERE location_id = new.comments LIMIT 1);
 
   		INSERT INTO patient_report (patient_id, source_ward, destination_ward, internal_transfer_date, obs_datetime, obs_id) VALUES(new.person_id, @ward, new.value_text, new.obs_datetime, new.obs_datetime, new.obs_id);
 
 		UPDATE patient_report SET last_ward_where_seen = new.value_text, last_ward_where_seen_date = new.obs_datetime WHERE COALESCE(delivery_mode,'') != '' AND patient_id = new.person_id AND delivery_date >= DATE_ADD(new.obs_datetime, INTERVAL -7 DAY) AND delivery_date <= DATE_ADD(new.obs_datetime, INTERVAL 7 DAY);
-	END IF;
+
+        END IF;
 
 	IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "ADMISSION SECTION" LIMIT 1) THEN
 		SET @ward = (SELECT name FROM location WHERE location_id = new.location_id LIMIT 1);	

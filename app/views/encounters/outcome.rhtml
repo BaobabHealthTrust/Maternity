@@ -537,6 +537,8 @@
   <% @mode_of_delivery = ["", "Forceps delivery", "Breech delivery"] %>
   <% @main_outcomes = @main_outcomes - ["Admitted"]%>
 
+   <% @main_outcomes = @main_outcomes - ["Discharged"] if @children_names.size == 0%>
+
   <% @main_outcomes = @main_outcomes - ["Discharged"] if !@location.upcase.include?("POST") && !@location.upcase.include?("ANTE") %>
 
 <%# @admission_section = ["", "ANTENATAL WARD", "LABOUR WARD", "GYNECOLOGY", "HDU"] %>

@@ -30,7 +30,7 @@ class PatientsController < ApplicationController
       end
     end
    
-    @at_registration_desk = (['registration', 'labour ward'].include?(Location.find(session[:location_id]).name.downcase))  rescue  nil
+    @at_registration_desk = (['registration'].include?(Location.find(session[:location_id]).name.downcase))  rescue  nil
     @is_registered = @patient.encounters.collect{|enc|
       enc.name.upcase if enc.date_created >= 7.days.ago
     }.include?("REGISTRATION")
@@ -40,7 +40,7 @@ class PatientsController < ApplicationController
       :conditions => ["patient_id =? AND encounter_type = ? AND date_created >= ?", @patient.patient_id, EncounterType.find_by_name("ADMIT PATIENT").id, 2.days.ago]).location_id  rescue nil
 	
     @last_visit_closed = !last_visit.end_date.nil? rescue true
-   
+
     if !@at_registration_desk && ((session[:location_id] != @last_location)  || @last_visit_closed) && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : true)
       params[:skip_check] = false
       redirect_to "/encounters/new/admit_patient?patient_id=#{@patient.id}" and return
