@@ -10,7 +10,7 @@
   var baby;
   var maxi;
   var mini;
-	var baby_obs = "";
+  var baby_obs = "";
   function $(e) {
     return document.getElementById(e);
   }
@@ -120,15 +120,15 @@
     
 
     arr = ["Appearance", "Pulse", "Grimance", "Activity", "Respiration"]
-  /*
+    /*
     arr_val = ['Pale/blue', "Baby pink/</br>blue extremities", "Completely </br> pink",
       "None", "Slow -</br>Below 100 bpm", "Above </br>100 bpm",
       "Flaccid", "Some flexion </br> of Extremities", "Active Motion",
       "None", "Grimance", "Vigorous </br>cry",
       "Absent", "Slow - </br> irregular", "Good crying"];
-  */
-  // arr_labels = ["Color", "Heart Rate", "Muscle Tone", "Reflex Irritability", "Respiratory Effort"]
-   arr_val = ['Blue, Pale', "Pink </br> Extreme blue", "Completely </br> pink",
+     */
+    // arr_labels = ["Color", "Heart Rate", "Muscle Tone", "Reflex Irritability", "Respiratory Effort"]
+    arr_val = ['Blue, Pale', "Pink </br> Extreme blue", "Completely </br> pink",
       "Absent", "Below </br>100 bpm", "Over </br>100 bpm",
       "Flaccid", "Some Flexion </br> of Extremities", "Active motion",
       "Absent", "Arms and legs</br> flexed", "Active movement",
@@ -358,13 +358,13 @@
       $('weight_label').innerHTML = "<i style='float:left;font-size:1.2em;'>  Enter Weight</i>";
     }   
   }
-	function checkBabyObs(baby){
-		id1 = "baby_outcome" + baby + "_name";
-		id2 = "baby_outcome" + baby + "_status";
-		string =  __$(id1).value + "--" + __$(id2).value + "!";
-		baby_obs += string;
-		document.forms[0].action = "/encounters/create/<%= params[:patient_id] %>?baby_obs=" + baby_obs;
-	}
+  function checkBabyObs(baby){
+    id1 = "baby_outcome" + baby + "_name";
+    id2 = "baby_outcome" + baby + "_status";
+    string =  __$(id1).value + "--" + __$(id2).value + "!";
+    baby_obs += string;
+    document.forms[0].action = "/encounters/create/<%= params[:patient_id] %>?baby_obs=" + baby_obs;
+  }
 </script>
 
 <style type="text/css">
@@ -522,8 +522,7 @@
 </style>
 
 <form id='outcome' action="/encounters/create" method='post'>
-	 <%= hidden_field_tag "patient_id", @patient.id %>
-	
+  <%= hidden_field_tag "patient_id", @patient.id %>
   <%= hidden_field_tag "encounter[patient_id]", @patient.id %>
   <%@presentation = [""] + Concept.find_by_name("PRESENTATION").concept_answers.collect{|c| c.name} %>
   <%@baby_outcome = [""] + Concept.find_by_name("BABY OUTCOME").concept_answers.collect{|c| c.name} %>
@@ -537,7 +536,7 @@
   <% @mode_of_delivery = ["", "Forceps delivery", "Breech delivery"] %>
   <% @main_outcomes = @main_outcomes - ["Admitted"]%>
 
-   <% @main_outcomes = @main_outcomes - ["Discharged"] if @children_names.size == 0%>
+  <% @main_outcomes = @main_outcomes - ["Discharged"] if @children_names.size == 0%>
 
   <% @main_outcomes = @main_outcomes - ["Discharged"] if !@location.upcase.include?("POST") && !@location.upcase.include?("ANTE") %>
 
@@ -664,7 +663,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
 <%#= hidden_field_tag("observations[][concept_name]", "DELIVERY PERIOD") %>
 <%#= hidden_field_tag("observations[][patient_id]", @patient.id) %>
 <%#= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
-  
+
 
   <%
   prefixes = {
@@ -680,7 +679,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     10=>"th"
   }
 %>
- 
+
   <% options = {
     :id => "perineum",
     :field_type => 'text',
@@ -737,7 +736,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
   <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
   <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
 
-  
+
   <% 10.times do |counter| %>
     <% options[:condition] = (@location.downcase == "ante-natal ward" && counter > 0 ? "false" :
         "($('discharge_outcome').value.toUpperCase() == 'DISCHARGED') && __$('diagnosis#{counter}').value != '' && " +
@@ -812,9 +811,9 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
 
     <% options = {
       :id => "procedure_diagnosis#{proc}",
-      :field_type => 'text', 
-      :ajaxURL => "/encounters/procedure_diagnoses?procedure=hysterectomy&search_string=",     
-      :helptext =>"Reason For Procedure",     
+      :field_type => 'text',
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=hysterectomy&search_string=",
+      :helptext =>"Reason For Procedure",
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
           "($('procedure_done#{proc}').value.toUpperCase() == 'HYSTERECTOMY')"),
       :tt_pageStyleClass => "qwertyKeyboardOnly"
@@ -824,11 +823,11 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
     <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-	<% options = {
+    <% options = {
       :id => "procedure_diagnosis#{proc}",
-      :field_type => 'text', 
-      :ajaxURL => "/encounters/procedure_diagnoses?procedure=biopsy&search_string=",     
-      :helptext =>"Reason For Procedure",     
+      :field_type => 'text',
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=biopsy&search_string=",
+      :helptext =>"Reason For Procedure",
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
           "($('procedure_done#{proc}').value.toUpperCase() == 'BIOPSY')"),
       :tt_pageStyleClass => "qwertyKeyboardOnly"
@@ -838,11 +837,11 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
     <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-	<% options = {
+    <% options = {
       :id => "procedure_diagnosis#{proc}",
-      :field_type => 'text', 
-      :ajaxURL => "/encounters/procedure_diagnoses?procedure=bilateral_tubal_ligation&search_string=",     
-      :helptext =>"Reason For Procedure",     
+      :field_type => 'text',
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=bilateral_tubal_ligation&search_string=",
+      :helptext =>"Reason For Procedure",
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
           "($('procedure_done#{proc}').value.toUpperCase() == 'BILATERAL TUBAL LIGATION')"),
       :tt_pageStyleClass => "qwertyKeyboardOnly"
@@ -852,11 +851,11 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
     <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-	<% options = {
+    <% options = {
       :id => "procedure_diagnosis#{proc}",
-      :field_type => 'text', 
-      :ajaxURL => "/encounters/procedure_diagnoses?procedure=myomectomy&search_string=",     
-      :helptext =>"Reason For Procedure",     
+      :field_type => 'text',
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=myomectomy&search_string=",
+      :helptext =>"Reason For Procedure",
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
           "($('procedure_done#{proc}').value.toUpperCase() == 'MYOMECTOMY')"),
       :tt_pageStyleClass => "qwertyKeyboardOnly"
@@ -866,11 +865,11 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
     <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-<% options = {
+    <% options = {
       :id => "procedure_diagnosis#{proc}",
-      :field_type => 'text', 
-      :ajaxURL => "/encounters/procedure_diagnoses?procedure=ceclage&search_string=",     
-      :helptext =>"Reason For Procedure",     
+      :field_type => 'text',
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=ceclage&search_string=",
+      :helptext =>"Reason For Procedure",
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
           "($('procedure_done#{proc}').value.toUpperCase() == 'CECLAGE')"),
       :tt_pageStyleClass => "qwertyKeyboardOnly"
@@ -880,11 +879,11 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
     <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-<% options = {
+    <% options = {
       :id => "procedure_diagnosis#{proc}",
-      :field_type => 'text', 
-      :ajaxURL => "/encounters/procedure_diagnoses?procedure=cystectomy&search_string=",     
-      :helptext =>"Reason For Procedure",     
+      :field_type => 'text',
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=cystectomy&search_string=",
+      :helptext =>"Reason For Procedure",
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
           "($('procedure_done#{proc}').value.toUpperCase() == 'CYSTECTOMY')"),
       :tt_pageStyleClass => "qwertyKeyboardOnly"
@@ -894,11 +893,11 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
     <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-<% options = {
+    <% options = {
       :id => "procedure_diagnosis#{proc}",
-      :field_type => 'text', 
-      :ajaxURL => "/encounters/procedure_diagnoses?procedure=malsupilisation&search_string=",     
-      :helptext =>"Reason For Procedure",     
+      :field_type => 'text',
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=malsupilisation&search_string=",
+      :helptext =>"Reason For Procedure",
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
           "($('procedure_done#{proc}').value.toUpperCase() == 'MALSUPILISATION')"),
       :tt_pageStyleClass => "qwertyKeyboardOnly"
@@ -908,11 +907,11 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
     <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-<% options = {
+    <% options = {
       :id => "procedure_diagnosis#{proc}",
-      :field_type => 'text', 
-      :ajaxURL => "/encounters/procedure_diagnoses?procedure=excision&search_string=",     
-      :helptext =>"Reason For Procedure",     
+      :field_type => 'text',
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=excision&search_string=",
+      :helptext =>"Reason For Procedure",
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
           "($('procedure_done#{proc}').value.toUpperCase() == 'EXCISION')"),
       :tt_pageStyleClass => "qwertyKeyboardOnly"
@@ -922,13 +921,13 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
     <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-<% options = {
+    <% options = {
       :id => "procedure_diagnosis#{proc}",
-      :field_type => 'text', 
-      :ajaxURL => "/encounters/procedure_diagnoses?procedure=incision_and_drainage&search_string=",     
-      :helptext =>"Reason For Procedure",     
+      :field_type => 'text',
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=incision_and_drainage&search_string=",
+      :helptext =>"Reason For Procedure",
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
-          "($('procedure_done#{proc}').value.toUpperCase().trim() == 'INCISION AND DRAINAGE')"),
+          "($('procedure_done#{proc}').value.toLowerCase().trim().match('incision and drainage'))"),
       :tt_pageStyleClass => "qwertyKeyboardOnly"
     }%>
     <%= hidden_field_tag("observations[][concept_name]", "INCISION AND DRAINAGE DIAGNOSIS") %>
@@ -936,11 +935,11 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
     <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-<% options = {
+    <% options = {
       :id => "procedure_diagnosis#{proc}",
-      :field_type => 'text', 
-      :ajaxURL => "/encounters/procedure_diagnoses?procedure=caesarean_section&search_string=",     
-      :helptext =>"Reason For Procedure",     
+      :field_type => 'text',
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=caesarean_section&search_string=",
+      :helptext =>"Reason For Procedure",
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
           "($('procedure_done#{proc}').value.toUpperCase() == 'CAESAREAN SECTION')"),
       :tt_pageStyleClass => "qwertyKeyboardOnly"
@@ -950,11 +949,11 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
     <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-<% options = {
+    <% options = {
       :id => "procedure_diagnosis#{proc}",
-      :field_type => 'text', 
-      :ajaxURL => "/encounters/procedure_diagnoses?procedure=exam_under_anaesthesia&search_string=",     
-      :helptext =>"Reason For Procedure",     
+      :field_type => 'text',
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=exam_under_anaesthesia&search_string=",
+      :helptext =>"Reason For Procedure",
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
           "($('procedure_done#{proc}').value.toUpperCase() == 'EXAM UNDER ANAESTHESIA')"),
       :tt_pageStyleClass => "qwertyKeyboardOnly"
@@ -964,11 +963,11 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
     <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-<% options = {
+    <% options = {
       :id => "procedure_diagnosis#{proc}",
-      :field_type => 'text', 
-      :ajaxURL => "/encounters/procedure_diagnoses?procedure=evacuation&search_string=",     
-      :helptext =>"Reason For Procedure",     
+      :field_type => 'text',
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=evacuation&search_string=",
+      :helptext =>"Reason For Procedure",
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
           "($('procedure_done#{proc}').value.toUpperCase() == 'EVACUATION/MANUAL VACUUM ASPIRATION')"),
       :tt_pageStyleClass => "qwertyKeyboardOnly"
@@ -978,11 +977,11 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
     <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-<% options = {
+    <% options = {
       :id => "procedure_diagnosis#{proc}",
-      :field_type => 'text', 
-      :ajaxURL => "/encounters/procedure_diagnoses?procedure=dilation_and_curettage&search_string=",     
-      :helptext =>"Reason For Procedure",     
+      :field_type => 'text',
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=dilation_and_curettage&search_string=",
+      :helptext =>"Reason For Procedure",
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
           "($('procedure_done#{proc}').value.toUpperCase() == 'DILATION AND CURETTAGE')"),
       :tt_pageStyleClass => "qwertyKeyboardOnly"
@@ -992,11 +991,11 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
     <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-<% options = {
+    <% options = {
       :id => "procedure_diagnosis#{proc}",
-      :field_type => 'text', 
-      :ajaxURL => "/encounters/procedure_diagnoses?procedure=laparatomy&search_string=",     
-      :helptext =>"Reason For Procedure",     
+      :field_type => 'text',
+      :ajaxURL => "/encounters/procedure_diagnoses?procedure=laparatomy&search_string=",
+      :helptext =>"Reason For Procedure",
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
           "($('procedure_done#{proc}').value.toUpperCase() == 'EXPLORATORY LAPARATOMY +/- ADNEXECTOMY')"),
       :tt_pageStyleClass => "qwertyKeyboardOnly"
@@ -1007,7 +1006,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
   <% end %>
 
-	<% options = {
+  <% options = {
     :id => "number_of_babies",
     :field_type => 'number',
     :helptext =>"Number of babies",
@@ -1026,8 +1025,8 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     }) %>
 
 
- <% (1..10).each do |baby| %>
-		<% options = {
+  <% (1..10).each do |baby| %>
+    <% options = {
       :id => "baby_outcome#{baby}_name",
       :field_type => 'text',
       :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby Name",
@@ -1043,10 +1042,10 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
         :id => "baby#{baby}_outcome_date_status"
       }) %>
 
-	<% options = {
+    <% options = {
       :id => "baby_outcome#{baby}_status",
       :field_type => 'text',
-			:tt_onUnLoad => "checkBabyObs(#{baby});",
+      :tt_onUnLoad => "checkBabyObs(#{baby});",
       :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Outcome",
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
           "($('discharge_outcome').value.toUpperCase() == 'DISCHARGED' && parseInt($('number_of_babies').value) > #{baby - 1})")
@@ -1058,9 +1057,9 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
       (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M"),
       {
         :id => "baby#{baby}_outcome_date_status"
-      }) %>	
-	
-	<%end%>
+      }) %>
+
+  <%end%>
 
   <% options = {
     :id => "date_of_death",
@@ -1103,7 +1102,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
   <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
   <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
 
- 
+
 <%#= hidden_field_tag "next_url", "/encounters/new/admission_diagnosis/?patient_id=#{@patient.id}", {:disabled => true} %>
 
   <% if @location.downcase == "ante-natal ward" %>
