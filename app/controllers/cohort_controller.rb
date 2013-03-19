@@ -1949,7 +1949,7 @@ class CohortController < ActionController::Base # < ApplicationController
     render :text => babies.uniq.to_json
   end
 
-   def total_alive_predischarge(startdate = Time.now, enddate = Time.now)
+  def total_alive_predischarge(startdate = Time.now, enddate = Time.now)
     babies = []
     Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
 				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
@@ -1961,7 +1961,7 @@ class CohortController < ActionController::Base # < ApplicationController
             AND concept_id = (SELECT concept_id FROM concept_name WHERE name = 'STATUS OF BABY' LIMIT 1)) = 0
 				AND o.value_coded IN (SELECT concept_id FROM concept_name WHERE name = 'Alive')").each do |data|
 
-     babies << data.person_b
+      babies << data.person_b
     end
 
     babies.delete_if{|baby| baby.blank? }
@@ -2000,6 +2000,14 @@ class CohortController < ActionController::Base # < ApplicationController
     }
 
     render :text => babies.uniq.to_json
+  end
+
+  def print_csv
+    csv_string = params["print_string"]
+    send_data(csv_string,
+      :type => 'text/csv; charset=utf-8;',
+      :disposition => 'attachment:wq',
+      :filename => "myfile.csv")
   end
 
 end
