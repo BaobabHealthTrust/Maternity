@@ -268,7 +268,7 @@ class PeopleController < ApplicationController
       params[:person][:id] = related_person.patient_id if related_person
     
       if !related_person.blank?
-        if params[:identifier].length != 6
+        if params[:identifier].length != 6 and create_from_dde_server
           dde_patient = DDEService::Patient.new(related_person)
 		
           national_id_replaced = dde_patient.check_old_national_id(related_person.national_id)
