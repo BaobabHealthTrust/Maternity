@@ -30,7 +30,7 @@ class PatientsController < ApplicationController
       end
     end
    
-    @at_registration_desk = (['registration'].include?(Location.find(session[:location_id]).name.downcase))  rescue  nil
+    @at_registration_desk = (['registration', 'labour ward'].include?(Location.find(session[:location_id]).name.downcase))  rescue  nil
     @is_registered = @patient.encounters.collect{|enc|
       enc.name.upcase if enc.date_created >= 7.days.ago
     }.include?("REGISTRATION")
