@@ -344,6 +344,7 @@ class EncountersController < ApplicationController
     end
     
     @results = diagnosis_concepts.collect{|e| e if e.downcase.include?(search_string.downcase)}
+   @results = @results.insert(@results.length - 1, @results.delete_at(@results.index("Other"))) rescue @results
     
     render :text => "<li>" + @results.join("</li><li>") + "</li>"
     

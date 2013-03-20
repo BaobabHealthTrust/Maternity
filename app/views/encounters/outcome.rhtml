@@ -536,7 +536,7 @@
   <% @mode_of_delivery = ["", "Forceps delivery", "Breech delivery"] %>
   <% @main_outcomes = @main_outcomes - ["Admitted"]%>
 
-  <% @main_outcomes = @main_outcomes - ["Discharged"] if @children_names.size == 0%>
+  <%# @main_outcomes = @main_outcomes - ["Discharged"] if @children_names.size == 0%>
 
   <% @main_outcomes = @main_outcomes - ["Discharged"] if !@location.upcase.include?("POST") && !@location.upcase.include?("ANTE") %>
 
@@ -554,6 +554,7 @@
 
   <%@delivery_mode = [""] + Concept.find_by_name("DELIVERY MODE").concept_answers.collect{|c| c.name} %>
   <%@procedure_done = [""] + Concept.find_by_name("PROCEDURE DONE").concept_answers.collect{|c| c.name}.sort %>
+  <%@procedure_done = @procedure_done.insert(0, @procedure_done.delete_at(@procedure_done.index("None")))%>
   <%@postpartum_type = ["", "TOTAL POSTPARTUM HYSTERECTOMY", "SUB-TOTAL POSTPARTUM HYSTERECTOMY"]%>
   <%@discharged_to_where = [["",""], ["Home", "Home"],
     ["Home - Waiting", "Home - Waiting"],
