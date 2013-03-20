@@ -82,7 +82,7 @@
     }  
     return displayText
   }
-  function showApgarControl(){
+  function showApgarControl(baby, minute){
     apgarScore = 0;
     var apgar = {"APPEARANCE": 0,
       "PULSE" : 0,
@@ -192,7 +192,7 @@
                 __$("" + x + k).style.Color= ( this.id != "" + x + k)? "black" : "white";
               }
             }
-            __$(key.toLowerCase()).value = apgar[key];
+            __$(key.toLowerCase() + "_" + minute).value = apgar[key];
             apgarScore = parseInt(apgar['APPEARANCE']) + parseInt(apgar['PULSE'])
               + parseInt(apgar['GRIMANCE']) + parseInt(apgar['ACTIVITY']) + parseInt(apgar['RESPIRATION']);
             showCategory("<span style='font-size:27px;font-weight:bold;'>APGAR</span> = " + apgarCheck['APPEARANCE'] + "+" + apgarCheck['PULSE'] +"+"+ apgarCheck['GRIMANCE']
@@ -637,7 +637,7 @@
   <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
   <% options = {
-    :id => "appearance"
+    :id => "appearance_one"
   }%>
   <%= hidden_field_tag("observations[][concept_name]", "APPEARANCE MINUTE ONE")%>
   <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
@@ -645,7 +645,7 @@
         session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
   <% options = {
-    :id => "pulse"
+    :id => "pulse_one"
   }%>
   <%= hidden_field_tag("observations[][concept_name]", "PULSE MINUTE ONE")%>
   <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
@@ -653,7 +653,7 @@
         session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
   <% options = {
-    :id => "grimance"
+    :id => "grimance_one"
   }%>
   <%= hidden_field_tag("observations[][concept_name]", "GRIMANCE MINUTE ONE")%>
   <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
@@ -661,7 +661,7 @@
         session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
   <% options = {
-    :id => "activity"
+    :id => "activity_one"
   }%>
   <%= hidden_field_tag("observations[][concept_name]", "ACTIVITY MINUTE ONE")%>
   <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
@@ -669,7 +669,7 @@
         session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
   <% options = {
-    :id => "respiration"
+    :id => "respiration_one"
   }%>
   <%= hidden_field_tag("observations[][concept_name]", "RESPIRATION MINUTE ONE")%>
   <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
@@ -677,13 +677,13 @@
         session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
   <% options =  {
-    :id => "apgar",
+    :id => "apgar_one",
     :field_type => 'number',
     :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: 1<sup>st</sup>Minute APGAR",
     :absoluteMin => 0,
     :absoluteMax => 10,
     :condition => "__$('baby_outcome').value.toUpperCase().trim() == 'ALIVE'",
-    :tt_onLoad => "showApgarControl(#{baby})",
+    :tt_onLoad => "showApgarControl(#{baby}, 'one')",
     :tt_pageStyleClass => "NoKeyboard"
   } %>
 
@@ -692,6 +692,64 @@
   <%= hidden_field_tag("observations[][concept_name]", "APGAR MINUTE ONE") %>
   <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
   <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
+
+<% options = {
+    :id => "appearance_five"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "APPEARANCE MINUTE FIVE")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% options = {
+    :id => "pulse_five"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "PULSE MINUTE FIVE")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% options = {
+    :id => "grimance_five"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "GRIMANCE MINUTE FIVE")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% options = {
+    :id => "activity_five"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "ACTIVITY MINUTE FIVE")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% options = {
+    :id => "respiration_five"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "RESPIRATION MINUTE FIVE")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% options =  {
+    :id => "apgar_five",
+    :field_type => 'number',
+    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: 5<sup>th</sup>Minute APGAR",
+    :absoluteMin => 0,
+    :absoluteMax => 10,
+    :condition => "__$('baby_outcome').value.toUpperCase().trim() == 'ALIVE'",
+    :tt_onLoad => "showApgarControl(#{baby}, 'five')",
+    :tt_pageStyleClass => "NoKeyboard"
+  } %>
+
+  <%= text_field_tag("observations[][value_numeric]", nil, options ) %>
+  <%= hidden_field_tag("observations[][value_text]", nil) %>
+  <%= hidden_field_tag("observations[][concept_name]", "APGAR MINUTE FIVE") %>
+  <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
+
 
   <% options =  {	:id => "weight",
     :field_type => 'number',
