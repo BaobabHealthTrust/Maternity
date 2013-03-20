@@ -89,7 +89,7 @@
           <button class="<%= (@encounters.include?("HEAD") ? "gray" : "blue") %>"
                   onclick="<%= (@encounters.include?("HEAD") ? "" :
                       "window.location = '/encounters/new/general_body_exam?patient_id=#{@patient.id}&next=true&ret=antenatal';") %> ">
-            <span>General Body Examination</span>
+            <span>Clinical Examination</span>
           </button>
         </div>        
       </div>

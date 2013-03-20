@@ -26,7 +26,7 @@ class ApplicationController < ActionController::Base
     # Registration clerk needs to do registration if it hasn't happened yet
     return "/encounters/new/registration?patient_id=#{patient.id}" if !current_visit_encounters.include?("REGISTRATION") || patient.current_visit.nil? || patient.current_visit.end_date != nil
     
-    return "/patients/show/#{patient.id}"
+    return "/patients/show/#{patient.id}?skip_check=true"
   end
 
   def print_and_redirect(print_url, redirect_url, message = "Printing, please wait...")
