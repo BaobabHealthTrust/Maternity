@@ -45,8 +45,7 @@ class PatientsController < ApplicationController
       params[:skip_check] = false
       redirect_to "/encounters/new/admit_patient?patient_id=#{@patient.id}" and return
     end  
-
-    redirect_to "/encounters/new/registration?patient_id=#{@patient.id}" and return  if !@is_registered
+   
     @super_user = false
     @clinician  = false
     @doctor     = false
