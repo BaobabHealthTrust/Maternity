@@ -806,7 +806,12 @@ class CohortController < ActionController::Base # < ApplicationController
   end
 
   def procedure(startdate = Time.now, enddate = Time.now, group = 1, field = "", proc = "")
-    check_field = field.humanize.gsub("- ", "-").gsub("!", "/") 
+    check_field = field.humanize.gsub("- ", "-").gsub("!", "/")
+
+    if check_field.downcase == "intrauterine device"
+      check_field = "Intrauterine Device (IUD)"
+    end
+
     check_proc = proc.humanize.gsub("- ", "-").gsub("!", "/")
     if proc.downcase == "evacuation"
       check_proc = "Evacuation/Manual Vacuum Aspiration"
