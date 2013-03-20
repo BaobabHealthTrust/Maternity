@@ -899,7 +899,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
       :ajaxURL => "/encounters/procedure_diagnoses?procedure=malsupilisation&search_string=",
       :helptext =>"Reason For Procedure",
       :condition => (@location.downcase == "ante-natal ward" ? "false" :
-          "($('procedure_done#{proc}').value.toUpperCase() == 'MALSUPILISATION')"),
+          "($('procedure_done#{proc}').value.toUpperCase() == 'MARSUPILISATION')"),
       :tt_pageStyleClass => "qwertyKeyboardOnly"
     }%>
     <%= hidden_field_tag("observations[][concept_name]", "MALSUPILISATION DIAGNOSIS") %>
