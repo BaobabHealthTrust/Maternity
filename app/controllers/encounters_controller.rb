@@ -336,6 +336,13 @@ class EncountersController < ApplicationController
       c_answer = ConceptAnswer.find(:all, :conditions => ["concept_id IN (?)", range])
       diagnosis_concepts = c_answer.collect{|d| ConceptName.find_by_concept_id(d.answer_concept).name}
     end
+
+     if params[:procedure].humanize.match(/Malsupilisation/i)
+      range = ConceptName.find(:all, :conditions => ["name = 'Malsupilisation'"]).collect{|c| c.concept_id} rescue []
+      c_answer = ConceptAnswer.find(:all, :conditions => ["concept_id IN (?)", range])
+      diagnosis_concepts = c_answer.collect{|d| ConceptName.find_by_concept_id(d.answer_concept).name}
+    end
+    
     @results = diagnosis_concepts.collect{|e| e if e.downcase.include?(search_string.downcase)}
     
     render :text => "<li>" + @results.join("</li><li>") + "</li>"
