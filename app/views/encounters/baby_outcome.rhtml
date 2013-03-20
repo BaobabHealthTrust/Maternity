@@ -120,20 +120,21 @@
     
 
     arr = ["Appearance", "Pulse", "Grimance", "Activity", "Respiration"]
-    /*
+   
     arr_val = ['Pale/blue', "Baby pink/</br>blue extremities", "Completely </br> pink",
-      "None", "Slow -</br>Below 100 bpm", "Above </br>100 bpm",
+      "Absent", "Slow -</br>Below 100 bpm", "Above </br>100 bpm",
       "Flaccid", "Some flexion </br> of Extremities", "Active Motion",
       "None", "Grimance", "Vigorous </br>cry",
       "Absent", "Slow - </br> irregular", "Good crying"];
-     */
-    // arr_labels = ["Color", "Heart Rate", "Muscle Tone", "Reflex Irritability", "Respiratory Effort"]
+    
+     arr_labels = ["Color", "Heart Rate", "Muscle Tone", "Reflex Irritability", "Respiratory Effort"]
+     /*
     arr_val = ['Blue, Pale', "Pink </br> Extreme blue", "Completely </br> pink",
       "Absent", "Below </br>100 bpm", "Over </br>100 bpm",
       "Flaccid", "Some Flexion </br> of Extremities", "Active motion",
       "Absent", "Arms and legs</br> flexed", "Active movement",
       "Absent", "Slow, </br> irregular", "Vigorous cry"];
-
+      */
     val_index = 0;
     values = [0, 1, 2]
     var labels = document.createElement("div");
@@ -205,7 +206,7 @@
           };
           
           
-        }else{control.innerHTML = arr[i];
+        }else{control.innerHTML = arr_labels[i];
           control.setAttribute("class", "leftButt");
         }
         row.appendChild(control);
