@@ -176,9 +176,14 @@ class EncountersController < ApplicationController
       # observation[:obs_datetime]    = (encounter.encounter_datetime.to_date.strftime("%Y-%m-%d ") + Time.now.strftime("%H:%M")) rescue Time.now()
       observation[:person_id]     ||= encounter.patient_id      
       # observation[:location_id]     ||= encounter.location_id
-      Observation.create(observation)  #rescue nil
      
-    end
+     x = Observation.create(observation) rescue nil
+     if x.blank?
+       observation[:value_text] = observation[:value_coded_or_text] if !observation[:value_coded_or_text].blank?
+       observation.delete(:value_coded_or_text)
+       Observation.create(observation)
+     end
+    end 
     referred_out = (params["observations"].collect{|o| o if !o["value_coded_or_text"].nil? and o["value_coded_or_text"].upcase == "REFERRED OUT"}.compact.length > 0) rescue false;
     if referred_out
       redirect_to "/encounters/new/refer_out?patient_id=#{@patient.id}" and return
