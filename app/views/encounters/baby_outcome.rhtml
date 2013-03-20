@@ -127,14 +127,14 @@
       "None", "Grimance", "Vigorous </br>cry",
       "Absent", "Slow - </br> irregular", "Good crying"];
     
-     arr_labels = ["Color", "Heart Rate", "Muscle Tone", "Reflex Irritability", "Respiratory Effort"]
-     /*
+    arr_labels = ["Color", "Heart Rate", "Muscle Tone", "Reflex Irritability", "Respiratory Effort"]
+    /*
     arr_val = ['Blue, Pale', "Pink </br> Extreme blue", "Completely </br> pink",
       "Absent", "Below </br>100 bpm", "Over </br>100 bpm",
       "Flaccid", "Some Flexion </br> of Extremities", "Active motion",
       "Absent", "Arms and legs</br> flexed", "Active movement",
       "Absent", "Slow, </br> irregular", "Vigorous cry"];
-      */
+     */
     val_index = 0;
     values = [0, 1, 2]
     var labels = document.createElement("div");
@@ -216,7 +216,9 @@
     $('inputFrame' + tstCurrentPage).style.display = "none";
     $('page' + tstCurrentPage).style.minHeight = "650px";
     $('page' + tstCurrentPage).appendChild(scoreWindow);
-    $("page" + tstCurrentPage).appendChild(alert);
+    if (minute == "five"){
+      $("page" + tstCurrentPage).appendChild(alert);
+    }
     
   }
 
@@ -532,7 +534,7 @@
   <%= hidden_field_tag "encounter[patient_id]", @patient.id %>
   <% @presentation = [""] + Concept.find_by_name("PRESENTATION").concept_answers.collect{|c| c.name} %>
   <% @baby_outcome = [""] + Concept.find_by_name("BABY OUTCOME").concept_answers.collect{|c| c.name} %>
-   <%@baby_outcome.delete_if{|out_c| out_c.match(/intrauterine death/i)}%>
+  <%@baby_outcome.delete_if{|out_c| out_c.match(/intrauterine death/i)}%>
   <% @main_outcomes = [""] + Concept.find_by_name("MATERNITY OUTCOME").concept_members_names rescue [] %>
 
   <% @delivery_period = ["", "DELIVERED IN THE WARD",
@@ -694,7 +696,7 @@
   <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
   <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
 
-<% options = {
+  <% options = {
     :id => "appearance_five"
   }%>
   <%= hidden_field_tag("observations[][concept_name]", "APPEARANCE MINUTE FIVE")%>
@@ -792,7 +794,7 @@
   <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
   <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
 
-   <%= hidden_field_tag("skip_check", "true") %>
+  <%= hidden_field_tag("skip_check", "true") %>
 
   <%= submit_tag "Finish" %>
 

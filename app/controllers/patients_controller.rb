@@ -1074,7 +1074,7 @@ class PatientsController < ApplicationController
 		@children_names.each do |cd|
 			@display_text = ""
 			@encounter_map["#{cd}"].each do |enc_name|
-        @display_text += "<table style='font-size: 1.2em; width: 100%;'><tr style='font-size: 0.8em; color: white; background: gray;'><th>" + enc_name.first + "</th><th>" + "</th></tr>"
+        @display_text += "<table style='font-size: 1.0em; width: 100%;'><tr style='font-size: 0.8em; color: white; background: gray;'><th>" + enc_name.first + "</th><th>" + "</th></tr>"
         enc = enc_name.first
         cycle = 0
         @encounter_map["#{cd}"]["#{enc}"].each do |concept|

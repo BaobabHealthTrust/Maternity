@@ -19,14 +19,18 @@ class ApplicationController < ActionController::Base
     @backtrace = exception.backtrace.join("\n") unless exception.nil?
     render :file => "#{RAILS_ROOT}/app/views/errors/error.rhtml", :layout=> false, :status => 404
   end if RAILS_ENV == 'production'
-#test push
+  #test push
 
   def next_task(patient)
     current_visit_encounters = patient.current_visit.encounters.active.find(:all, :include => [:type]).map{|e| e.type.name} rescue []
     # Registration clerk needs to do registration if it hasn't happened yet
     return "/encounters/new/registration?patient_id=#{patient.id}" if !current_visit_encounters.include?("REGISTRATION") || patient.current_visit.nil? || patient.current_visit.end_date != nil
-    
-    return "/patients/show/#{patient.id}?skip_check=true"
+   
+    unless params[:action] == "new"
+      return "/patients/show/#{patient.id}?skip_check=true"
+    else
+      return "/patients/show/#{patient.id}"
+    end
   end
 
   def print_and_redirect(print_url, redirect_url, message = "Printing, please wait...")
@@ -52,7 +56,7 @@ class ApplicationController < ActionController::Base
 
   end
 
-   def next_admit_task(patient)
+  def next_admit_task(patient)
     
     return "/encounters/new/admit_patient?patient_id=#{patient.id}" if  session[:diagnosis_done] == false && !patient.admitted_to_ward
     return "/encounters/diagnoses_index?patient_id=#{patient.id}" if  session[:diagnosis_done] == false
@@ -61,9 +65,9 @@ class ApplicationController < ActionController::Base
 
   end
 
-   def close_visit
-     return "/people"
-   end
+  def close_visit
+    return "/people"
+  end
 
   def send_label(label_data)
     send_data(
