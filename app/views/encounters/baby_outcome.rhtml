@@ -639,7 +639,7 @@
   <% options = {
     :id => "appearance"
   }%>
-  <%= hidden_field_tag("observations[][concept_name]", "APPEARANCE")%>
+  <%= hidden_field_tag("observations[][concept_name]", "APPEARANCE MINUTE ONE")%>
   <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
   <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
         session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
@@ -647,7 +647,7 @@
   <% options = {
     :id => "pulse"
   }%>
-  <%= hidden_field_tag("observations[][concept_name]", "PULSE")%>
+  <%= hidden_field_tag("observations[][concept_name]", "PULSE MINUTE ONE")%>
   <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
   <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
         session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
@@ -655,7 +655,7 @@
   <% options = {
     :id => "grimance"
   }%>
-  <%= hidden_field_tag("observations[][concept_name]", "GRIMANCE")%>
+  <%= hidden_field_tag("observations[][concept_name]", "GRIMANCE MINUTE ONE")%>
   <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
   <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
         session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
@@ -663,7 +663,7 @@
   <% options = {
     :id => "activity"
   }%>
-  <%= hidden_field_tag("observations[][concept_name]", "ACTIVITY")%>
+  <%= hidden_field_tag("observations[][concept_name]", "ACTIVITY MINUTE ONE")%>
   <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
   <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
         session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
@@ -671,7 +671,7 @@
   <% options = {
     :id => "respiration"
   }%>
-  <%= hidden_field_tag("observations[][concept_name]", "RESPIRATION")%>
+  <%= hidden_field_tag("observations[][concept_name]", "RESPIRATION MINUTE ONE")%>
   <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
   <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
         session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
@@ -689,7 +689,7 @@
 
   <%= text_field_tag("observations[][value_numeric]", nil, options ) %>
   <%= hidden_field_tag("observations[][value_text]", nil) %>
-  <%= hidden_field_tag("observations[][concept_name]", "APGAR") %>
+  <%= hidden_field_tag("observations[][concept_name]", "APGAR MINUTE ONE") %>
   <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
   <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
 
