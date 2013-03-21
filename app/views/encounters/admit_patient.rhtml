@@ -43,6 +43,7 @@
   <%= hidden_field_tag("observations[][value_coded_or_text]", @location, options)%>
   <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
   <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+  <%= hidden_field_tag("observations[][value_datetime]",  (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
   <%= hidden_field_tag("observations[][comments]",    @last_location) %>
 
   <%= submit_tag "Finish" %>    
