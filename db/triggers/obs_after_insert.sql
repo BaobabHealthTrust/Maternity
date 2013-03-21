@@ -159,7 +159,7 @@ IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "BILATERAL
   		INSERT INTO patient_report (patient_id, referral_in, obs_datetime, obs_id) VALUES(new.person_id, new.obs_datetime, new.obs_datetime, new.obs_id);
 	END IF;
 	
-	IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "CLINIC SITE OTHER" LIMIT 1) AND new.value_coded IN (SELECT concept_id FROM concept_name WHERE name = "Yes") THEN
+	IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "REFERRED OUT" LIMIT 1) AND new.value_coded IN (SELECT concept_id FROM concept_name WHERE name = "Yes") THEN
 
   		INSERT INTO patient_report (patient_id, referral_out, obs_datetime, obs_id) VALUES(new.person_id, new.obs_datetime, new.obs_datetime, new.obs_id);
 	END IF;
