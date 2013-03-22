@@ -1057,17 +1057,16 @@ class PatientsController < ApplicationController
 		@children.each do |child|
       name =  PersonName.find_by_person_id(child.person_b).given_name + "  " +		PersonName.find_by_person_id(child.person_b).family_name
       @encounter_map["#{name}"] = Hash.new
-
-      Patient.find(child.person_b).encounters.active.each do |enc|
+      baby_encounters = Encounter.find(:all, :conditions => ["patient_id = ? AND encounter_type = ?", child.person_b, EncounterType.find_by_name("UPDATE OUTCOME").id]) rescue []
+      baby_encounters.each do |enc|
         enc_name = enc.name
         @encounter_map["#{name}"]["#{enc_name}"] = Hash.new if !@encounter_map["#{name}"]["#{enc_name}"]
         enc.observations.each do |o|
           concept = ConceptName.find_by_concept_id(o.concept_id).name
           @encounter_map["#{name}"]["#{enc_name}"]["#{concept}"] = o.answer_string
         end
-       @encounter_map["#{name}"]["#{enc_name}"] = @encounter_map["#{name}"]["#{enc_name}"].sort
 			end
-		end
+		end rescue nil
 		
 		#Lazy bones never build interfaces in HTML only, Baby encounters come here
 		@output = Hash.new
@@ -1090,7 +1089,7 @@ class PatientsController < ApplicationController
 		
 			end
       @output["#{cd}"] = @display_text
-		end
+		end rescue nil
   end
 end
 
