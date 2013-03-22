@@ -1077,19 +1077,60 @@ class PatientsController < ApplicationController
         @display_text += "<table style='font-size: 1.0em; width: 100%;'><tr style='font-size: 0.8em; color: white; background: gray;'><th>" + enc_name.first + "</th><th>" + "</th></tr>"
         enc = enc_name.first
         cycle = 0
+
+        apgar_values = Hash.new
+        apgar_values2 = Hash.new
+        
+        ["APGAR Minute One", "Appearance Minute One", "Pulse Minute One", "Grimance Minute One", "Activity Minute One", "Respiration Minute One"].each do |field|
+             apgar_values["#{field}"] = @encounter_map["#{cd}"]["#{enc}"][field] rescue nil if @encounter_map["#{cd}"]["#{enc}"][field]
+             @encounter_map["#{cd}"]["#{enc}"].delete(field)
+        end
+        apgar = Hash.new
+        apgar_values = apgar_values.sort.map do |key, value|
+          apgar["#{key}"] = value
+        end
+        
+         ["APGAR Minute Five", "Appearance Minute Five", "Pulse Minute Five", "Grimance Minute Five", "Activity Minute Five", "Respiration Minute Five"].each do |field|
+             apgar_values2["#{field}"] = @encounter_map["#{cd}"]["#{enc}"][field] rescue nil if @encounter_map["#{cd}"]["#{enc}"][field]
+             @encounter_map["#{cd}"]["#{enc}"].delete(field)
+        end
+        apgar2 = Hash.new
+        apgar_values2 = apgar_values2.sort.map do |key, value|
+          apgar2["#{key}"] = value
+        end
+
         @encounter_map["#{cd}"]["#{enc}"].each do |concept|
 					if cycle%2 == 1				
-            @display_text  += "<tr class = 'odd'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge").gsub("Gender of vontact", "Gender") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
+            @display_text  += "<tr class = 'odd'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge").gsub("Gender of contact", "Gender") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
 					else
             @display_text  += "<tr class = 'even'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge").gsub("Gender of contact", "Gender") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
 					end
 					cycle += 1					
 				end
+
+        apgar.each do |concept|
+					if cycle%2 == 1
+            @display_text  += "<tr class = 'odd'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge").gsub("Gender of contact", "Gender") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
+					else
+            @display_text  += "<tr class = 'even'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge").gsub("Gender of contact", "Gender") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
+					end
+					cycle += 1
+				end
+
+        apgar2.each do |concept|
+					if cycle%2 == 1
+            @display_text  += "<tr class = 'odd'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge").gsub("Gender of contact", "Gender") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
+					else
+            @display_text  += "<tr class = 'even'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge").gsub("Gender of contact", "Gender") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
+					end
+					cycle += 1
+				end
+        
         @display_text += "</table>"
 		
 			end
       @output["#{cd}"] = @display_text
-		end rescue nil
+		end
   end
 end
 
