@@ -1065,6 +1065,7 @@ class PatientsController < ApplicationController
           concept = ConceptName.find_by_concept_id(o.concept_id).name
           @encounter_map["#{name}"]["#{enc_name}"]["#{concept}"] = o.answer_string
         end
+       @encounter_map["#{name}"]["#{enc_name}"] = @encounter_map["#{name}"]["#{enc_name}"].sort
 			end
 		end
 		
@@ -1079,9 +1080,9 @@ class PatientsController < ApplicationController
         cycle = 0
         @encounter_map["#{cd}"]["#{enc}"].each do |concept|
 					if cycle%2 == 1				
-            @display_text  += "<tr class = 'odd'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
+            @display_text  += "<tr class = 'odd'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge").gsub("Gender of vontact", "Gender") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
 					else
-            @display_text  += "<tr class = 'even'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
+            @display_text  += "<tr class = 'even'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge").gsub("Gender of contact", "Gender") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
 					end
 					cycle += 1					
 				end
