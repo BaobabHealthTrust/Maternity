@@ -45,6 +45,11 @@ INSERT INTO location (name, description, creator, date_created, retired)
 	WHERE NOT EXISTS (SELECT name FROM location WHERE name = "Kamuzu Central Hospital" LIMIT 1);
 
 INSERT INTO location (name, description, creator, date_created, retired)
+	SELECT "Ethel Mutharika Maternity Wing", "(ID=700)", 1, now(), 0
+    FROM dual
+	WHERE NOT EXISTS (SELECT name FROM location WHERE name = "Ethel Mutharika Maternity Wing" LIMIT 1);
+
+INSERT INTO location (name, description, creator, date_created, retired)
 	SELECT "Theater", "(ID=700)", 1, now(), 0
     FROM dual
 	WHERE NOT EXISTS (SELECT name FROM location WHERE name = "Theater" LIMIT 1);
