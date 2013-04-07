@@ -2026,10 +2026,7 @@ class CohortController < ActionController::Base # < ApplicationController
 
       csv_string +=  "#{row}\n"
 
-
     end
-    
-
 
     send_data(csv_string,
       :type => 'text/csv; charset=utf-8;',
