@@ -19,63 +19,71 @@
         var body = "";        
 
         header = format(header);
+        header = header + ","
 
         for(var j=0;j<rowLength;j++){
 
           for(var k=0;k<colLength;k++){
-
-            body = body+table.rows[j].cells[k].getAttribute("csvread")+",";         
-
-          }
-
-          body = format(body)+'\r\n';
-
-        }
-
-        body = header+ '\r\n'+body;       
-        sendFile(body);
-
-      }
-
-      function sendFile(str){
-        url = "/cohort/print_csv?print_string=" + str
-        ajaxReq(str, url);
-
-      }
-
-      function format(str){
-        if(str.substring(length-2,length-1).match(",")){
-          var tail = str.substring(0,str.length-1);
-        }else{
-          var tail = str
-        }
-        return tail;
-      }
             
-      function exportToCsv(){
-        var table = document.getElementById("main").contentDocument.getElementById("tble");
-        var header = "Birthweight Group,Macerated During Pregnancy,Fresh During Pregnancy,Pre-Discharge,Alive At Discharge,Missing Outcomes,Total,"
-        exportTable(table, header);
-        // jQuery("#main").contents().find("#tble").table2CSV({header:["BirthWeight Group", "Macerated During Pregnancy","Fresh During Pregnancy", "Pre-Discharge", "Alive at Discharge", "Missing Outcomes", "Total"]});
-       
-      }
+            if (k == colLength - 1){
+               body = body+table.rows[j].cells[k].getAttribute("csvread")+",,";
+            }else{
 
-      function ajaxReq(string, aUrl){
+            body = body+table.rows[j].cells[k].getAttribute("csvread")+",";
 
-        var httpRequest = new XMLHttpRequest();
-
-        httpRequest.onreadystatechange = function() {
-
-          if (httpRequest.readyState == 4 && httpRequest.status == 200) {
-            var result = httpRequest.responseText;
           }
-          
+
         }
-        try {
-          httpRequest.open('POST', aUrl, true);
-          httpRequest.send(null);
-        } catch(e){}
+
+        body = format(body)+'\r\n';
+
       }
+
+      body = header+ '\r\n'+body;
+
+      sendFile(body);
+
+    }
+
+    function sendFile(str){
+     
+      window.location = "/cohort/print_csv?print_string=" + str
+      
+    }
+
+    function format(str){
+      if(str.substring(length-2,length-1).match(",")){
+        var tail = str.substring(0,str.length-1);
+      }else{
+        var tail = str
+      }
+      return tail;
+    }
+            
+    function exportToCsv(){
+      var table = document.getElementById("main").contentDocument.getElementById("tble");
+      var header = "Birthweight Group,Macerated During Pregnancy,Fresh During Pregnancy,Pre-Discharge,Alive At Discharge,Missing Outcomes,Total,"
+      exportTable(table, header);
+      // jQuery("#main").contents().find("#tble").table2CSV({header:["BirthWeight Group", "Macerated During Pregnancy","Fresh During Pregnancy", "Pre-Discharge", "Alive at Discharge", "Missing Outcomes", "Total"]});
+       
+    }
+
+    function ajaxReq(string, aUrl){
+
+      var httpRequest = new XMLHttpRequest();
+
+      httpRequest.onreadystatechange = function() {
+
+        if (httpRequest.readyState == 4 && httpRequest.status == 200) {
+          var result = httpRequest.responseText;
+        }
+          
+      }
+      try {
+        httpRequest.open('POST', aUrl, true);
+        httpRequest.send(null);
+      } catch(e){}
+    }
         
           
     </script>

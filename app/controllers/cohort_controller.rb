@@ -2017,11 +2017,25 @@ class CohortController < ActionController::Base # < ApplicationController
   end
 
   def print_csv
-    csv_string = params["print_string"]
+    
+    csv_arr = params["print_string"].split(",,")
+
+    csv_string = ""
+
+    csv_arr.each do |row|
+
+      csv_string +=  "#{row}\n"
+
+
+    end
+    
+
+
     send_data(csv_string,
       :type => 'text/csv; charset=utf-8;',
-      :disposition => 'attachment:wq',
-      :filename => "myfile.csv")
+      :stream=> false,
+      :disposition => 'inline',
+      :filename => "babies_matrix.csv") and return   
   end
 
 end
