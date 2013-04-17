@@ -73,7 +73,7 @@ class Patient < ActiveRecord::Base
     id[0..4] + "-" + id[5..8] + "-" + id[9..-1] rescue id
   end
 
-  def national_id_label
+  def national_id_label(qty=2)
     return unless self.national_id
     sex =  self.person.gender.match(/F/i) ? "(F)" : "(M)"
     address = self.person.address.strip[0..24].humanize.delete("'") rescue ""
@@ -86,7 +86,7 @@ class Patient < ActiveRecord::Base
     label.draw_multi_text("#{self.person.name.titleize.delete("'")}") #'
     label.draw_multi_text("#{self.national_id_with_dashes} #{self.person.birthdate_formatted}#{sex}")
     label.draw_multi_text("#{address}")
-    label.print(2)
+    label.print(qty)
   end
 =begin
   def visit_label

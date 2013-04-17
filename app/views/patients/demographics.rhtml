@@ -188,7 +188,7 @@
 
     <% if params[:cat] && params[:cat].downcase == "baby" %>
       <button id="printButton" class="button navButton blue"
-              onclick="window.location = '/patients/national_id_label?patient_id=<%= @person.id %>'">
+              onclick="window.location = '/patients/national_id_label?patient_id=<%= @person.id %>&cat=baby'">
         <span>Print Baby Barcode</span>
       </button>
     <% end %>

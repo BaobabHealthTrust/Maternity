@@ -145,7 +145,11 @@ class PatientsController < ApplicationController
   end
   
   def national_id_label
-    print_string = Patient.find(params[:patient_id]).national_id_label rescue (raise "Unable to find patient (#{params[:patient_id]}) or generate a national id label for that patient")
+    if (params[:cat] && params[:cat].downcase == "baby")
+      print_string = Patient.find(params[:patient_id]).national_id_label(1) rescue (raise "Unable to find patient (#{params[:patient_id]}) or generate a national id label for that patient")
+    else
+      print_string = Patient.find(params[:patient_id]).national_id_label rescue (raise "Unable to find patient (#{params[:patient_id]}) or generate a national id label for that patient")
+    end   
     send_data(print_string,:type=>"application/label; charset=utf-8", :stream=> false, :filename=>"#{params[:patient_id]}#{rand(10000)}.lbl", :disposition => "inline")
   end
   
@@ -921,7 +925,7 @@ class PatientsController < ApplicationController
 
     @provider_details_available = true if (hospital_date and health_center and health_district and provider_title and provider_name)
     if @provider_details_available
-        result = RestClient.post(uri, data) rescue "birth report couldnt be sent"
+      result = RestClient.post(uri, data) rescue "birth report couldnt be sent"
     end
     if !@provider_details_available
       flash[:error] = "Provider Details Incomplete"
@@ -1082,17 +1086,17 @@ class PatientsController < ApplicationController
         apgar_values2 = Hash.new
         
         ["APGAR Minute One", "Appearance Minute One", "Pulse Minute One", "Grimance Minute One", "Activity Minute One", "Respiration Minute One"].each do |field|
-             apgar_values["#{field}"] = @encounter_map["#{cd}"]["#{enc}"][field] rescue nil if @encounter_map["#{cd}"]["#{enc}"][field]
-             @encounter_map["#{cd}"]["#{enc}"].delete(field)
+          apgar_values["#{field}"] = @encounter_map["#{cd}"]["#{enc}"][field] rescue nil if @encounter_map["#{cd}"]["#{enc}"][field]
+          @encounter_map["#{cd}"]["#{enc}"].delete(field)
         end
         apgar = Hash.new
         apgar_values = apgar_values.sort.map do |key, value|
           apgar["#{key}"] = value
         end
         
-         ["APGAR Minute Five", "Appearance Minute Five", "Pulse Minute Five", "Grimance Minute Five", "Activity Minute Five", "Respiration Minute Five"].each do |field|
-             apgar_values2["#{field}"] = @encounter_map["#{cd}"]["#{enc}"][field] rescue nil if @encounter_map["#{cd}"]["#{enc}"][field]
-             @encounter_map["#{cd}"]["#{enc}"].delete(field)
+        ["APGAR Minute Five", "Appearance Minute Five", "Pulse Minute Five", "Grimance Minute Five", "Activity Minute Five", "Respiration Minute Five"].each do |field|
+          apgar_values2["#{field}"] = @encounter_map["#{cd}"]["#{enc}"][field] rescue nil if @encounter_map["#{cd}"]["#{enc}"][field]
+          @encounter_map["#{cd}"]["#{enc}"].delete(field)
         end
         apgar2 = Hash.new
         apgar_values2 = apgar_values2.sort.map do |key, value|
