@@ -86,7 +86,7 @@ class Patient < ActiveRecord::Base
     label.draw_multi_text("#{self.person.name.titleize.delete("'")}") #'
     label.draw_multi_text("#{self.national_id_with_dashes} #{self.person.birthdate_formatted}#{sex}")
     label.draw_multi_text("#{address}")
-    label.print(1)
+    label.print(2)
   end
 =begin
   def visit_label
