@@ -1003,10 +1003,9 @@ class PatientsController < ApplicationController
 
     @district = CoreService.get_global_property_value("current_district") rescue ''
     
-    if !params[:HospitalDate].nil? && !params[:HospitalDate].blank?
-      @anc_patient.set_attribute("Hospital Date", params[:HospitalDate])
-    end
    
+    @anc_patient.set_attribute("Hospital Date", Date.today)
+     
     @anc_patient.set_attribute("Health Center", @facility)
    
     @anc_patient.set_attribute("Health District", @district)

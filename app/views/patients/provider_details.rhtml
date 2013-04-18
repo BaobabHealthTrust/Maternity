@@ -59,12 +59,13 @@
     :tt_onLoad => "$('nextButton').style.display = 'block';  $('touchscreenInput'+tstCurrentPage).value = facility; "
   } %>
 
-  <%end%>
 
   <%= text_field_tag "HospitalDate", nil,
     {
     :helptext => "HospitalDate",
     :field_type => "date"
   } %>
+
+    <%end%>
 
 <% end %>
