@@ -919,9 +919,9 @@ class PatientsController < ApplicationController
 
     hospital_date = @anc_patient.get_attribute("Hospital Date")
     health_center = @anc_patient.get_attribute("Health Center")
-    health_district = @anc_patient.get_attribute("Health District")
-    provider_title = @anc_patient.get_attribute("Provider Title")
-    provider_name = @anc_patient.get_attribute("Provider Name")
+    health_district = @anc_patient.get_attribute("Health District")    
+    provider_title = @anc_patient.get_attribute("Provider Title")    
+    provider_name = @anc_patient.get_attribute("Provider Name")   
 
     @provider_details_available = true if (hospital_date and health_center and health_district and provider_title and provider_name)
     if @provider_details_available
@@ -995,20 +995,21 @@ class PatientsController < ApplicationController
   end
 
   def create_provider
+    
     @patient = Patient.find(params[:person_id]) rescue nil
     @anc_patient = ANCService::ANC.new(@patient) rescue nil
 
+    @facility = CoreService.get_global_property_value("current_facility") rescue ''
+
+    @district = CoreService.get_global_property_value("current_district") rescue ''
+    
     if !params[:HospitalDate].nil? && !params[:HospitalDate].blank?
       @anc_patient.set_attribute("Hospital Date", params[:HospitalDate])
     end
-
-    if !params[:Hospital].nil? && !params[:Hospital].blank?
-      @anc_patient.set_attribute("Health Center", params[:Hospital])
-    end
-
-    if !params[:district].nil? && !params[:district].blank?
-      @anc_patient.set_attribute("Health District", params[:district])
-    end
+   
+    @anc_patient.set_attribute("Health Center", @facility)
+   
+    @anc_patient.set_attribute("Health District", @district)
 
     if !params[:ProviderTitle].nil? && !params[:ProviderTitle].blank?
       @anc_patient.set_attribute("Provider Title", params[:ProviderTitle])

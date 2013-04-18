@@ -35,6 +35,8 @@
     :helptext => "Provider Title"
   } %>
 
+<%if false %>
+
   <p><label for="region_region_name">Region</label></br>
     <%= text_field "region" , 'region_name',
       :helpText => "Region",
@@ -56,6 +58,8 @@
     :ajaxURL => "/encounters/static_locations?search_string=",
     :tt_onLoad => "$('nextButton').style.display = 'block';  $('touchscreenInput'+tstCurrentPage).value = facility; "
   } %>
+
+  <%end%>
 
   <%= text_field_tag "HospitalDate", nil,
     {
