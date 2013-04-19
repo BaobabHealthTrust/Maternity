@@ -29,7 +29,7 @@ class PatientsController < ApplicationController
         session["patient_anc_map"][@patient.id] = AncConnection::PatientIdentifier.search_by_identifier(@maternity_patient.national_id).id
       end
     end
-   
+    @registration = (['registration'].include?(Location.find(session[:location_id]).name.downcase)) rescue false
     @at_registration_desk = (['registration', 'labour ward'].include?(Location.find(session[:location_id]).name.downcase))  rescue  nil
     @is_registered = @patient.encounters.collect{|enc|
       enc.name.upcase if enc.date_created >= 7.days.ago
@@ -148,8 +148,13 @@ class PatientsController < ApplicationController
     if (params[:cat] && params[:cat].downcase == "baby")
       print_string = Patient.find(params[:patient_id]).national_id_label(1) rescue (raise "Unable to find patient (#{params[:patient_id]}) or generate a national id label for that patient")
     else
-      print_string = Patient.find(params[:patient_id]).national_id_label rescue (raise "Unable to find patient (#{params[:patient_id]}) or generate a national id label for that patient")
-    end   
+      @registration = (['registration'].include?(Location.find(session[:location_id]).name.downcase)) rescue false
+      if @registration
+        print_string = Patient.find(params[:patient_id]).national_id_label(1) rescue (raise "Unable to find patient (#{params[:patient_id]}) or generate a national id label for that patient")
+      else
+        print_string = Patient.find(params[:patient_id]).national_id_label rescue (raise "Unable to find patient (#{params[:patient_id]}) or generate a national id label for that patient")
+      end
+    end
     send_data(print_string,:type=>"application/label; charset=utf-8", :stream=> false, :filename=>"#{params[:patient_id]}#{rand(10000)}.lbl", :disposition => "inline")
   end
   
