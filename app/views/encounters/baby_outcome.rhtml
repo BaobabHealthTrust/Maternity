@@ -570,10 +570,13 @@
   }
 %>
 
+  <% htext1 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Time of Delivery" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Time of Delivery"%>
+
   <% options = {
     :id => "time_of_delivery",
     :field_type => 'advancedTime',
-    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Time of Delivery",
+    :helptext =>"#{htext1}",
     :tt_onLoad => "baby_num = #{baby}"
   }%>
   <%= hidden_field_tag("observations[][concept_name]",  "TIME OF DELIVERY")%>
@@ -581,10 +584,13 @@
   <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
         session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
+  <% htext2 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Date of Delivery" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Date of Delivery"%>
+
   <% options = {
     :id => "date_of_delivery",
     :field_type => 'date',
-    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Date of Delivery",
+    :helptext =>"#{htext2}",
     :tt_onUnLoad => "calculateBabyOutcomeDate(#{baby})"
   }%>
   <%= hidden_field_tag("observations[][concept_name]",  "DATE OF DELIVERY")%>
@@ -592,19 +598,25 @@
   <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
         session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
+  <% htext3 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Presentation" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Presentation"%>
+
   <% options = {
     :id => "presentation#{baby}",
     :field_type => 'text',
-    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Presentation"
+    :helptext =>"#{htext3}"
   }%>
   <%= hidden_field_tag("observations[][concept_name]", "PRESENTATION") %>
   <%= select_tag("observations[][value_coded_or_text]", options_for_select(@presentation), options)%>
   <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
+  <% htext4 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Delivery Outcome" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Delivery Outcome"%>
+
   <% options = {
     :id => "baby_outcome",
     :field_type => 'text',
-    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Delivery Outcome"
+    :helptext =>"#{htext4}"
   }%>
 
   <%= hidden_field_tag("observations[][concept_name]", "BABY OUTCOME") %>
@@ -615,10 +627,13 @@
       :id => "baby_outcome_date"
     }) %>
 
+  <% htext5 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Delivery Mode" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Delivery Mode"%>
+
   <% options = {
     :id => "delivery_mode",
     :field_type => 'text',
-    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Delivery Mode"
+    :helptext =>"#{htext5}"
   }%>
 
   <%= hidden_field_tag("observations[][concept_name]", "DELIVERY MODE") %>
@@ -629,11 +644,13 @@
       :id => "baby_delivery_mode_date"
     }) %>
 
+  <% htext6 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Gender" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Gender"%>
 
   <% options = {
     :id => "baby_gender#{baby}",
     :field_type => 'text',
-    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Gender"
+    :helptext =>"#{htext6}"
   }%>
   <%= hidden_field_tag("observations[][concept_name]", "GENDER OF CONTACT") %>
   <%= select_tag("observations[][value_coded_or_text]", options_for_select(["", "Male", "Female"]), options)%>
@@ -679,10 +696,13 @@
   <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
         session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
+   <% htext7 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby 1<sup>st</sup>Minute APGAR" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: 1<sup>st</sup>Minute APGAR"%>
+
   <% options =  {
     :id => "apgar_one",
     :field_type => 'number',
-    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: 1<sup>st</sup>Minute APGAR",
+    :helptext =>"#{htext7}",
     :absoluteMin => 0,
     :absoluteMax => 10,
     :condition => "__$('baby_outcome').value.toUpperCase().trim() == 'ALIVE'",
@@ -736,10 +756,13 @@
   <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
         session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
+  <% htext8 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby 5<sup>th</sup>Minute APGAR" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: 5<sup>th</sup>Minute APGAR"%>
+
   <% options =  {
     :id => "apgar_five",
     :field_type => 'number',
-    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: 5<sup>th</sup>Minute APGAR",
+    :helptext =>"#{htext8}",
     :absoluteMin => 0,
     :absoluteMax => 10,
     :condition => "__$('baby_outcome').value.toUpperCase().trim() == 'ALIVE'",
@@ -754,9 +777,13 @@
   <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
 
 
+  <% htext9 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Weight (Grams)" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Weight (Grams)"%>
+
+
   <% options =  {	:id => "weight",
     :field_type => 'number',
-    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Weight (Grams)",
+    :helptext =>"#{htext9}",
     :tt_onLoad => "timedEvent = self.setInterval(function(){weightAlert()}, 100);",
     :tt_onUnLoad => "window.clearInterval(timedEvent);",
     :min => number_with_precision(2500.0, :precision => 1),
@@ -773,6 +800,9 @@
   <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
   <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
 
+  <% htext10 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Length (CM)" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Length (CM)"%>
+
   <% options =  {
     :id => "height",
     :field_type => 'number',
@@ -786,7 +816,7 @@
     :validationRule => "^([0-9]+)|Unknown$",
     :validationMessage => "You must enter numbers only (for example 157)",
     :tt_pageStyleClass => "unknownButton ",
-    :helptext =>"#{baby}<sup>#{prefixes[baby]}</sup> Baby: Length (CM)" } %>
+    :helptext =>"#{htext10}" } %>
 
   <%= text_field_tag("observations[][value_numeric]", nil, options ) %>
   <%= hidden_field_tag("observations[][value_text]", nil) %>
