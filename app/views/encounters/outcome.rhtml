@@ -1082,7 +1082,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     :condition => "$('discharge_outcome').value.toUpperCase() == 'PATIENT DIED'"
   }%>
   <%= hidden_field_tag("observations[][concept_name]",  "PLACE OF DEATH")%>
-  <%= select_tag("observations[][value_coded_or_text]", options_for_select([" ", "Home", "Current Health Center", "On The Way", "Other" ]), options)%>
+  <%= select_tag("observations[][value_coded_or_text]", options_for_select([" ", "Home", "Current Facility", "On The Way", "Other" ]), options)%>
   <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
   <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
         session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
