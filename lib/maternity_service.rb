@@ -313,7 +313,7 @@ module MaternityService
 					first_name = first_name +"_"+ Date.today.year.to_s + "/" + Date.today.month.to_s + "/" + Date.today.day.to_s
 				end
 
-	       baby = {
+        baby = {
           "patient"=>{
             "identifiers"=>{
               "diabetes_number"=> ""             
@@ -352,7 +352,7 @@ module MaternityService
 				else
 					person.dead = true
 				end
-					person.save
+        person.save
 
 				#A baby with a name must be extra beautiful
 				name = PersonName.find_by_person_id(person.person_id)
@@ -374,7 +374,7 @@ module MaternityService
         PatientIdentifier.create(:patient_id => person.patient.patient_id,
           :identifier => serial_num.serial_number,
           :identifier_type => id_type
-					) if serial_num and !person.blank?
+        ) if serial_num and !person.blank?
         
         serial_num.national_id = person.patient.national_id
         serial_num.date_assigned = Date.today
@@ -417,7 +417,7 @@ module MaternityService
          
         mother = ANCService::ANC.new(self.mother.person.patient) rescue nil
         father = ANCService::ANC.new(self.father.relation.patient) rescue nil
-       {
+        {
           "birthdate_estimated" => (self.person.birthdate_estimated rescue 0),
           "gender" => (child.person.gender rescue nil),
           "birthdate" => (child.person.birthdate.strftime("%Y-%m-%d") rescue nil),
@@ -480,10 +480,10 @@ module MaternityService
             "addresses" => {
               "address1" => (mother.current_address1 rescue nil),
               "city_village" => (mother.current_address2 rescue nil),
-              "address2" => (mother.current_district rescue nil),
-              "subregion" => (mother.home_district rescue nil),
+              "state_province" => (mother.current_district rescue nil),
+              "address2" => (mother.home_district rescue nil),
               "county_district" => (mother.home_ta rescue nil),
-              "neighborhood_cell" => (mother.home_village rescue nil)
+              "neighborhood_cell" => (mother.home_village rescue nil)            
             }
           },
           "father" => {
@@ -512,10 +512,10 @@ module MaternityService
               "race" => (father.get_full_attribute("Race").value rescue nil)
             },
             "addresses" => {
-              "address1" => (father.current_address1 rescue nil),
+               "address1" => (father.current_address1 rescue nil),
               "city_village" => (father.current_address2 rescue nil),
-              "address2" => (father.current_district rescue nil),
-              "subregion" => (father.home_district rescue nil),
+              "state_province" => (father.current_district rescue nil),
+              "address2" => (father.home_district rescue nil),
               "county_district" => (father.home_ta rescue nil),
               "neighborhood_cell" => (father.home_village rescue nil)
             }
@@ -563,7 +563,7 @@ module MaternityService
     result.delete_if{|r| r["BABY OUTCOME"].downcase != "alive"} rescue []
   end
 
-	  def self.extract_baby(params)
+  def self.extract_baby(params)
     babies = params["observations"].collect{|o|
       o if ((!o["value_coded_or_text"].blank? ||
             !o["value_datetime"].blank?) &&
@@ -583,11 +583,11 @@ module MaternityService
         when "DATE OF DELIVERY":
             o["value_datetime"]
         else
-	          o["value_coded_or_text"]
+          o["value_coded_or_text"]
         end)
       i += 1
     }
-	result
+    result
 
   end
 
