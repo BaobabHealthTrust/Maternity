@@ -536,7 +536,7 @@
   <% @mode_of_delivery = ["", "Forceps delivery", "Breech delivery"] %>
   <% @main_outcomes = @main_outcomes - ["Admitted"]%>
 
-  <%# @main_outcomes = @main_outcomes - ["Discharged"] if @children_names.size == 0%>
+<%# @main_outcomes = @main_outcomes - ["Discharged"] if @children_names.size == 0%>
 
   <% @main_outcomes = @main_outcomes - ["Discharged"] if !@location.upcase.include?("POST") && !@location.upcase.include?("ANTE") %>
 
@@ -1074,6 +1074,20 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
   <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
         session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
+  <% options = {
+    :id => "time_of_death",
+    :field_type => "advancedTime",
+    :helptext =>"Time of Death",
+    :condition => "$('discharge_outcome').value.toUpperCase() == 'PATIENT DIED'"
+  }%>
+
+
+  <%= hidden_field_tag("observations[][concept_name]",  "TIME OF DEATH")%>
+  <%= text_field_tag("observations[][value_time]",   nil, options)%>
+  <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
 
   <% options = {
     :id => "place_of_death",
@@ -1093,7 +1107,6 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
     :allowFreeText => 'true',
     :ajaxURL => "/encounters/diagnoses?search_string=",
     :textCase => "upper",
-    :tt_onLoad => "$('nextButton').innerHTML = '<span>Finish</span>'",
     :tt_pageStyleClass => "n qwertyKeyboardOnly",
     :condition => "$('discharge_outcome').value.toUpperCase() == 'PATIENT DIED'"
   } %>
@@ -1102,6 +1115,19 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
   <%= hidden_field_tag("observations[][concept_name]", "DIAGNOSIS", options) %>
   <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
   <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
+
+  <% options = {
+    :id => "condition_at_death",
+    :field_type => 'text',
+    :helptext =>"Condition At Death",
+    :tt_onLoad => "$('nextButton').innerHTML = '<span>Finish</span>'",
+    :condition => "$('discharge_outcome').value.toUpperCase() == 'PATIENT DIED'"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]",  "CONDITION AT DEATH")%>
+  <%= select_tag("observations[][value_coded_or_text]", options_for_select([" ", "Antenatal", "Postpartum", "Intrapartum"]), options)%>
+  <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
 
 <%#= hidden_field_tag "next_url", "/encounters/new/admission_diagnosis/?patient_id=#{@patient.id}", {:disabled => true} %>
