@@ -62,7 +62,17 @@
 </style>
 
 <script type="text/javascript">
+
   tt_cancel_destination = "/patients/general_demographics?patient_id=<%= @patient.patient_id%>";
+<%
+@registration = (['registration'].include?(Location.find(session[:location_id]).name.downcase)) rescue false
+params[:reg] = "true" if @registration
+%>
+  reg = "<%= params[:reg].to_s rescue "false"%>"
+  
+  if(reg == "true"){
+    tt_cancel_destination = "/patients/show?patient_id=<%= @patient.patient_id%>&skip_check=true";
+  }
 </script>
 
 <div class="container">
