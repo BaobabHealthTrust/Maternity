@@ -30,7 +30,6 @@ do
 	mysql --user=$USERNAME --password=$PASSWORD $DATABASE < $f
 done
 
-mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/create_dde_server_connection.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/districts.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/relationship_type.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/birth_report.sql
