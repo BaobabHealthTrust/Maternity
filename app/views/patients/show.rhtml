@@ -68,10 +68,12 @@
             </select>
             <select id="navigation_links">
 
-              <% unless   @registration %>
-                <!--option link='/patients/general_demographics?patient_id=<%= @patient.id %>'>
+              <% 
+              assign_serial_numbers = CoreService.get_global_property_value("assign_serial_numbers").to_s == "true" rescue false
+              unless   @registration || !assign_serial_numbers %>
+                <option link='/patients/general_demographics?patient_id=<%= @patient.id %>'>
                   Demographics
-                </option-->
+                </option>
               <%else%>
                 <option link='/patients/demographics?patient_id=<%= @patient.id %>&person_id=<%= @patient.id %>&reg=true'>
                   Demographics
