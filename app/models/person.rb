@@ -28,7 +28,13 @@ class Person < ActiveRecord::Base
   end  
 
   def address
-    "#{self.addresses.first.city_village}" rescue nil
+    address = self.current_district rescue ""
+    if address.blank?
+      address = self.current_residence rescue ""
+    else
+      address += ", " + self.current_residence unless self.current_residence.blank?
+    end
+    address   
   end 
 
   def age(today = Date.today)
@@ -601,6 +607,10 @@ class Person < ActiveRecord::Base
     #    PersonAttributeType.find_by_name('Current Place Of Residence').id, self.id]).value rescue 'Unknown'
 
     self.addresses.last.city_village rescue 'Unknown'
+  end
+
+  def current_district
+    "#{self.addresses.last.state_province}" rescue nil
   end
 
   def sex
