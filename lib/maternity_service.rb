@@ -368,17 +368,22 @@ module MaternityService
 				end
 				
 				#Not these days, serial numbers just good as well
-        id_type = PatientIdentifierType.find_by_name("Serial Number").patient_identifier_type_id
-        serial_num = SerialNumber.find(:first, :conditions => ["national_id IS NULL"])
+        assign_serial_numbers = CoreService.get_global_property_value("assign_serial_numbers").to_s == "true" rescue false
 
-        PatientIdentifier.create(:patient_id => person.patient.patient_id,
-          :identifier => serial_num.serial_number,
-          :identifier_type => id_type
-        ) if serial_num and !person.blank?
+        if assign_serial_numbers
+          id_type = PatientIdentifierType.find_by_name("Serial Number").patient_identifier_type_id
+          serial_num = SerialNumber.find(:first, :conditions => ["national_id IS NULL"])
+
+          PatientIdentifier.create(:patient_id => person.patient.patient_id,
+            :identifier => serial_num.serial_number,
+            :identifier_type => id_type
+          ) if serial_num and !person.blank?
         
-        serial_num.national_id = person.patient.national_id
-        serial_num.date_assigned = Date.today
-        serial_num.save
+          serial_num.national_id = person.patient.national_id
+          serial_num.date_assigned = Date.today
+          serial_num.save
+
+        end
         
         person.patient.national_id_label
 
@@ -512,7 +517,7 @@ module MaternityService
               "race" => (father.get_full_attribute("Race").value rescue nil)
             },
             "addresses" => {
-               "address1" => (father.current_address1 rescue nil),
+              "address1" => (father.current_address1 rescue nil),
               "city_village" => (father.current_address2 rescue nil),
               "state_province" => (father.current_district rescue nil),
               "address2" => (father.home_district rescue nil),
