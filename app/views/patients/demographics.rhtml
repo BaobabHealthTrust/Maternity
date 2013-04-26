@@ -96,6 +96,14 @@ params[:reg] = "true" if @registration || !@assign_serial_numbers
           <td><a href="edit_demographics?patient_id=<%=@patient.id%>&field=first_name&person_id=<%=
                  @person.id %>&cat=<%= (params["cat"] rescue "") %>&given_name=<%= @first_name %>">Edit</a></td>
         </tr>
+        <% if @baby == true%>
+        <tr>
+          <td class='title'>Middle Name</td>
+          <td class='data'><%=@update_patient.middle_name%></td>
+          <td><a href="edit_demographics?patient_id=<%=@patient.id%>&field=middle_name&person_id=<%=
+                 @person.id %>&cat=<%= (params["cat"] rescue "") %>&middle_name=<%= @update_patient.middle_name %>">Edit</a></td>
+        </tr>
+        <% end %>
         <tr>
           <td class='title'>Last Name</td>
           <td class='data'><%=@last_name%></td>
