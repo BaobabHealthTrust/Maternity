@@ -735,7 +735,10 @@ class EncountersController < ApplicationController
 
   def observations_printable
     @patient    = Patient.find(params[:patient_id] || session[:patient_id]) rescue nil
+    
     @user = params[:user_id]
+    @user_name = User.find(@user).name rescue nil if @user.present?
+    @user_name = User.find(session[:user_id]).name rescue nil if @user_name.blank?
 
     @facility = (GlobalProperty.find_by_property("facility.name").property_value rescue "") || 
       (Location.find(session[:facility]).name rescue "")    
@@ -928,7 +931,7 @@ class EncountersController < ApplicationController
     # raise request.remote_ip.to_yaml
 
     location = request.remote_ip rescue ""
-    @patient    = Patient.find(params[:patient_id] || params[:id] || session[:patient_id]) rescue nil
+    @patient    = Patient.find(params[:patient_id]) rescue (Patient.find(params[:id]) rescue (Patient.find(session[:patient_id]) rescue nil))
 
     if @patient
       current_printer = ""
@@ -942,7 +945,7 @@ class EncountersController < ApplicationController
       t1 = Thread.new{
         Kernel.system "wkhtmltopdf -s A4 http://" +
           request.env["HTTP_HOST"] + "\"/encounters/observations_printable/" +
-          @patient.id.to_s + "?patient_id=#{@patient.id}&ret=#{params[:ret]}"+ "\" /tmp/output-" + session[:user_id].to_s + ".pdf \n"
+          @patient.patient_id.to_s + "?patient_id=#{@patient.patient_id}&user_id=#{params[:user_id]}&ret=#{params[:ret]}"+ "\" /tmp/output-" + params[:user_id].to_s + ".pdf \n"
       }
 
       t2 = Thread.new{
@@ -953,7 +956,7 @@ class EncountersController < ApplicationController
 
       t3 = Thread.new{
         sleep(10)
-        Kernel.system "rm /tmp/output-" + session[:user_id].to_s + ".pdf\n"
+       # Kernel.system "rm /tmp/output-" + session[:user_id].to_s + ".pdf\n"
       }
 
     
