@@ -907,7 +907,7 @@ class Person < ActiveRecord::Base
 		patient.first_name = person.names.first.given_name rescue nil
 		patient.last_name = person.names.first.family_name rescue nil
     patient.sex = sex(person)
-    patient.age = age(person, current_date) rescue nil
+    patient.age = age(person, current_date) #rescue nil
     patient.age_in_months = age_in_months(person, current_date) rescue nil
     patient.dead = person.dead
     patient.birth_date = birthdate_formatted(person)
