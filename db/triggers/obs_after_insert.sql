@@ -131,7 +131,7 @@ IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "MYOMECTOM
   		INSERT INTO patient_report (patient_id, diagnosis, procedure_done, diagnosis_date, obs_datetime, obs_id) VALUES(new.person_id, @diagnosis, "Myomectomy", new.obs_datetime, new.obs_datetime, new.obs_id);
 	END IF;
 
-IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "BILATERAL TUBAL LIGATION DIAGNOSIS" LIMIT 1) THEN
+        IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "BILATERAL TUBAL LIGATION DIAGNOSIS" LIMIT 1) THEN
 		SET @diagnosis = (SELECT name FROM concept_name WHERE concept_name_id = new.value_coded_name_id);	
 
   		INSERT INTO patient_report (patient_id, diagnosis, procedure_done, diagnosis_date, obs_datetime, obs_id) VALUES(new.person_id, @diagnosis, "Bilateral Tubal Ligation", new.obs_datetime, new.obs_datetime, new.obs_id);
@@ -152,6 +152,10 @@ IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "BILATERAL
 		SET @ward = (SELECT name FROM location WHERE location_id = new.location_id LIMIT 1);	
 
   		INSERT INTO patient_report (patient_id, admission_ward, admission_date, obs_datetime, obs_id) VALUES(new.person_id, @ward, new.value_datetime, new.value_datetime, new.obs_id);
+	END IF;
+
+        IF (new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "ADMISSION TIME" LIMIT 1)) AND (UPPER(@type) = "OBSERVATIONS") THEN
+		INSERT INTO patient_report (patient_id, admission_date, obs_datetime, obs_id) VALUES(new.person_id, new.value_datetime, new.value_datetime, new.obs_id);
 	END IF;
 	
 	IF new.concept_id = (SELECT concept_id FROM concept_name WHERE name = "IS PATIENT REFERRED?" LIMIT 1) AND new.value_coded IN (SELECT concept_id FROM concept_name WHERE name = "Yes") THEN
