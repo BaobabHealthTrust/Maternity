@@ -101,7 +101,14 @@ class PatientsController < ApplicationController
     }
 
     @link_to_anc = link_to_anc
-    
+
+    #check for pending birth report and enforce them to be sent, denying finish click
+
+    @pending_birth_reports = Relationship.find_by_sql("SELECT * FROM relationship r
+      WHERE person_a = #{@patient.patient_id} AND (SELECT COUNT(*) FROM birth_report WHERE person_id = r.person_b) = 0
+      AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+      ")
+    #raise @pending_birth_reports.to_yaml
     @past_treatments = @patient.visit_treatments
     session[:auto_load_forms] = false if params[:auto_load_forms] == 'false'
     session[:outcome_updated] = true if !outcome.nil?
