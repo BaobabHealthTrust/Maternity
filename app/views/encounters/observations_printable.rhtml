@@ -419,7 +419,7 @@
     </tr>
     <tr>
       <td colspan="3" style="padding-top: 30px; border-bottom: 1px solid #000; height: 60px;">
-        <b>Name of admitting officer:</b> <%= User.find(session[:user_id] || @user).name.titleize rescue "......................................." %>
+        <b>Name of admitting officer:</b> <%= @user_name.titleize rescue "......................................." %>
       </td>
       <td colspan="2" style="padding-top: 30px; border-bottom: 1px solid #000;" align="right">
         <b>Signature:</b> ...................................................

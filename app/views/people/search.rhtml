@@ -39,7 +39,7 @@ pos = 1
     }
 
     try {
-      people[<%= pos %>]["Home District"] = "<%=h person.home_district -%>";
+      people[<%= pos %>]["Home District"] = "<%=h person.home_district.squish rescue nil -%>";
     }catch(e){
       people[<%= pos %>]["Home District"] = null;
     }
@@ -50,7 +50,7 @@ pos = 1
       people[<%= pos %>]["Ancestral Traditional Authority(T/A)"] = null;
     }
     try {
-      people[<%= pos %>]["Current Residence"] = "" //"<%#=h person.current_residence -%>";
+      people[<%= pos %>]["Current Residence"] = "<%=h person.current_residence -%>";
     }catch(e){
       people[<%= pos %>]["Current Residence"] = null;
     }
@@ -103,12 +103,13 @@ end -%>
       "relation",
       "birthdate",
       "birthdate_estimated",
-      "state_province",
+      "home_district",
       "city_village",
       "county_district",
       "occupation",
       "cell_phone_number",
-      "national_id"
+      "national_id",
+      "state_province"
     ]
 
     createControlAndAssignValue("remote", "remote", "true");
@@ -224,8 +225,8 @@ end -%>
   }
 
   function makeRemoteButton(){
-    <%link_dde_server = (CoreService.get_global_property_value('create.from.dde.server').to_s == "true") rescue false%>
-    <% if link_dde_server && false %>
+<%link_dde_server = (CoreService.get_global_property_value('create.from.dde.server').to_s == "true") rescue false%>
+<% if link_dde_server && false %>
       __$("backButton").innerHTML = "<span>Remote Search</span>";
       __$('backButton').setAttribute("onmousedown","search_remote();");
       __$('backButton').style.display = "block";
@@ -349,18 +350,18 @@ end -%>
     <% form_tag "search", :method => :get do %>
       <%= text_field_tag :given_name, params[:given_name],
         {:field_type => 'alpha',
-        :helpText => "#{params[:cat].titleize} First name",
+        :helpText => "#{params[:cat].titleize rescue nil} First name",
         :ajaxURL => '/person_names/given_names?search_string=',
         :allowFreeText => true }%>
 
       <%= text_field_tag :family_name, params[:family_name],
         {:field_type => 'alpha',
-        :helpText => "#{params[:cat].titleize} Last name",
+        :helpText => "#{params[:cat].titleize rescue nil} Last name",
         :ajaxURL => '/person_names/family_names?search_string=',
         :allowFreeText => true }%>
 
       Gender: <%= select_tag :gender, options_for_select({"" => "", "Male" => "M", "Female" => "F"}),
-        {:helpText => "#{params[:cat].titleize} Gender"} %>
+        {:helpText => "#{params[:cat].titleize rescue nil} Gender"} %>
       <%= hidden_field_tag :create_patient, params[:create_patient] %>
       <%= hidden_field_tag :relation, params[:relation] %>
       <input type="hidden" id="cat" name="cat" value="<%=h params[:cat] -%>" />
@@ -375,9 +376,9 @@ end -%>
   <% unless (params[:gender].blank? || params[:given_name].blank? || params[:family_name].blank?) && (params[:identifier].blank?) %>
     <% form_tag "select", :method => :post do %>
       <% if @patient.blank? %>
-       
-          <label for="person">No people were found:</label>
-                
+
+        <label for="person">No people were found:</label>
+
       <% else -%>
         <% if @relation.blank? %>
           <label for="person">Select the person from the following</label>
@@ -425,6 +426,7 @@ end -%>
           </option>
         <% end -%>
       </select>
+
       <input type="hidden" id="identifier" name="identifier" value="<%=h params[:identifier] -%>" />
       <input type="hidden" id="gender" name="gender" value="<%=h params[:gender] -%>" />
       <input type="hidden" id="given_name" name="given_name" value="<%=h params[:given_name] -%>" />

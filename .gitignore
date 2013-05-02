@@ -2,6 +2,7 @@
 *.swp
 *.swo
 *.yml
+log
 config/database.yml
 config/settings.yml
 config/application.yml

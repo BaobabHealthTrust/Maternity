@@ -24,7 +24,24 @@
   <%= hidden_field_tag "encounter[provider_id]", session[:user_id] %>
   <%session_date = session[:datetime] || Time.now() %>
 
-  <%= touch_text_field_tag "GUARDIAN FIRST NAME", @patient, nil,
+ 
+  <%= touch_select_tag "EDUCATION LEVEL", @patient, options_for_select(["", "Primary", "Secondary", "Tertiary", "None", "Other"]),
+    {:id => "education",
+    :helptext => "Education Level" } %>
+
+  <%= touch_select_tag "Religion", @patient, options_for_select(@religions),
+    {:id => "religion",
+	:ajaxURL => "/patients/religion?search_string=",
+    :helptext => "Religion" } %>
+    
+  <%= touch_text_field_tag "Other", @patient, nil,
+    { 
+    :id => "other",
+    :helpText => "Specify other religion",
+    :condition => "__$('religion').value == 'Other'"
+  } %>
+
+ <%= touch_text_field_tag "GUARDIAN FIRST NAME", @patient, nil,
     {:id => "first_name",
     :helptext => "Next of Kin First Name" } %>
 
@@ -57,21 +74,6 @@
     :condition => "__$('relation').value == 'Other'"
   } %>
 
-  <%= touch_select_tag "EDUCATION LEVEL", @patient, options_for_select(["", "Primary", "Secondary", "Tertiary", "None", "Other"]),
-    {:id => "education",
-    :helptext => "Education Level" } %>
-
-  <%= touch_select_tag "Religion", @patient, options_for_select(@religions),
-    {:id => "religion",
-	:ajaxURL => "/patients/religion?search_string=",
-    :helptext => "Religion" } %>
-    
-  <%= touch_text_field_tag "Other", @patient, nil,
-    { 
-    :id => "other",
-    :helpText => "Specify other religion",
-    :condition => "__$('religion').value == 'Other'"
-  } %>
 
   <%= hidden_field_tag "next_url", "/encounters/new/#{ (params[:ret] ? params[:ret] : "observations") }/?patient_id=#{@patient.id}" %>
 

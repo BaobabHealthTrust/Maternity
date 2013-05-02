@@ -2,8 +2,90 @@
   <head>
     <title>Maternity Cohort Report</title>
 
+    <%= javascript_include_tag 'jquery' %>
+    <%=javascript_include_tag "jquery.table2CSV.min" %>
+    <script src ="/javascripts/jquery-1.3.2.mini.js"></script>
+
     <script type="text/javascript">
-      tt_cancel_destination = '/people';
+      
+      tt_cancel_destination = '/people';     
+     
+      function exportTable(table, header){
+
+        var rowLength = table.rows.length;
+
+        var colLength = table.rows[0].cells.length;     
+
+        var body = "";        
+
+        header = format(header);
+        header = header + ","
+
+        for(var j=0;j<rowLength;j++){
+
+          for(var k=0;k<colLength;k++){
+            
+            if (k == colLength - 1){
+               body = body+table.rows[j].cells[k].getAttribute("csvread")+",,";
+            }else{
+
+            body = body+table.rows[j].cells[k].getAttribute("csvread")+",";
+
+          }
+
+        }
+
+        body = format(body)+'\r\n';
+
+      }
+
+      body = header+ '\r\n'+body;
+
+      sendFile(body);
+
+    }
+
+    function sendFile(str){
+     
+      window.location = "/cohort/print_csv?print_string=" + str
+      
+    }
+
+    function format(str){
+      if(str.substring(length-2,length-1).match(",")){
+        var tail = str.substring(0,str.length-1);
+      }else{
+        var tail = str
+      }
+      return tail;
+    }
+            
+    function exportToCsv(){
+      var table = document.getElementById("main").contentDocument.getElementById("tble");
+      var header = "Birthweight Group,Macerated During Pregnancy,Fresh During Pregnancy,Pre-Discharge,Alive At Discharge,Missing Outcomes,Total,"
+      exportTable(table, header);
+      // jQuery("#main").contents().find("#tble").table2CSV({header:["BirthWeight Group", "Macerated During Pregnancy","Fresh During Pregnancy", "Pre-Discharge", "Alive at Discharge", "Missing Outcomes", "Total"]});
+       
+    }
+
+    function ajaxReq(string, aUrl){
+
+      var httpRequest = new XMLHttpRequest();
+
+      httpRequest.onreadystatechange = function() {
+
+        if (httpRequest.readyState == 4 && httpRequest.status == 200) {
+          var result = httpRequest.responseText;
+        }
+          
+      }
+      try {
+        httpRequest.open('POST', aUrl, true);
+        httpRequest.send(null);
+      } catch(e){}
+    }
+        
+          
     </script>
 
     <style>
@@ -19,17 +101,17 @@
     </style>
   </head>
   <body>
-<% if CoreService.get_global_property_value("extended_diagnoses_report").to_s == "true" %>
-    <iframe id="main" src="/cohort/<%= (@reportType.to_i == 2 ? "diagnoses_report_extended" : "report") %>?start_date=<%= @start_date %>+<%= @start_time %>&end_date=<%= @end_date 
-          %>+<%= @end_time %>&reportType=<%= @reportType %>"></iframe>
-<% else %>
+    <% if CoreService.get_global_property_value("extended_diagnoses_report").to_s == "true" %>
+      <iframe id="main" src="/cohort/<%= (@reportType.to_i == 2 ? "diagnoses_report_extended" :  (@reportType.to_i == 3 ? "baby_matrix_printable": "report")) %>?start_date=<%= @start_date %>+<%= @start_time %>&end_date=<%= @end_date
+            %>+<%= @end_time %>&reportType=<%= @reportType %>"></iframe>
+            <% else %>
 
- <iframe id="main" src="/cohort/<%= (@reportType.to_i == 2 ? "diagnoses_report" : "report") %>?start_date=<%= @start_date %>+<%= @start_time %>&end_date=<%= @end_date 
-          %>+<%= @end_time %>&reportType=<%= @reportType %>"></iframe>
+      <iframe id="main" src="/cohort/<%= (@reportType.to_i == 2 ? "diagnoses_report" : (@reportType.to_i == 3 ? "baby_matrix_printable": "report")) %>?start_date=<%= @start_date %>+<%= @start_time %>&end_date=<%= @end_date
+            %>+<%= @end_time %>&reportType=<%= @reportType %>"></iframe>
 
-<% end %>
+    <% end %>
 
-    <div style="z-index:11;bottom:0px; height: 82px; width: 100%; left: 0px;
+    <div id = "nav" style="z-index:11;bottom:0px; height: 82px; width: 100%; left: 0px;
          right: -66px; position: absolute; background-color: #333333; padding: 0px;">
       <button onclick="window.location = '/cohort_report';" class="button navButton red"
               id="cancelButton" style="position: absolute; z-index: 100; margin-top: 10px;"><span>Cancel</span>
@@ -43,11 +125,20 @@
       </button>
       <button class="button navButton blue" style="margin-top: 10px;"
               onclick="window.location = '/cohort_report/print_cohort?start_date=<%= @start_date %>+<%= @start_time
-                %>&end_date=<%= @end_date %>+<%= @end_time %>&reportType=<%= @reportType %>'" style="float: right; ">
+            %>&end_date=<%= @end_date %>+<%= @end_time %>&reportType=<%= @reportType %>'" style="float: right; ">
         <span>
           Print
         </span>
       </button>
+      <%if @reportType.to_i == 3%>
+        <button class="button navButton blue" style="margin-top: 10px;"
+                onclick="exportToCsv();">
+          <span>
+            Export To Csv
+          </span>
+        </button>
+      <%end%>
+
     </div>
   </body>
 </html>

@@ -1,0 +1,240 @@
+<html>
+  <title>Baby Matrix</title>
+
+  <style>
+    #tble0 {
+      height:29%;
+      width:100%;
+      border-style: 1px solid gray;
+      border-width:  1px 1px 1px 0px;
+      border-color: gray;
+      -moz-user-select: none;
+      empty-cells: show;
+      table-layout: fixed;
+    }
+
+    #tble {
+      height:69%;
+      width:100%;
+      border-style: 1px solid gray;
+      border-width:  1px 1px 1px 0px;
+      border-color: gray;
+      -moz-user-select: none;
+      empty-cells: show;
+      table-layout: fixed;
+    }
+
+    .margin {
+      background: lightgray;
+      vertical-align: center;
+      font-weight: bold;
+      font-size: 1.2em;
+      text-align: center;
+      min-width: 14%;
+      border-style: solid;
+      border-color: gray;
+      border-width: 0px 1px 1px 1px;
+    }
+
+    .top-margin {
+      background: lightgray;
+      font-weight: bold;
+      vertical-align: top;
+      text-align: center;
+      font-size: 1.2em;
+    }
+
+    .data {
+      border-style: solid;
+      border-color: gray;
+      border-width: 0px 1px 1px 0px;
+      max-height: 60px;
+    }
+
+    .merged-row {
+      border-style: solid;
+      border-color: gray;
+      border-width: 1px 0px 1px 0px;
+      max-height: 60px;
+    }
+
+    .unmerged-row {
+      border-style: solid;
+      border-color: gray;
+      border-width: 1px 1px 0px 0px;
+      max-height: 60px;
+    }
+
+    .data-row {
+      border: 1px;
+      min-height: 12%;
+    }
+    table td{
+      text-align: center;
+      vertical-align: middle;
+    }
+    #weight1{
+      border-style: solid;
+      border-color: gray;
+      border-width: 1px 1px 0px 1px;
+      max-height: 60px;
+      vertical-align: bottom;
+      padding-bottom: 20	px;
+    }
+    #weight2{
+      border-style: solid;
+      border-color: gray;
+      border-width: 0px 1px 1px 1px;
+      max-height: 60px;
+      vertical-align: top;
+    }
+
+    #title{
+      text-align: center;
+      vertical-align: middle;
+      font-weight: bold;
+      width: 100%;
+      height: 95%;
+      font-size: 1.1em;
+    }
+  </style>
+  <body >
+    <div id = "title"><span style ="font-size: 1.3em;">BABIES MATRIX</span> <br><span>(Adapted to Capture Data Quality)</span><div>
+        <table id ="tble0" cellspacing="0">
+          <tr class="top-margin">
+            <td id ="weight1">Birthweight</td>
+            <td height ="17%" class = "merged-row" style="text-align: right; border-left: 1px !important;">&nbsp&nbspTime&nbsp&nbspPeriod</td>
+            <td class = "merged-row"> / Age&nbsp&nbsp At </td>
+            <td class = "merged-row" style="text-align: left;border-style: solid;border-color: gray;border-width: 1px 1px 1px 0px;">Death</td>
+            <td class = "unmerged-row" >&nbsp;</td>
+            <td class = "unmerged-row">&nbsp;</td>
+            <td class = "unmerged-row">&nbsp;</td>
+          </tr>
+
+          <tr class="top-margin">
+            <td id = "weight2">Group<br>(Grams) </td>
+            <td class = "data">Macerated<br>=During<br>Pregnancy</td>
+            <td class = "data">Fresh<br>=During<br>Delivery</td>
+            <td class = "data">Pre-<br>Discharge</td>
+            <td class = "data" style ="vertical-align: top;">Alive at<br>Discharge</td>
+            <td class = "data" style ="vertical-align: top;">Missing<br>Outcomes</td>
+            <td class = "data" style ="vertical-align: top;">Total</td>
+          </tr>
+        </table>
+
+        <table id ="tble" cellspacing="0">
+          <tr class ="data-row">
+            <td id ="1" class = "margin" style="vertical-align:top;"><br><span><=1499</span></td>
+            <td id = "lessorequal1499_macerated" style="background: rgb(140, 180, 255);"  class = "data"></td>
+            <td id = "lessorequal1499_fresh" style="background: rgb(140, 180, 255);"  class = "data"></td>
+            <td id = "lessorequal1499_predischarge" style="background: rgb(140, 180, 255);"  class = "data"></td>
+            <td id = "lessorequal1499_aliveatdischarge" class = "data"></td>
+            <td id = "lessorequal1499_missingoutcomes" class = "data"></td>
+            <td id = "lessorequal1499_total" class = "data"></td>
+          </tr>
+
+          <tr class ="data-row">
+            <td id="2" class = "margin" style="vertical-align:top;"><br>1500-2499</td>
+            <td id = "1500-2499_macerated" style="background: #FF6600;" class = "data"></td>
+            <td id = "1500-2499_fresh" style="background: #FF0000;" class = "data"></td>
+            <td id = "1500-2499_predischarge" style="background:#66CC66;" class = "data"></td>
+            <td id = "1500-2499_aliveatdischarge" class = "data"></td>
+            <td id = "1500-2499_missingoutcomes" class = "data"></td>
+            <td id = "1500-2499_total" class = "data"></td>
+          </tr>
+
+          <tr class ="data-row">
+            <td id="3" class = "margin" style="vertical-align:top;"><br>>=2500</td>
+            <td id = "greaterorequal2500_macerated" style="background: #FF6600;" class = "data"></div></td>
+            <td id = "greaterorequal2500_fresh" style="background:#FF0000;" class = "data"></td>
+            <td id = "greaterorequal2500_predischarge" style="background:#66CC66;" class = "data"></td>
+            <td id = "greaterorequal2500_aliveatdischarge" class = "data"></td>
+            <td id = "greaterorequal2500_missingoutcomes" class = "data"></td>
+            <td id = "greaterorequal2500_total" class = "data"></td>
+          </tr>
+
+          <tr class ="data-row">
+            <td id="4" class = "margin">Missing<br>Weights</td>
+            <td id = "missingweights_macerated" class = "data"></td>
+            <td id = "missingweights_fresh" class = "data"></td>
+            <td id = "missingweights_predischarge" class = "data"></td>
+            <td id = "missingweights_aliveatdischarge" class = "data"></td>
+            <td id = "missingweights_missingoutcomes" class = "data"></td>
+            <td id = "missingweights_total" class = "data"></td>
+          </tr>
+
+          <tr class ="data-row">
+            <td id="5" style ="vertical-align:top;" class = "margin"><br>Total</td>
+            <td id = "total_macerated" class = "data"></td>
+            <td id = "total_fresh" class = "data"></td>
+            <td id = "total_predischarge" class = "data"></td>
+            <td id = "total_aliveatdischarge" class = "data"></td>
+            <td id = "total_missingoutcomes" class = "data"></td>
+            <td id = "total_total" class = "data"></td>
+          </tr>
+
+        </table>
+
+        <script>
+
+         
+          ajaxifyFields();
+          assignColumnFieldsNames();
+          
+          function assignColumnFieldsNames(){
+            __$("1").setAttribute("csvread", "<=1499");
+            __$("2").setAttribute("csvread", "1500-2499");
+            __$("3").setAttribute("csvread", ">=2500");
+            __$("4").setAttribute("csvread", "Missing Weights");
+            __$("5").setAttribute("csvread", "Total");
+          }
+          
+          function ajaxifyFields(){
+            cells = document.getElementsByClassName("data");
+            for (i = 0; i < cells.length; i ++){
+              if (typeof(cells[i].id) != "undefined" && cells[i].id){
+                url = "/cohort/matrix_q?field=" + cells[i].id + "&start_date=<%=params[:start_date]%>&end_date=<%=params[:end_date]%>";
+                ajaxRequest(cells[i].id, url);
+              }
+            }
+          }
+			
+          function __$(id){
+            return document.getElementById(id)
+          }
+
+          function ajaxRequest(id, aUrl){
+				
+            if (__$(id) && __$(id) != "undefined"){
+              var httpRequest = new XMLHttpRequest();
+              httpRequest.onreadystatechange = function() {
+
+                if (httpRequest.readyState == 4 && httpRequest.status == 200) {
+                  var result = httpRequest.responseText;
+                  var babies = JSON.parse(result);
+                  //alert( id + " : " + babies)
+                  if(babies.length > 0){
+													
+                    __$(id).innerHTML = "<span style = 'cursor:pointer;' onclick = 'redirect(\"" + babies +"\")'>" + babies.length + "</span>"
+
+                  }else{
+                    __$(id).innerHTML = babies.length
+                  }
+                  __$(id).setAttribute("csvread", babies.length)
+                }
+              }
+              try {
+                httpRequest.open('GET', aUrl, true);
+                httpRequest.send(null);
+              } catch(e){}
+            }
+          }
+			
+          function redirect(array){
+            window.parent.location = "/cohort/matrix_decompose?patients=" + array;
+          }
+          
+        </script>
+
+        </body>
+        </html>

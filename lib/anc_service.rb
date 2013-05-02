@@ -168,8 +168,8 @@ module ANCService
     
       @obstetrics = {}
       search_set = ["YEAR OF BIRTH", "PLACE OF BIRTH", "BIRTHPLACE", "PREGNANCY", "GESTATION", "LABOUR DURATION",
-      "METHOD OF DELIVERY", "CONDITION AT BIRTH", "BIRTH WEIGHT", "ALIVE",
-      "AGE AT DEATH", "UNITS OF AGE OF CHILD", "PROCEDURE DONE"]
+        "METHOD OF DELIVERY", "CONDITION AT BIRTH", "BIRTH WEIGHT", "ALIVE",
+        "AGE AT DEATH", "UNITS OF AGE OF CHILD", "PROCEDURE DONE"]
       current_level = 0
     
       Encounter.find(:all, :conditions => ["encounter_type = ? AND patient_id = ?", 
@@ -1277,7 +1277,7 @@ module ANCService
     end
 
     def current_district
-      "#{self.person.addresses.last.address2}" rescue nil
+      "#{self.person.addresses.last.state_province}" rescue nil
     end
 
     def current_address
@@ -1285,7 +1285,7 @@ module ANCService
     end
 
     def home_district
-      "#{self.person.addresses.last.subregion}" rescue nil
+      "#{self.person.addresses.last.address2}" rescue nil
     end
 
     def home_ta
@@ -1591,8 +1591,8 @@ module ANCService
         "addresses" => {
           "address1" => (self.current_address1 rescue nil),
           "city_village" => (self.current_address2 rescue nil),
-          "address2" => (self.current_district rescue nil),
-          "subregion" => (self.home_district rescue nil),
+          "state_province" => (self.current_district rescue nil),
+          "address2" => (self.home_district rescue nil),
           "county_district" => (self.home_ta rescue nil),
           "neighborhood_cell" => (self.home_village rescue nil)
         },
@@ -1617,12 +1617,12 @@ module ANCService
             "race" => (mother.get_full_attribute("Race").value rescue nil)
           },
           "addresses" => {
-            "address1" => (mother.current_address1 rescue nil),
-            "city_village" => (mother.current_address2 rescue nil),
-            "address2" => (mother.current_district rescue nil),
-            "subregion" => (mother.home_district rescue nil),
-            "county_district" => (mother.home_ta rescue nil),
-            "neighborhood_cell" => (mother.home_village rescue nil)
+            "address1" => (self.current_address1 rescue nil),
+            "city_village" => (self.current_address2 rescue nil),
+            "state_province" => (self.current_district rescue nil),
+            "address2" => (self.home_district rescue nil),
+            "county_district" => (self.home_ta rescue nil),
+            "neighborhood_cell" => (self.home_village rescue nil)
           }
         },
         "father" => {
@@ -1646,12 +1646,12 @@ module ANCService
             "race" => (father.get_full_attribute("Race").value rescue nil)
           },
           "addresses" => {
-            "address1" => (father.current_address1 rescue nil),
-            "city_village" => (father.current_address2 rescue nil),
-            "address2" => (father.current_district rescue nil),
-            "subregion" => (father.home_district rescue nil),
-            "county_district" => (father.home_ta rescue nil),
-            "neighborhood_cell" => (father.home_village rescue nil)
+            "address1" => (self.current_address1 rescue nil),
+            "city_village" => (self.current_address2 rescue nil),
+            "state_province" => (self.current_district rescue nil),
+            "address2" => (self.home_district rescue nil),
+            "county_district" => (self.home_ta rescue nil),
+            "neighborhood_cell" => (self.home_village rescue nil)
           }
         },
         "facility" => {
@@ -1709,19 +1709,19 @@ module ANCService
     }
 
     server = CoreService.get_global_property_value("remote_servers.parent")
-       begin
+    begin
 			output = RestClient.post("http://#{server}/people/create_remote", known_demographics)
 
-      rescue Timeout::Error
-        return 'timeout'
-      rescue
-        return 'creation failed'
-      end
+    rescue Timeout::Error
+      return 'timeout'
+    rescue
+      return 'creation failed'
+    end
 
-      output if output and output.match(/person/)
+    output if output and output.match(/person/)
       
 
-   	 output ? JSON.parse(output) : nil
+    output ? JSON.parse(output) : nil
   end
 
   def self.person_search(params)
@@ -1956,11 +1956,11 @@ module ANCService
 
       person.birthdate_estimated = 1 if params["birthdate_estimated"] == 'true'
       person.save
-    end
+    end rescue nil
 
-    person.update_attributes(person_params) if !person_params.empty?
-    person.names.first.update_attributes(names_params) if names_params
-    person.addresses.first.update_attributes(address_params) if address_params
+    person.update_attributes(person_params) rescue nil if !person_params.empty? 
+    person.names.first.update_attributes(names_params) rescue nil if names_params
+    person.addresses.first.update_attributes(address_params) rescue nil if address_params
 
     #update or add new person attribute
     person_attribute_params.each{|attribute_type_name, attribute|
@@ -2058,13 +2058,13 @@ module ANCService
   end
 
   def self.create_patient_from_dde(params)
-
+		old_identifier = params["identifier"] rescue nil
 	  address_params = params["person"]["addresses"] rescue []
 		names_params = params["person"]["names"] rescue []
 		patient_params = params["person"]["patient"] rescue []
     birthday_params = params["person"] rescue []
 
-      params_to_process = params.reject{|key,value|
+    params_to_process = params.reject{|key,value|
       key.match(/identifiers|addresses|patient|names|relation|cell_phone_number|home_phone_number|office_phone_number|agrees_to_be_visited_for_TB_therapy|agrees_phone_text_for_TB_therapy/)
     }
 		birthday_params = params_to_process["person"].reject{|key,value| key.match(/gender/) }
@@ -2105,24 +2105,25 @@ module ANCService
       birthdate_estimated = 0
 		end
 
-    passed_params = {"person"=>
-        {"data" =>
-          {"addresses"=>
-            {"state_province"=> address_params["address2"],
-            "address2"=> address_params["address1"],
+    passed_params = {"person"=> 
+        {"data" => 
+          {"addresses"=> 
+            {"state_province"=> address_params["state_province"],
+            "address2"=> address_params["address2"],
+            "address1"=> address_params["address1"],
+            "neighborhood_cell"=> address_params["neighborhood_cell"],
             "city_village"=> address_params["city_village"],
             "county_district"=> address_params["county_district"]
-          },
-          "attributes"=>
-            {"occupation"=> params["person"]["occupation"],
+          }, 
+          "attributes"=> 
+            {"occupation"=> params["person"]["occupation"], 
             "cell_phone_number" => params["person"]["cell_phone_number"] },
-          "patient"=>
-            {"identifiers"=>
-              {"diabetes_number"=>""}},
-          "gender"=> person_params["gender"],
-          "birthdate"=> birthdate,
-          "birthdate_estimated"=> birthdate_estimated ,
-          "names"=>{"family_name"=> names_params["family_name"],
+          "patient"=> 
+            {"identifiers"=> {"old_identification_number"=> old_identifier}},
+          "gender"=> person_params["gender"], 
+          "birthdate"=> birthdate, 
+          "birthdate_estimated"=> birthdate_estimated , 
+          "names"=>{"family_name"=> names_params["family_name"], 
             "given_name"=> names_params["given_name"]
           }}}}
 
@@ -2143,7 +2144,7 @@ module ANCService
       national_id = params["person"]["patient"]["identifiers"]["National_id"]
     end
 
-	  person = self.create_from_form(params[:person])
+    person = self.create_from_form(params[:person])
     identifier_type = PatientIdentifierType.find_by_name("National id") || PatientIdentifierType.find_by_name("Unknown id")
     person.patient.patient_identifiers.create("identifier" => national_id,
       "identifier_type" => identifier_type.patient_identifier_type_id) unless national_id.blank?
@@ -2156,15 +2157,15 @@ module ANCService
       params = params['person']
     end
 
-	  address_params = params["addresses"] rescue []
-		names_params = params["names"] rescue []
-		patient_params = params["patient"] rescue []
+    address_params = params["addresses"] rescue []
+    names_params = params["names"] rescue []
+    patient_params = params["patient"] rescue []
     birthday_params = params.reject{|key,value| !key.match(/birth_|age_estimate/) } rescue []
-		params_to_process = params.reject{|key,value|
+    params_to_process = params.reject{|key,value|
       key.match(/identifiers|addresses|patient|names|relation|cell_phone_number|home_phone_number|office_phone_number|agrees_to_be_visited_for_TB_therapy|agrees_phone_text_for_TB_therapy/)
     }
-		birthday_params = params_to_process.reject{|key,value| key.match(/gender/) }
-		person_params = params_to_process.reject{|key,value| key.match(/birth_|age_estimate|occupation/) }
+    birthday_params = params_to_process.reject{|key,value| key.match(/gender/) }
+    person_params = params_to_process.reject{|key,value| key.match(/birth_|age_estimate|occupation/) }
 
     # person_params << birthday_params
     
@@ -2174,18 +2175,18 @@ module ANCService
 
     # raise person_params.to_yaml
 
-		if person_params["gender"].to_s == "Female"
+    if person_params["gender"].to_s == "Female"
       person_params["gender"] = 'F'
-		elsif person_params["gender"].to_s == "Male"
+    elsif person_params["gender"].to_s == "Male"
       person_params["gender"] = 'M'
-		end
+    end
 
-		unless birthday_params.empty?
-		  if birthday_params["birth_year"] == "Unknown"
-			  birthdate = Date.new(Date.today.year - birthday_params["age_estimate"].to_i, 7, 1)
+    unless birthday_params.empty?
+      if birthday_params["birth_year"] == "Unknown"
+        birthdate = Date.new(Date.today.year - birthday_params["age_estimate"].to_i, 7, 1)
         birthdate_estimated = 1
-		  else
-			  year = birthday_params["birth_year"]
+      else
+        year = birthday_params["birth_year"]
         month = birthday_params["birth_month"]
         day = birthday_params["birth_day"]
 
@@ -2203,16 +2204,18 @@ module ANCService
           birthdate = Date.new(year.to_i,month_i,day.to_i)
           birthdate_estimated = 0
         end
-		  end
+      end
     else
       birthdate_estimated = 0
-		end
+    end
 
     passed_params = {"person"=>
         {"data" =>
           {"addresses"=>
-            {"state_province"=> address_params["address2"],
-            "address2"=> address_params["address1"],
+            {"state_province"=> address_params["state_province"],
+            "address2"=> address_params["address2"],
+            "address1"=> address_params["address1"],
+            "neighborhood_cell"=> address_params["neighborhood_cell"],
             "city_village"=> address_params["city_village"],
             "county_district"=> address_params["county_district"]
           },
@@ -2250,7 +2253,7 @@ module ANCService
     
     person_params["patient"] = {"identifiers" => national_id}
 
-	  person = self.create_from_form(person_params)
+    person = self.create_from_form(person_params)
 
     # raise person.to_yaml
 

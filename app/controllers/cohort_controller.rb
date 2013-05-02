@@ -198,7 +198,7 @@ class CohortController < ActionController::Base # < ApplicationController
 
   def print_cohort
     # raise request.env["HTTP_HOST"].to_yaml
-    
+   
     @selSelect = params[:selSelect] rescue ""
     @day =  params[:day] rescue ""
     @selYear = params[:selYear] rescue ""
@@ -212,20 +212,23 @@ class CohortController < ActionController::Base # < ApplicationController
 
     if params
       link = ""
+
+
+
       if CoreService.get_global_property_value("extended_diagnoses_report").to_s == "true"
-      link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report_extended" : "report") }" + 
-        "?start_date=#{@start_date}+#{@start_time}&end_date=#{@end_date}+#{@end_time}&reportType=#{@reportType}"
+        link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report_extended" : (@reportType.to_i == 3 ? "baby_matrix_printable" : "report")) }" +
+          "?start_date=#{@start_date}+#{@start_time}&end_date=#{@end_date}+#{@end_time}&reportType=#{@reportType}"
       else
-	link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report" : "report") }" + 
-        "?start_date=#{@start_date}+#{@start_time}&end_date=#{@end_date}+#{@end_time}&reportType=#{@reportType}"
+        link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report" :  (@reportType.to_i == 3 ? "baby_matrix_printable" : "report"))}" +
+          "?start_date=#{@start_date}+#{@start_time}&end_date=#{@end_date}+#{@end_time}&reportType=#{@reportType}"
       end
       #t1 = Thread.new{
-        # Kernel.system "htmldoc --webpage -f /tmp/output-" + session[:user_id].to_s + ".pdf \"http://" +
-        #  request.env["HTTP_HOST"] + link + "\"\n"
+      # Kernel.system "htmldoc --webpage -f /tmp/output-" + session[:user_id].to_s + ".pdf \"http://" +
+      #  request.env["HTTP_HOST"] + link + "\"\n"
 
-        Kernel.system "wkhtmltopdf -s A4 \"http://" +
-          request.env["HTTP_HOST"] + "#{link}\" \"/tmp/output-" + session[:user_id].to_s + ".pdf\" \n"
-     # }
+      Kernel.system "wkhtmltopdf -s A4 \"http://" +
+        request.env["HTTP_HOST"] + "#{link}\" \"/tmp/output-" + session[:user_id].to_s + ".pdf\" \n"
+      # }
 
       t2 = Thread.new{
         sleep(5)
@@ -302,9 +305,9 @@ class CohortController < ActionController::Base # < ApplicationController
 	
     if params[:parent]
 
-	procedure(params[:start_date], params[:end_date], params[:group], params[:field], params[:parent])
+      procedure(params[:start_date], params[:end_date], params[:group], params[:field], params[:parent])
     elsif params[:like]
-	diagnosis_regex(params[:start_date], params[:end_date], params[:group], params[:field])
+      diagnosis_regex(params[:start_date], params[:end_date], params[:group], params[:field])
     elsif params[:field] && !params[:ext] && !params[:pro] && !params[:proc]
       case params[:field]
       when "admissions"
@@ -339,6 +342,8 @@ class CohortController < ActionController::Base # < ApplicationController
         referral_in(params[:start_date], params[:end_date], params[:group], params[:field])
       when "discharges"
         discharges(params[:start_date], params[:end_date], params[:group], params[:field])
+      when "ante_natal_ward"
+        ante_natal_ward(params[:start_date], params[:end_date], params[:group], params[:field])
       when "discharges_low_risk"
         discharges_low_risk(params[:start_date], params[:end_date], params[:group], params[:field])
       when "discharges_high_risk"
@@ -405,13 +410,12 @@ class CohortController < ActionController::Base # < ApplicationController
         ruptured_uterus(params[:start_date], params[:end_date], params[:group], params[:field])
       end    
     elsif !params[:proc]
-	diagnosis(params[:start_date], params[:end_date], params[:group], params[:field])
+      diagnosis(params[:start_date], params[:end_date], params[:group], params[:field])
     end           
   end
   
   def admissions(startdate = Time.now, enddate = Time.now, group = 1, field = "")
-    patients = PatientReport.find(:all, :conditions => ["COALESCE(admission_ward, '') != '' " + 
-          "AND admission_date >= ? AND admission_date <= ?", startdate, enddate]).collect{|p| p.patient_id} #.uniq
+    patients = PatientReport.find(:all, :conditions => ["admission_date >= ? AND admission_date <= ?", startdate, enddate]).collect{|p| p.patient_id} #.uniq
     
     render :text => patients.to_json
   end
@@ -531,6 +535,13 @@ class CohortController < ActionController::Base # < ApplicationController
     patients = PatientReport.find(:all, :conditions => ["COALESCE(outcome, '') = 'Discharged' " + 
           "AND outcome_date >= ? AND outcome_date <= ?", startdate, enddate]).collect{|p| p.patient_id} #.uniq
     
+    render :text => patients.to_json
+  end
+
+  def ante_natal_ward(startdate = Time.now, enddate = Time.now, group = 1, field = "")
+    patients = PatientReport.find(:all, :conditions => ["COALESCE(discharge_ward, '') = 'Ante-Natal Ward' " +
+          "AND discharged >= ? AND discharged <= ?", startdate, enddate]).collect{|p| p.patient_id} #.uniq
+
     render :text => patients.to_json
   end
 
@@ -769,47 +780,1258 @@ class CohortController < ActionController::Base # < ApplicationController
 
   def diagnosis(startdate = Time.now, enddate = Time.now, group = 1, field = "")
 	
-	check_field = field.humanize.gsub("- ", "-").gsub("_", " ").gsub("!", "/")
-	if check_field.downcase == "pprom"
-		check_field = " Preterm Premature Rupture Of Membranes (Pprom)"
-	end
+    check_field = field.humanize.gsub("- ", "-").gsub("_", " ").gsub("!", "/")
+    if check_field.downcase == "pprom"
+      check_field = " Preterm Premature Rupture Of Membranes (Pprom)"
+    end
     patients = PatientReport.find(:all, :conditions => ["diagnosis = ? AND diagnosis_date >= ? AND diagnosis_date <= ?", 
         check_field, startdate, enddate]).collect{|p| p.patient_id}.uniq
-
+    if check_field == "anaemia"
+      patients_like = PatientReport.find(:all, :conditions => ["diagnosis = ? AND diagnosis_date >= ? AND diagnosis_date <= ?",
+          check_field, startdate, enddate]).collect{|p| p.patient_id}.uniq
+    end
     render :text => patients.to_json
   end
 
   def diagnosis_regex(startdate = Time.now, enddate = Time.now, group = 1, field = "")
 
-	check_field = field.humanize.gsub("- ", "-").gsub("_", " ").gsub("!", "/")
- 	if field == "invasive_cancer_of_cervix"
-		patients = PatientReport.find(:all, :conditions => ["diagnosis IN (?) AND diagnosis_date >= ? AND diagnosis_date <= ?", 
-		["Cervical stage 1", "Cervical stage 2", "Cervical stage 3", "Cervical stage 4", "Invasive cancer of cervix", "Cancer of Cervix"], startdate, enddate]).collect{|p| p.patient_id}.uniq
-	else
-	 	patients = PatientReport.find(:all, :conditions => ["diagnosis regexp ? AND diagnosis_date >= ? AND diagnosis_date <= ?", 
-		check_field, startdate, enddate]).collect{|p| p.patient_id}.uniq
-	end
-	render :text => patients.to_json
-end
+    check_field = field.humanize.gsub("- ", "-").gsub("_", " ").gsub("!", "/")
+    if field == "invasive_cancer_of_cervix"
+      patients = PatientReport.find(:all, :conditions => ["diagnosis IN (?) AND diagnosis_date >= ? AND diagnosis_date <= ?",
+          ["Cervical stage 1", "Cervical stage 2", "Cervical stage 3", "Cervical stage 4", "Invasive cancer of cervix", "Cancer of Cervix"], 			startdate, enddate]).collect{|p| p.patient_id}.uniq
+    else
+      patients = PatientReport.find(:all, :conditions => ["diagnosis regexp ? AND diagnosis_date >= ? AND diagnosis_date <= ?",
+          check_field, startdate, enddate]).collect{|p| p.patient_id}.uniq
 
-  def procedure(startdate = Time.now, enddate = Time.now, group = 1, field = "", proc = "")
-    check_field = field.humanize.gsub("- ", "-").gsub("!", "/") 
-    check_proc = proc.humanize.gsub("- ", "-").gsub("!", "/")
-    if proc.downcase == "evacuation"
-	check_proc = "Evacuation/Manual Vacuum Aspiration"
+      if check_field == "Anaemia"
+        patients_like = PatientReport.find(:all, :conditions => ["diagnosis regexp ? AND diagnosis_date >= ? AND diagnosis_date <= ?",
+            "anemia", startdate, enddate]).collect{|p| p.patient_id}.uniq
+        patients = patients.concat(patients_like).uniq
+      end
     end
 	
-    patients = PatientReport.find(:all, :conditions => ["diagnosis = ? AND procedure_done = ? AND diagnosis_date >= ? AND diagnosis_date <= ?", 
-        check_field, check_proc, startdate, enddate]).collect{|p| p.patient_id}.uniq
+    render :text => patients.to_json
+  end
+
+  def procedure(startdate = Time.now, enddate = Time.now, group = 1, field = "", proc = "")
+    check_field = field.humanize.gsub("- ", "-").gsub("!", "/")
+
+    if check_field.downcase == "intrauterine device"
+      check_field = "Intrauterine Device (IUD)"
+    end
+
+    check_proc = proc.humanize.gsub("- ", "-").gsub("!", "/")
+    if proc.downcase == "evacuation"
+      check_proc = "Evacuation/Manual Vacuum Aspiration"
+    end
+	
+    patients = PatientReport.find(:all, :conditions => ["diagnosis = ? AND procedure_done = ? AND diagnosis_date >= ? AND diagnosis_date <= ?",   check_field, check_proc, startdate, enddate]).collect{|p| p.patient_id}.uniq
 
     render :text => patients.to_json
   end
 
   def decompose
-    @patients = Patient.find(:all, :conditions => ["patient_id IN (?)", params[:patients].split(",")]).uniq
-    
-    # raise @patients.to_yaml
-    render :layout => false
+		@patients = Patient.find(:all, :conditions => ["patient_id IN (?)", params[:patients].split(",")]).uniq
+		render :layout => false
   end
+
+	
+  def matrix_decompose
+		@patients = Patient.find(:all, :conditions => ["patient_id IN (?)", params[:patients].split(",")]).uniq
+		render :layout => false
+  end
+
+	def baby_matrix	
+		render :layout => false
+	end
+	
+	def baby_matrix_printable			
+		render :layout => false
+	end
+	
+	def matrix_q
+    case params[:field]
+    when "lessorequal1499_macerated"
+      lessorequal1499(params[:start_date].to_date, params[:end_date].to_date, 'Macerated Still birth')
+    when "lessorequal1499_fresh"
+      lessorequal1499(params[:start_date].to_date, params[:end_date].to_date, 'Fresh Still birth')
+    when "lessorequal1499_predischarge"
+      lessorequal1499_predischarge(params[:start_date].to_date, params[:end_date].to_date)
+    when "lessorequal1499_aliveatdischarge"
+      lessorequal1499_aliveatdischarge(params[:start_date].to_date, params[:end_date].to_date)
+    when "lessorequal1499_missingoutcomes"
+      lessorequal1499_missingoutcomes(params[:start_date].to_date, params[:end_date].to_date)
+    when "lessorequal1499_total"
+      lessorequal1499_total(params[:start_date].to_date, params[:end_date].to_date)
+    when "1500-2499_macerated"
+      from1500to2499(params[:start_date].to_date, params[:end_date].to_date, 'Macerated Still birth')
+    when "1500-2499_fresh"
+      from1500to2499(params[:start_date].to_date, params[:end_date].to_date, 'Fresh Still birth')
+    when "1500-2499_predischarge"
+      from1500to2499_predischarge(params[:start_date].to_date, params[:end_date].to_date)
+    when "1500-2499_aliveatdischarge"
+      from1500to2499_aliveatdischarge(params[:start_date].to_date, params[:end_date].to_date)
+    when "1500-2499_missingoutcomes"
+      from1500to2499_missingoutcomes(params[:start_date].to_date, params[:end_date].to_date)
+    when "1500-2499_total"
+      from1500to2499_total(params[:start_date].to_date, params[:end_date].to_date)
+    when "greaterorequal2500_macerated"
+      greaterorequal2500(params[:start_date].to_date, params[:end_date].to_date, 'Macerated Still birth')
+    when "greaterorequal2500_fresh"
+      greaterorequal2500(params[:start_date].to_date, params[:end_date].to_date, 'Fresh Still birth')
+    when "greaterorequal2500_predischarge"
+      greaterorequal2500_predischarge(params[:start_date].to_date, params[:end_date].to_date)
+    when "greaterorequal2500_aliveatdischarge"
+      greaterorequal2500_aliveatdischarge(params[:start_date].to_date, params[:end_date].to_date)
+    when "greaterorequal2500_missingoutcomes"
+      greaterorequal2500_missingoutcomes(params[:start_date].to_date, params[:end_date].to_date)
+    when "greaterorequal2500_total"
+      greaterorequal2500_total(params[:start_date].to_date, params[:end_date].to_date)
+    when "missingweights_macerated"
+      missingweights(params[:start_date].to_date, params[:end_date].to_date, 'Macerated Still birth')
+    when "missingweights_fresh"
+      missingweights(params[:start_date].to_date, params[:end_date].to_date, 'Fresh Still birth')
+    when "missingweights_predischarge"
+      missingweights_predischarge(params[:start_date].to_date, params[:end_date].to_date)
+    when "missingweights_aliveatdischarge"
+      missingweights_aliveatdischarge(params[:start_date].to_date, params[:end_date].to_date)
+    when "missingweights_missingoutcomes"
+      missingweights_missingoutcomes(params[:start_date].to_date, params[:end_date].to_date)
+    when "missingweights_total"
+      missingweights_total(params[:start_date].to_date, params[:end_date].to_date)
+    when "total_macerated"
+      total(params[:start_date].to_date, params[:end_date].to_date, 'Macerated Still birth')
+    when "total_fresh"
+      total(params[:start_date].to_date, params[:end_date].to_date, 'Fresh Still birth')
+    when "total_predischarge"
+      total_predischarge(params[:start_date].to_date, params[:end_date].to_date)
+    when "total_aliveatdischarge"
+      total_aliveatdischarge(params[:start_date].to_date, params[:end_date].to_date)
+    when "total_missingoutcomes"
+      total_missingoutcomes(params[:start_date].to_date, params[:end_date].to_date)
+    when "total_total"
+      total_total(params[:start_date].to_date, params[:end_date].to_date)
+    end
+  end
+	
+	def lessorequal1499(startdate = Time.now, enddate = Time.now, field = 'blank')
+    babies = []
+
+    @concepts = ['BABY OUTCOME'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.voided = 0
+				AND o.value_coded = (SELECT concept_id FROM concept_name WHERE name = '#{field}' LIMIT 1)").each do |data| 
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight and (weight <= 1499)
+    end
+
+    babies.delete_if{|baby| baby.blank?}
+    render :text => babies.uniq.to_json
+	end
+
+  def lessorequal1499_neonatal(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Neonatal death'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+
+    @concepts = ['BABY OUTCOME'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}'
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}'
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.voided = 0
+				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Dead'))").each do |data|
+
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight  and (weight <= 1499)
+    end
+
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("BABY OUTCOME").concept_id]).answer_string.blank? rescue false)
+    }
+
+    babies
+	end
+
+	def lessorequal1499_predischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Dead'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+
+    @concepts = ['STATUS OF BABY'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.voided = 0
+				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Dead'))").each do |data|
+
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight  and (weight <= 1499)
+    end
+				
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
+    }
+        
+    neo = lessorequal1499_neonatal(startdate, enddate) rescue []
+    babies = babies.concat(neo)
+        
+    render :text => babies.uniq.to_json
+	end
+
+	def lessorequal1499_aliveatdischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+			
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.concept_id = (SELECT concept_id FROM concept_name WHERE name = 'STATUS OF BABY')
+				AND o.voided = 0
+				AND o.value_coded = (SELECT concept_id FROM concept_name WHERE name = 'Alive' LIMIT 1)").each do |data| 
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight and (weight <= 1499)
+    end
+
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
+    }
+    render :text => babies.uniq.to_json
+	end
+
+  def lessorequal1499_alive_predischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}'
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}'
+				AND o.concept_id = (SELECT concept_id FROM concept_name WHERE name = 'BABY OUTCOME')
+				AND o.voided = 0
+        AND (SELECT COUNT(*) FROM obs WHERE person_id = r.person_b AND voided = 0
+            AND concept_id = (SELECT concept_id FROM concept_name WHERE name = 'STATUS OF BABY' LIMIT 1)) = 0
+				AND o.value_coded IN (SELECT concept_id FROM concept_name WHERE name = 'Alive')").each do |data|
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight and (weight <= 1499)
+    end
+
+    babies.delete_if{|baby| baby.blank? }
+    babies
+	end
   
+  def lessorequal1499_missingoutcomes(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+
+    @concepts = ['BABY OUTCOME'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.voided = 0
+				AND (o.value_coded NOT IN (#{@values_coded})  								
+								OR (SELECT COUNT(*) FROM obs WHERE person_id = r.person_b AND concept_id = (SELECT concept_id FROM concept_name WHERE name = 'BABY OUTCOME')) = 0
+	)").each do |data| 
+				
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight and (weight <= 1499)
+    end
+
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
+    }
+    render :text => babies.uniq.to_json
+  end
+
+  def lessorequal1499_total(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+
+    @concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.voided = 0
+				AND o.concept_id IN (#{@concepts_coded})").each do |data| 
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+      babies << data.person_b if weight and (weight <= 1499)
+    end
+
+    alive_without_discharge = lessorequal1499_alive_predischarge(startdate, enddate) rescue []
+   
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
+    }
+    babies = babies - alive_without_discharge
+    render :text => babies.uniq.to_json
+  end
+
+  def from1500to2499(startdate = Time.now, enddate = Time.now, field = 'blank')
+    babies = []
+
+    @concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.voided = 0
+				AND o.value_coded = (SELECT concept_id FROM concept_name WHERE name = '#{field}' LIMIT 1)").each do |data| 
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight and (weight > 1499) and (weight <= 2499)
+    end
+
+    babies.delete_if{|baby| baby.blank?}
+    render :text => babies.uniq.to_json
+  end
+
+  def from1500to2499_neonatal(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Neonatal death'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+
+    @concepts = ['BABY OUTCOME'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}'
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}'
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.voided = 0
+				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Dead'))").each do |data|
+
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight and (weight > 1499) and (weight <= 2499)
+    end
+
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("BABY OUTCOME").concept_id]).answer_string.blank? rescue false)
+    }
+
+    babies
+  end
+
+  def from1500to2499_predischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Dead'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+
+    @concepts = ['STATUS OF BABY'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.voided = 0
+				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Dead'))").each do |data|
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight and (weight > 1499) and (weight <= 2499)
+    end
+				
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
+    }
+    neo = from1500to2499_neonatal(startdate, enddate)
+    babies = babies.concat(neo)
+    render :text => babies.uniq.to_json
+  end
+
+  def from1500to2499_alive_predischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}'
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}'
+				AND o.concept_id = (SELECT concept_id FROM concept_name WHERE name = 'BABY OUTCOME')
+				AND o.voided = 0
+        AND (SELECT COUNT(*) FROM obs WHERE person_id = r.person_b AND voided = 0
+            AND concept_id = (SELECT concept_id FROM concept_name WHERE name = 'STATUS OF BABY' LIMIT 1)) = 0
+				AND o.value_coded IN (SELECT concept_id FROM concept_name WHERE name = 'Alive')").each do |data|
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight and (weight > 1499) and (weight <= 2499)
+    end
+
+    babies.delete_if{|baby| baby.blank? }
+    babies
+	end
+  
+  def from1500to2499_aliveatdischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+			
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.concept_id = (SELECT concept_id FROM concept_name WHERE name = 'STATUS OF BABY')
+				AND o.voided = 0
+				AND o.value_coded = (SELECT concept_id FROM concept_name WHERE name = 'Alive' LIMIT 1)").each do |data| 
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight and (weight > 1499) and (weight <= 2499)
+    end
+
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
+    }
+    render :text => babies.uniq.to_json
+  end
+
+  def from1500to2499_missingoutcomes(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+
+    @concepts = ['BABY OUTCOME'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.voided = 0
+				AND (o.value_coded NOT IN (#{@values_coded})  								
+								OR (SELECT COUNT(*) FROM obs WHERE person_id = r.person_b AND concept_id = (SELECT concept_id FROM concept_name WHERE name = 'BABY OUTCOME')) = 0
+	)").each do |data| 
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight and (weight > 1499) and (weight <= 2499)
+    end
+
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
+    }
+    render :text => babies.uniq.to_json
+  end
+
+  def from1500to2499_total(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+
+    @concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.voided = 0
+				AND o.concept_id IN (#{@concepts_coded})").each do |data| 
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight and (weight > 1499) and (weight <= 2499)
+    end
+
+    alive_without_discharge = from1500to2499_alive_predischarge(startdate, enddate) rescue []
+    babies = babies - alive_without_discharge
+
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
+    }
+    render :text => babies.uniq.to_json
+  end
+	
+  def greaterorequal2500(startdate = Time.now, enddate = Time.now, field = 'blank')
+    babies = []
+
+    @concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.voided = 0
+				AND o.value_coded = (SELECT concept_id FROM concept_name WHERE name = '#{field}' LIMIT 1)").each do |data| 
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight and (weight > 2499)
+    end
+
+    babies.delete_if{|baby| baby.blank?}
+    render :text => babies.uniq.to_json
+  end
+
+  def greaterorequal2500_neonatal(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Neonatal death'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+
+    @concepts = ['BABY OUTCOME'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}'
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}'
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.voided = 0
+				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Dead'))").each do |data|
+
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight and (weight > 2499)
+    end
+
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("BABY OUTCOME").concept_id]).answer_string.blank? rescue false)
+    }
+
+    babies
+  end
+
+  def greaterorequal2500_predischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Dead'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+
+    @concepts = ['STATUS OF BABY'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.voided = 0
+				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Dead'))").each do |data|
+
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight and (weight > 2499)
+    end
+				
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
+    }
+        
+    neo = greaterorequal2500_neonatal(startdate, enddate)
+    babies = babies.concat(neo)
+    render :text => babies.uniq.to_json
+  end
+
+  def greaterorequal2500_aliveatdischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+			
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.concept_id = (SELECT concept_id FROM concept_name WHERE name = 'STATUS OF BABY')
+				AND o.voided = 0
+				AND o.value_coded = (SELECT concept_id FROM concept_name WHERE name = 'Alive' LIMIT 1)").each do |data| 
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight and (weight > 2499)
+    end
+
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
+    }
+    render :text => babies.uniq.to_json
+  end
+
+  def greaterorequal2500_missingoutcomes(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+
+    @concepts = ['BABY OUTCOME'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.voided = 0
+				AND (o.value_coded NOT IN (#{@values_coded})  								
+								OR (SELECT COUNT(*) FROM obs WHERE person_id = r.person_b AND concept_id = (SELECT concept_id FROM concept_name WHERE name = 'BABY OUTCOME')) = 0
+	)").each do |data|  
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight and (weight > 2499)
+    end
+
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
+    }
+    render :text => babies.uniq.to_json
+  end
+
+  def greaterorequal2500_alive_predischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}'
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}'
+				AND o.concept_id = (SELECT concept_id FROM concept_name WHERE name = 'BABY OUTCOME')
+				AND o.voided = 0
+        AND (SELECT COUNT(*) FROM obs WHERE person_id = r.person_b AND voided = 0
+            AND concept_id = (SELECT concept_id FROM concept_name WHERE name = 'STATUS OF BABY' LIMIT 1)) = 0
+				AND o.value_coded IN (SELECT concept_id FROM concept_name WHERE name = 'Alive')").each do |data|
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+      babies << data.person_b if weight and (weight >= 2500)
+    end
+
+    babies.delete_if{|baby| baby.blank? }
+    babies
+	end
+  
+  def greaterorequal2500_total(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+      
+
+    @concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.voided = 0       
+				AND o.concept_id IN (#{@concepts_coded})").each do |data| 
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight and (weight > 2499)
+    end
+
+    alive_without_discharge = greaterorequal2500_alive_predischarge(startdate, enddate) rescue []
+    babies = babies - alive_without_discharge
+    
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
+    }
+    render :text => babies.uniq.to_json
+  end
+
+  def missingweights(startdate = Time.now, enddate = Time.now, field = 'blank')
+    babies = []
+
+    @concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.voided = 0
+				AND o.value_coded = (SELECT concept_id FROM concept_name WHERE name = '#{field}' LIMIT 1)").each do |data| 
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight.blank?
+    end
+
+    babies.delete_if{|baby| baby.blank?}
+    render :text => babies.uniq.to_json
+  end
+
+  def missingweights_neonatal(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Neonatal death'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+
+    @concepts = ['BABY OUTCOME'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}'
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}'
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.voided = 0
+				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Dead'))").each do |data|
+
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight.blank?
+    end
+
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("BABY OUTCOME").concept_id]).answer_string.blank? rescue false)
+    }
+
+    babies
+  end
+   
+  def missingweights_predischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Dead'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+
+    @concepts = ['STATUS OF BABY'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.voided = 0
+				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Dead'))").each do |data|
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight.blank?
+    end
+				
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
+    }
+    neo = missingweights_neonatal(startdate, enddate) rescue []
+    babies = babies.concat(neo)
+    render :text => babies.uniq.to_json
+  end
+
+  def missingweights_aliveatdischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+			
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.concept_id = (SELECT concept_id FROM concept_name WHERE name = 'STATUS OF BABY')
+				AND o.voided = 0
+				AND o.value_coded = (SELECT concept_id FROM concept_name WHERE name = 'Alive' LIMIT 1)").each do |data| 
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight.blank?
+    end
+
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
+    }
+    render :text => babies.uniq.to_json
+  end
+
+  def missingweights_missingoutcomes(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+
+    @concepts = ['BABY OUTCOME'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.voided = 0
+				AND (o.value_coded NOT IN (#{@values_coded})  								
+								OR (SELECT COUNT(*) FROM obs WHERE person_id = r.person_b AND concept_id = (SELECT concept_id FROM concept_name WHERE name = 'BABY OUTCOME')) = 0
+	)").each do |data| 
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight.blank?
+    end
+
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
+    }
+    render :text => babies.uniq.to_json
+  end
+
+
+  def missingweights_alive_predischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}'
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}'
+				AND o.concept_id = (SELECT concept_id FROM concept_name WHERE name = 'BABY OUTCOME')
+				AND o.voided = 0
+        AND (SELECT COUNT(*) FROM obs WHERE person_id = r.person_b AND voided = 0
+            AND concept_id = (SELECT concept_id FROM concept_name WHERE name = 'STATUS OF BABY' LIMIT 1)) = 0
+				AND o.value_coded IN (SELECT concept_id FROM concept_name WHERE name = 'Alive')").each do |data|
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+      babies << data.person_b if weight.blank?
+    end
+    
+    babies.delete_if{|baby| baby.blank? }
+    babies
+	end
+  
+  def missingweights_total(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+
+    @concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}'
+				AND o.voided = 0 
+				AND o.concept_id IN (#{@concepts_coded})").each do |data| 
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b if weight.blank?
+    end
+
+    alive_without_discharge = missingweights_alive_predischarge(startdate, enddate)
+    babies  = babies - alive_without_discharge
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
+    }
+    render :text => babies.uniq.to_json
+  end
+	
+  def total(startdate = Time.now, enddate = Time.now, field = 'blank')
+    babies = []
+
+    @concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.voided = 0
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.value_coded = (SELECT concept_id FROM concept_name WHERE name = '#{field}' LIMIT 1)").each do |data| 
+
+      babies << data.person_b
+    end
+
+    babies.delete_if{|baby| baby.blank?}
+    render :text => babies.uniq.to_json
+  end
+
+  def total_neonatal(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Neonatal death'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+
+    @concepts = ['BABY OUTCOME'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}'
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}'
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.voided = 0
+				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Dead'))").each do |data|
+
+
+      weight = Observation.find(:last,
+        :conditions => ["person_id = ? AND concept_id = ?",
+          data.person_b, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i  rescue nil
+
+      babies << data.person_b
+    end
+
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("BABY OUTCOME").concept_id]).answer_string.blank? rescue false)
+    }
+
+    babies
+  end
+
+  def total_predischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Dead'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+
+    @concepts = ['STATUS OF BABY'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.voided = 0
+				AND (o.value_coded IN (#{@values_coded}) OR o.value_text IN ('Dead'))").each do |data|
+
+
+      babies << data.person_b
+    end
+				
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
+    }
+    neo = total_neonatal(startdate, enddate) rescue []
+    babies = babies.concat(neo)
+    render :text => babies.uniq.to_json
+  end
+
+  def total_aliveatdischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+			
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.concept_id = (SELECT concept_id FROM concept_name WHERE name = 'STATUS OF BABY')
+				AND o.voided = 0
+				AND o.value_coded = (SELECT concept_id FROM concept_name WHERE name = 'Alive' LIMIT 1)").each do |data| 
+      babies << data.person_b
+    end
+
+    babies.delete_if{|baby|
+      baby.blank? or (Observation.find(:last, :conditions => ["person_id = ? AND concept_id = ?",
+            baby, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string.blank? rescue false)
+    }
+    render :text => babies.uniq.to_json
+  end
+
+  def total_missingoutcomes(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+
+    @concepts = ['BABY OUTCOME'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.concept_id IN (#{@concepts_coded})
+				AND o.voided = 0
+				AND (o.value_coded NOT IN (#{@values_coded})  
+								OR (SELECT COUNT(*) FROM obs WHERE person_id = r.person_b AND concept_id = (SELECT concept_id FROM concept_name WHERE name = 'BABY OUTCOME')) = 0
+	)").each do |data| 
+
+      babies << data.person_b
+ 					
+    end
+
+    babies.delete_if{|baby|
+      baby.blank?
+    }
+    render :text => babies.uniq.to_json
+  end
+
+  def total_alive_predischarge(startdate = Time.now, enddate = Time.now)
+    babies = []
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r JOIN obs o ON o.person_id = r.person_b
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}'
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}'
+				AND o.concept_id = (SELECT concept_id FROM concept_name WHERE name = 'BABY OUTCOME')
+				AND o.voided = 0
+        AND (SELECT COUNT(*) FROM obs WHERE person_id = r.person_b AND voided = 0
+            AND concept_id = (SELECT concept_id FROM concept_name WHERE name = 'STATUS OF BABY' LIMIT 1)) = 0
+				AND o.value_coded IN (SELECT concept_id FROM concept_name WHERE name = 'Alive')").each do |data|
+
+      babies << data.person_b
+    end
+
+    babies.delete_if{|baby| baby.blank? }
+    babies
+	end
+ 
+  def total_total(startdate = Time.now, enddate = Time.now)
+    babies = []
+
+    @values = ['Neonatal death', 'Fresh still birth', 'Macerated still birth', 'Intrauterine death', 'Alive'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @values_coded = "'" + @values.join("','") + "'"
+
+    @concepts = ['BABY OUTCOME', 'STATUS OF BABY'].collect{
+      |val| ConceptName.find_by_name(val).concept_id
+    }
+    @concepts_coded = "'" + @concepts.join("','") + "'"
+
+    Relationship.find_by_sql("SELECT r.person_b FROM relationship r
+			  JOIN obs o ON o.person_id = r.person_b 
+				WHERE r.voided = 0 AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') <= '#{enddate}' 
+				AND DATE_FORMAT((SELECT birthdate FROM person WHERE person_id = r.person_b), '%Y-%m-%d') >= '#{startdate}' 
+				AND o.voided = 0
+				AND o.concept_id IN (#{@concepts_coded})").each do |data| 
+
+      babies << data.person_b
+    end
+
+    alive_without_discharge = total_alive_predischarge(startdate, enddate)
+    babies = babies - alive_without_discharge
+
+    babies.delete_if{|baby|
+      baby.blank?
+    }
+
+    render :text => babies.uniq.to_json
+  end
+
+  def print_csv
+    
+    csv_arr = params["print_string"].split(",,")
+
+    csv_string = ""
+
+    csv_arr.each do |row|
+
+      csv_string +=  "#{row}\n"
+
+    end
+
+    send_data(csv_string,
+      :type => 'text/csv; charset=utf-8;',
+      :stream=> false,
+      :disposition => 'inline',
+      :filename => "babies_matrix.csv") and return   
+  end
+
 end

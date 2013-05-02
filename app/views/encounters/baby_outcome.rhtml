@@ -1,0 +1,831 @@
+<%= javascript_include_tag "jquery" %>
+<script language="javascript">
+  var tt_cancel_destination = "/patients/show/<%= params[:patient_id] %>?skip_check=true"
+  var currentWeight;
+  var baby_date_map = "";
+  var displayText = "";
+  var apgarScore = 0; 
+  displaySummary = 'false'; 
+  var timedEvent;
+  var baby;
+  var maxi;
+  var mini;
+  var number_of_babies = "<%= params[:number_of_babies]%>"
+  var baby = "<%= params[:baby]%>"
+  function $(e) {
+    return document.getElementById(e);
+  }
+
+  function growthIndicators(){
+    $('inputFrame'+tstCurrentPage).innerHTML = "";
+    //These values pulled from the tt_onLoad bit in the third form...
+  
+    headers = ["    ", "WEIGHT", "APGAR"];
+    var alertsTable = document.createElement("div");
+    alertsTable.id = "alertsTable";
+    var alertsHeaderRow = document.createElement("div");
+    alertsHeaderRow.setAttribute("class", "alertsHeaderRow");
+    for (j = 0; j < headers.length; j++){
+      var alertsHeader = document.createElement("div");
+      alertsHeader.setAttribute("class", "alertsHeader");
+      alertsHeader.innerHTML = headers[j];
+      alertsHeaderRow.appendChild(alertsHeader);
+    }
+    alertsTable.appendChild(alertsHeaderRow);
+      
+    for (i = 1; i <= parseInt(document.getElementById("number_of_babies").value); i++){
+      currentWeight = $('weight' + i).value;
+      gender = $("baby_gender" + i).value;
+      if (gender == "Male"){
+        maxi = 4500.0;
+        mini = 2500.0;
+      }else if (gender == "Female"){
+        maxi = 4400.0;
+        mini = 2400.0;
+      }
+
+      var alertsRow = document.createElement("div");
+      alertsRow.setAttribute("class", "alertsRow");
+      // add the left title of the table row
+      var alertsTitle = document.createElement("div");
+      alertsTitle.setAttribute("class", "alertsTitle");
+      alertsTitle.innerHTML = "<span>BABY " + i + "<span>";
+      alertsRow.appendChild(alertsTitle);
+      // add cell figures
+     
+      var alertsCell = document.createElement("div");
+      alertsCell.setAttribute("class", "alertsCell");
+      alertsCell.innerHTML = showWeightForAge(i);
+      alertsRow.appendChild(alertsCell);
+
+      var alertsCell2 = document.createElement("div");
+      alertsCell2.setAttribute("class", "alertsCell");
+      alertsCell2.innerHTML = showApgarScore(i);
+      alertsRow.appendChild(alertsCell2);
+        
+      //add row to table
+      alertsTable.appendChild(alertsRow);
+    }
+    $('inputFrame'+tstCurrentPage).appendChild(alertsTable);
+    displayText = "";
+   
+  }
+  function showApgarScore(n){
+    displayText = ""
+    apgarScore = parseFloat($("apgar" + n).value);
+    if (apgarScore >= 7){
+      displayText = "<span class='normal'> " + apgarScore.toFixed(0) + "/10 - Normal APGAR</span>";
+    } else if (apgarScore <=3) {
+      displayText = "<span class='red_alert'> " + apgarScore.toFixed(0) + "/10 - Low APGAR</span>";
+    } else {
+      displayText = "<span class='yellow_alert'> " + apgarScore.toFixed(0) + "/10 - Fairly Low </span>";
+    }  
+    return displayText
+  }
+  function showApgarControl(baby, minute){
+    apgarScore = 0;
+    var apgar = {"APPEARANCE": 0,
+      "PULSE" : 0,
+      "GRIMANCE": 0,
+      "ACTIVITY": 0,
+      "RESPIRATION": 0
+    };
+    var apgarCheck = {"APPEARANCE": "?",
+      "PULSE" : "?",
+      "GRIMANCE": "?",
+      "ACTIVITY": "?",
+      "RESPIRATION": "?"
+    };
+   
+    alert = document.createElement("div");    
+
+    $("clearButton").onclick = function(){
+      apgarScore = 0
+      updateApgarAlert(apgarScore)
+      cells = document.getElementsByClassName("butt");
+      for( i = 0; 0 < cells.length; i++){
+        cells[i].setAttribute("selected", "false");
+        cells[i].style.background = "url('/images/btn_blue.png'";
+        apgar["APPEARANCE"] = 0; apgar["PULSE"] = 0; apgar["GRIMANCE"] = 0; apgar["ACTIVITY"] = 0; apgar["RESPIRATION"] = 0;
+        apgarCheck["APPEARANCE"] = "?"; apgarCheck["PULSE"] = "?"; apgarCheck["GRIMANCE"] = "?";
+        apgarCheck["ACTIVITY"] = "?"; apgarCheck["RESPIRATION"] = "?";
+        showCategory("<span style='font-size:27px;font-weight:bold;'>APGAR</span> = " + apgarCheck['APPEARANCE'] + "+" + apgarCheck['PULSE'] +"+"+ apgarCheck['GRIMANCE']
+          + "+" + apgarCheck['ACTIVITY'] + "+" + apgarCheck['RESPIRATION']);
+      }
+    }
+    $("clearButton").onclick.apply($("clearButton"));
+    updateApgarAlert(apgarScore);
+    scoreWindow = document.createElement("div");
+    scoreWindow.setAttribute("id", "selectWindow");
+    
+
+    arr = ["Appearance", "Pulse", "Grimance", "Activity", "Respiration"]
+   
+    arr_val = ['Pale/blue', "Baby pink/</br>blue extremities", "Completely </br> pink",
+      "Absent", "Slow -</br>Below 100 bpm", "Above </br>100 bpm",
+      "Flaccid", "Some flexion </br> of Extremities", "Active Motion",
+      "None", "Grimance", "Vigorous </br>cry",
+      "Absent", "Slow - </br> irregular", "Good crying"];
+    
+    arr_labels = ["Color", "Heart Rate", "Muscle Tone", "Reflex Irritability", "Respiratory Effort"]
+    /*
+    arr_val = ['Blue, Pale', "Pink </br> Extreme blue", "Completely </br> pink",
+      "Absent", "Below </br>100 bpm", "Over </br>100 bpm",
+      "Flaccid", "Some Flexion </br> of Extremities", "Active motion",
+      "Absent", "Arms and legs</br> flexed", "Active movement",
+      "Absent", "Slow, </br> irregular", "Vigorous cry"];
+     */
+    val_index = 0;
+    values = [0, 1, 2]
+    var labels = document.createElement("div");
+    labels.id = "row1";
+    
+    placebo = document.createElement("div");
+    placebo.id = "placebo";
+    labels.appendChild(placebo);
+
+    for(i = 0; i < values.length; i++){
+      var lblCell = document.createElement("div");
+      lblCell.setAttribute("class", "value");
+      lblCell.innerHTML = (i == 2)? (i + " Points") : (i + " Point")
+      labels.appendChild(lblCell);
+    }
+    scoreWindow.appendChild(labels);
+   
+    for (i = 0; i < arr.length; i ++){
+      var row = document.createElement("div");
+      row.id = "apgar_row_" + i
+      row.setAttribute("class", "boardRow");
+
+      for (j = 0; j < 4; j++){
+        var control = document.createElement("div");
+        control.id = "" + i + j;
+        if (j != 0){
+          
+          control.setAttribute("class", "butt");
+          control.setAttribute("value", j-1);
+          control.setAttribute("apgar_field", arr[i]);
+          // update/set selection status of the control
+          if ((apgarCheck[arr[i].toUpperCase()] != "?") && ("" + i + (parseInt(apgarCheck[arr[i].toUpperCase()]) + 1) == control.id)){
+            control.setAttribute("selected", "true");
+          }else{ control.setAttribute("selected", "false"); }
+          control.setAttribute("i", i);
+          control.setAttribute("j", j);
+          
+          control.innerHTML = arr_val[val_index];
+          val_index ++;
+         
+          control.onclick = function(){
+            var num = __$(this.id).getAttribute("value");
+            var field = __$(this.id).getAttribute("apgar_field");
+            var key = field.toUpperCase();
+            apgar[key] = num;
+            apgarCheck[key] = apgar[key];
+            //update row selections
+            
+            if (__$(this.id).getAttribute("selected") == "false"){
+              
+              for(k = 1; k < 4; k++){
+                var x = this.getAttribute("i");
+                __$("" + x + k).setAttribute("selected", ( this.id != "" + x + k)? "false": "true");
+                
+                __$("" + x + k).style.background = ( this.id != "" + x + k)? "url('/images/btn_blue.png')" : "url('/images/click_btn.png')";
+                __$("" + x + k).style.Color= ( this.id != "" + x + k)? "black" : "white";
+              }
+            }
+            __$(key.toLowerCase() + "_" + minute).value = apgar[key];
+            apgarScore = parseInt(apgar['APPEARANCE']) + parseInt(apgar['PULSE'])
+              + parseInt(apgar['GRIMANCE']) + parseInt(apgar['ACTIVITY']) + parseInt(apgar['RESPIRATION']);
+            showCategory("<span style='font-size:27px;font-weight:bold;'>APGAR</span> = " + apgarCheck['APPEARANCE'] + "+" + apgarCheck['PULSE'] +"+"+ apgarCheck['GRIMANCE']
+              + "+" + apgarCheck['ACTIVITY'] + "+" + apgarCheck['RESPIRATION']);
+            if (apgarCheck["APPEARANCE"] != "?" && apgarCheck["PULSE"] != "?" && apgarCheck["GRIMANCE"] != "?" && apgarCheck["ACTIVITY"] != "?" && apgarCheck["RESPIRATION"] != "?"){
+              $('touchscreenInput'+tstCurrentPage).value = apgarScore;
+
+            }
+            updateApgarAlert(apgarScore);
+          };
+          
+          
+        }else{control.innerHTML = arr_labels[i];
+          control.setAttribute("class", "leftButt");
+        }
+        row.appendChild(control);
+      }
+      scoreWindow.appendChild(row);    }
+
+    $('inputFrame' + tstCurrentPage).style.display = "none";
+    $('page' + tstCurrentPage).style.minHeight = "650px";
+    $('page' + tstCurrentPage).appendChild(scoreWindow);
+    if (minute == "five"){
+      $("page" + tstCurrentPage).appendChild(alert);
+    }
+    
+  }
+
+  function updateApgarAlert(apgarScore){   
+    if (apgarScore >= 7){
+      text = "" + apgarScore.toFixed(0) + "/10 - Normal APGAR</span>";
+      alert.id = "normal_apgar_alert";
+    } else if (apgarScore <=3) {
+      text = "" + apgarScore.toFixed(0) + "/10 - Low APGAR</span>";
+      alert.id = "red_apgar_alert";
+    } else {
+      text = "" + apgarScore.toFixed(0) + "/10 - Fairly Low </span>";
+      alert.id = "yellow_apgar_alert";
+    }
+    alert.innerHTML = text;
+  }
+
+  function showWeightForAge(baby){
+    displayText = "";
+    $('weight_for_age').value = currentWeight;   
+    if ((currentWeight <= maxi) && (currentWeight >=mini)){
+      displayText = "<span class='normal'>" + currentWeight + "g - Normal Weight </span>";
+    } else if (currentWeight > maxi) {
+      displayText = "<span class='yellow_alert'>" + currentWeight + "g - Over Weight </span>";
+    } else if (currentWeight < mini){
+      displayText = "<span class='red_alert'>" + currentWeight + "g - Under Weight</span>";
+    }
+    return displayText;
+  }
+  function isValidDateFormat(value){
+    return value.trim().match(/(\d{4})\-(\d{2})\-(\d{2})\s(\d{2})\:(\d{2})/);
+  }
+  function isValidTimeFormat(value){
+    return value.trim().match(/(\d{2})\:(\d{2})/);
+  }
+  function createDate(value){
+    var d = isValidDateFormat(value);
+    if(d){
+      return new Date(eval(d[1]),(eval(d[2])-1),eval(d[3]),eval(d[4]),eval(d[5]));
+    } else {
+      return new Date();
+    }
+  }
+  function dateTimeFormatted(value){
+    return value.getFullYear() + "-" + padZeros((value.getMonth() + 1),2) + "-" +
+      padZeros(value.getDate(),2) + " " + padZeros(value.getHours(),2) + ":" +
+      padZeros(value.getMinutes(),2)
+  }
+  function mergeDateTime(date, time){
+    var t = isValidTimeFormat(time);
+    if(t){
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate(), eval(t[1]), eval(t[2]));
+    } else {
+      return date;
+    }
+  }
+  function updateTimeOtherFields(group){
+    var outcome_date = __$("baby" + group + "_outcome_date").value.trim();
+    var delivery_mode_date = __$("baby" + group + "_delivery_mode_date").value.trim();
+    var time = __$("time_of_delivery" + group).value.trim();
+    if(isValidTimeFormat(time)){
+      outcome_date = createDate(outcome_date);
+      outcome_date = mergeDateTime(outcome_date, time);
+      __$("baby" + group + "_outcome_date").value = dateTimeFormatted(outcome_date);
+      delivery_mode_date = createDate(delivery_mode_date);
+      delivery_mode_date = mergeDateTime(delivery_mode_date, time);
+      __$("baby" + group + "_delivery_mode_date").value = dateTimeFormatted(delivery_mode_date);
+      if(group == 1){
+        var number_of_babies_date = __$("number_of_babies_date").value.trim();
+        number_of_babies_date = createDate(number_of_babies_date);
+        number_of_babies_date = mergeDateTime(number_of_babies_date, time);
+        __$("number_of_babies_date").value = dateTimeFormatted(number_of_babies_date);
+      }
+    }
+  }
+  function updateDateOtherFields(group){
+    var outcome_date = createDate(__$("baby" + group + "_outcome_date").value.trim());
+    var delivery_mode_date = createDate(__$("baby" + group + "_delivery_mode_date").value.trim());
+    var date = __$("date_of_delivery" + group).value.trim();
+    var time = padZeros(outcome_date.getHours(),2) + ":" + padZeros(outcome_date.getMinutes(),2);
+    if(isValidTimeFormat(time)){
+      date = createDate(date);
+      date = mergeDateTime(date, time);
+      __$("baby" + group + "_outcome_date").value = dateTimeFormatted(date);
+    }
+    date = __$("date_of_delivery" + group).value.trim();
+    time = padZeros(delivery_mode_date.getHours(),2) + ":" + padZeros(delivery_mode_date.getMinutes(),2);
+    if(isValidTimeFormat(time)){
+      date = createDate(date);
+      date = mergeDateTime(date, time);
+      __$("baby" + group + "_delivery_mode_date").value = dateTimeFormatted(date);
+    }
+    var number_of_babies_date = createDate(__$("number_of_babies_date").value.trim());
+
+    date = __$("date_of_delivery" + group).value.trim();
+    time = padZeros(number_of_babies_date.getHours(),2) + ":" + padZeros(number_of_babies_date.getMinutes(),2);
+    if(group == 1 && isValidTimeFormat(time)){
+      number_of_babies_date = createDate(number_of_babies_date);
+      number_of_babies_date = mergeDateTime(number_of_babies_date, time);
+      __$("number_of_babies_date").value = dateTimeFormatted(number_of_babies_date);
+    }
+  }
+  // Every 500 milliseconds update the Next/Finish button
+  function updateNextFinish(){
+    if (tstInputTarget.value == '')
+      $('nextButton').innerHTML = '<span>Finish</span>';
+    else
+      $('nextButton').innerHTML = '<span>Next</span>'
+    setTimeout(updateNextFinish, 500);
+  }
+  function calculateBabyOutcomeDate(baby){
+    var baby_time = __$("time_of_delivery").value.trim();
+    var b_date = __$("date_of_delivery").value.trim() + " 00:00";
+    var baby_date = createDate(b_date);
+    merged_date = mergeDateTime(baby_date, baby_time);
+    baby_date_map += baby + "," +  dateTimeFormatted(merged_date) + "!";
+    document.forms[0].action = "/encounters/create/<%= params[:patient_id] %>?baby_date_map=" + baby_date_map;
+  }
+  function weightAlert(){
+    if(!$('weight_label')){
+      var div = document.createElement("div");
+      div.id = "weight_label";
+      div.className = "statusLabel";  
+
+      gender = $("baby_gender" + baby_num).value;
+      if (gender == "Male"){
+        maxi = 4500.0;
+        mini = 2500.0;
+      }else if (gender == "Female"){
+        maxi = 4400.0;
+        mini = 2400.0;
+      }
+      $("inputFrame" + tstCurrentPage).appendChild(div);
+
+    }
+    weight = $("touchscreenInput" + tstCurrentPage).value.trim();
+    if (weight != ""){
+      $('weight_label').innerHTML = ((weight > maxi )? "<i style='font-size: 1.2em;color: red;float: right;'> Over Weight</i>" : ((weight < mini)? "<i  style='font-size: 1.2em;float: right;color: red;'>Under Weight</i>"  : ""));
+      if (weight < maxi && weight > mini){$('weight_label').innerHTML = "<i style='float:right;font-size:1.2em;'>  Normal Weight</i>";}
+    }else {       
+      $('weight_label').innerHTML = "<i style='float:left;font-size:1.2em;'>  Enter Weight</i>";
+    }   
+  }
+</script>
+
+<style type="text/css">
+  #space { display:inline; font-size:1.2em; }
+  #Unknown {display: none;}
+  #num {display: none;}
+
+  .n #Unknown{
+    display: block;
+  }
+  #summary {
+    padding:10px;
+    font-size:1.8em;
+  }
+  #char {
+    display: none;
+  }
+  .title {
+    text-decoration:underline;
+    margin-right:10px;
+  }
+
+  .red_alert {color:black;background:red;border:2px solid gray;}
+  .yellow_alert {color:black;background:yellow;border:2px solid gray;}
+  .normal {color:black;}
+
+  #red_apgar_alert {
+    background:red;
+  }
+  #yellow_apgar_alert {    
+    background:yellow;    
+  }
+  #normal_apgar_alert, #red_apgar_alert, #yellow_apgar_alert {
+    border-radius: 10px;
+    -moz-user-select: none;
+    height: 110px;
+    color:black;
+    width: 85%;
+    border:2px solid gray;
+    font-size: 30px;
+    text-align: center;
+    margin-left:auto;
+    margin-right:auto;   
+    margin-top: 40px;
+    vertical-align: middle;
+  }
+
+  #tt_page_summary .inputFrameClass { height: 84%;}
+
+  #qwerty{ display:none; }
+
+  .numericKeyboard #char, #slash, #star, #plus, #date, #minus, #comma, #percent {
+    display: none;
+  }
+
+  #selectWindow{
+    -moz-user-select: none;
+    display: table;
+    width: 85%;
+    height:55%;
+    border:1px solid #999999;
+    align: center;
+    border-spacing: 8px;
+    margin-left:auto;
+    margin-right:auto;
+    border-radius: 10px;
+    background: white;
+    margin-top: 17px;
+  }
+  .butt{
+    font-family: sans-serif;
+    font-size:1.1em;
+    font-weight: bold;
+    -moz-border-radius: 5px;
+    border-radius: 10px;
+    display:table-cell;
+    background: url('/images/btn_blue.png');
+    border:1px solid #999999;
+    border-color:gray;
+    color: white;
+    vertical-align: middle;
+    height: auto;
+    width: auto;
+    max-width: 73px;
+    text-align: center;    
+  }
+  .leftButt, .value{
+    font-size:1.3em;
+    border-radius: 4px;
+    font-weight: bold;
+    background: white;
+    display:table-cell;
+    border:1px solid #999999;
+    height: auto;
+    color: rgb(5, 30, 5);
+    width: auto;
+    vertical-align: middle;
+    text-align: center;
+    max-width: 73px;
+
+  }
+  .value{
+    height: 40px;
+    font-weight: bold;
+  }
+  .boardRow{
+    display: table-row;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    border-spacing: 5px;
+  }
+  #row1{
+    display: table-row;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    border-spacing: 5px 5px 5px 5px;
+  }
+  #alertsTable{
+    -moz-user-select: none;
+    display: table;
+    border-radius: 4px;
+    background: gray;
+    border-spacing: 1px;
+    width: 98%;
+    height:auto;
+    border:1px solid #999999;
+    vertical-align: middle;
+    margin-left:auto;
+    margin-top: 12px;
+    margin-right:auto;
+    max-height: 99%;
+    overflow: auto;
+  }
+  .alertsRow, .alertsHeaderRow{
+    display: table-row;
+    height: 65px !important;
+  }
+  .alertsTitle, .alertsHeader, .alertsCell{
+    display: table-cell;
+    border: solid 1px lightgray;
+    font-size: 28px;
+    vertical-align: middle;   
+    text-align: center;
+    background: white;
+  }
+  .alertsHeader, .alertsTitle{
+    font-weight: bold;
+    text-align: center;
+    background: white;
+  }
+
+
+
+
+</style>
+
+<form id='outcome' action="/encounters/create" method='post'>
+  <% unless params[:baby].blank? || params[:baby].to_i <= 0
+    baby = params[:baby].to_i
+  else
+    baby = 1
+  end
+
+%>
+  <%= hidden_field_tag "cat", "baby" %>
+  <%= hidden_field_tag "owner", "baby" %>
+  <%= hidden_field_tag "patient_id", params[:patient_id] %>
+  <%= hidden_field_tag "number_of_babies", params[:number_of_babies] %>
+  <%= hidden_field_tag("baby",  baby.to_i + 1)%>
+  <%= hidden_field_tag "encounter[patient_id]", @patient.id %>
+  <% @presentation = [""] + Concept.find_by_name("PRESENTATION").concept_answers.collect{|c| c.name} %>
+  <% @baby_outcome = [""] + Concept.find_by_name("BABY OUTCOME").concept_answers.collect{|c| c.name} %>
+  <%@baby_outcome.delete_if{|out_c| out_c.match(/intrauterine death/i)}%>
+  <% @main_outcomes = [""] + Concept.find_by_name("MATERNITY OUTCOME").concept_members_names rescue [] %>
+
+  <% @delivery_period = ["", "DELIVERED IN THE WARD",
+    "DELIVERED BEFORE ARRIVAL",
+    "DELIVERED IN THEATRE",
+    "DELIVERED IN ANTENATAL WARD"] %>
+  <% @mode_of_delivery = ["", "Forceps delivery", "Breech delivery"] %>
+
+  <% @delivery_mode = [""] + Concept.find_by_name("DELIVERY MODE").concept_answers.collect{|c| c.name} %>
+
+  <%= hidden_field_tag "encounter[encounter_type_name]", "UPDATE OUTCOME" %>
+  <%= hidden_field_tag "encounter[encounter_datetime]",
+    (session[:datetime] ? session[:datetime].to_time : (session[:datetime] ? session[:datetime].to_time :
+        DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+  <%= hidden_field_tag "encounter[provider_id]", session[:user_id] %>
+
+  <% if CoreService.get_global_property_value('extra_delivery_mode')%>
+    <% @delivery_mode.concat(["Forceps Delivery"]) %>
+  <% end %>
+
+  <%
+  prefixes = {
+    1=>"st",
+    2=>"nd",
+    3=>"rd",
+    4=>"th",
+    5=>"th",
+    6=>"th",
+    7=>"th",
+    8=>"th",
+    9=>"th",
+    10=>"th"
+  }
+%>
+
+  <% htext1 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Time of Delivery" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Time of Delivery"%>
+
+  <% options = {
+    :id => "time_of_delivery",
+    :field_type => 'advancedTime',
+    :helptext =>"#{htext1}",
+    :tt_onLoad => "baby_num = #{baby}"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]",  "TIME OF DELIVERY")%>
+  <%= text_field_tag("observations[][value_time]",   nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% htext2 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Date of Delivery" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Date of Delivery"%>
+
+  <% options = {
+    :id => "date_of_delivery",
+    :field_type => 'date',
+    :helptext =>"#{htext2}",
+    :tt_onUnLoad => "calculateBabyOutcomeDate(#{baby})"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]",  "DATE OF DELIVERY")%>
+  <%= text_field_tag("observations[][value_datetime]",   nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% htext3 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Presentation" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Presentation"%>
+
+  <% options = {
+    :id => "presentation#{baby}",
+    :field_type => 'text',
+    :helptext =>"#{htext3}"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "PRESENTATION") %>
+  <%= select_tag("observations[][value_coded_or_text]", options_for_select(@presentation), options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% htext4 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Delivery Outcome" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Delivery Outcome"%>
+
+  <% options = {
+    :id => "baby_outcome",
+    :field_type => 'text',
+    :helptext =>"#{htext4}"
+  }%>
+
+  <%= hidden_field_tag("observations[][concept_name]", "BABY OUTCOME") %>
+  <%= select_tag("observations[][value_coded_or_text]", options_for_select(@baby_outcome), options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]",
+    (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M"),
+    {
+      :id => "baby_outcome_date"
+    }) %>
+
+  <% htext5 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Delivery Mode" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Delivery Mode"%>
+
+  <% options = {
+    :id => "delivery_mode",
+    :field_type => 'text',
+    :helptext =>"#{htext5}"
+  }%>
+
+  <%= hidden_field_tag("observations[][concept_name]", "DELIVERY MODE") %>
+  <%= select_tag("observations[][value_coded_or_text]", options_for_select(@delivery_mode.uniq), options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]",
+    (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M"),
+    {
+      :id => "baby_delivery_mode_date"
+    }) %>
+
+  <% htext6 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Gender" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Gender"%>
+
+  <% options = {
+    :id => "baby_gender#{baby}",
+    :field_type => 'text',
+    :helptext =>"#{htext6}"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "GENDER OF CONTACT") %>
+  <%= select_tag("observations[][value_coded_or_text]", options_for_select(["", "Male", "Female"]), options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% options = {
+    :id => "appearance_one"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "APPEARANCE MINUTE ONE")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% options = {
+    :id => "pulse_one"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "PULSE MINUTE ONE")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% options = {
+    :id => "grimance_one"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "GRIMANCE MINUTE ONE")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% options = {
+    :id => "activity_one"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "ACTIVITY MINUTE ONE")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% options = {
+    :id => "respiration_one"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "RESPIRATION MINUTE ONE")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+   <% htext7 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby 1<sup>st</sup>Minute APGAR" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: 1<sup>st</sup>Minute APGAR"%>
+
+  <% options =  {
+    :id => "apgar_one",
+    :field_type => 'number',
+    :helptext =>"#{htext7}",
+    :absoluteMin => 0,
+    :absoluteMax => 10,
+    :condition => "__$('baby_outcome').value.toUpperCase().trim() == 'ALIVE'",
+    :tt_onLoad => "showApgarControl(#{baby}, 'one')",
+    :tt_pageStyleClass => "NoKeyboard"
+  } %>
+
+  <%= text_field_tag("observations[][value_numeric]", nil, options ) %>
+  <%= hidden_field_tag("observations[][value_text]", nil) %>
+  <%= hidden_field_tag("observations[][concept_name]", "APGAR MINUTE ONE") %>
+  <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
+
+  <% options = {
+    :id => "appearance_five"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "APPEARANCE MINUTE FIVE")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% options = {
+    :id => "pulse_five"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "PULSE MINUTE FIVE")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% options = {
+    :id => "grimance_five"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "GRIMANCE MINUTE FIVE")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% options = {
+    :id => "activity_five"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "ACTIVITY MINUTE FIVE")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% options = {
+    :id => "respiration_five"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "RESPIRATION MINUTE FIVE")%>
+  <%= hidden_field_tag("observations[][value_numeric]", nil, options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
+        session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% htext8 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby 5<sup>th</sup>Minute APGAR" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: 5<sup>th</sup>Minute APGAR"%>
+
+  <% options =  {
+    :id => "apgar_five",
+    :field_type => 'number',
+    :helptext =>"#{htext8}",
+    :absoluteMin => 0,
+    :absoluteMax => 10,
+    :condition => "__$('baby_outcome').value.toUpperCase().trim() == 'ALIVE'",
+    :tt_onLoad => "showApgarControl(#{baby}, 'five')",
+    :tt_pageStyleClass => "NoKeyboard"
+  } %>
+
+  <%= text_field_tag("observations[][value_numeric]", nil, options ) %>
+  <%= hidden_field_tag("observations[][value_text]", nil) %>
+  <%= hidden_field_tag("observations[][concept_name]", "APGAR MINUTE FIVE") %>
+  <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
+
+
+  <% htext9 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Weight (Grams)" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Weight (Grams)"%>
+
+
+  <% options =  {	:id => "weight",
+    :field_type => 'number',
+    :helptext =>"#{htext9}",
+    :tt_onLoad => "timedEvent = self.setInterval(function(){weightAlert()}, 100);",
+    :tt_onUnLoad => "window.clearInterval(timedEvent);",
+    :min => number_with_precision(2500.0, :precision => 1),
+    :max => number_with_precision(4500.0, :precision => 1),
+    :absoluteMin => 0,
+    :absoluteMax =>10000,
+    :validationRule => "([0-9]+(\\.[0-9])?)|Unknown$",
+    :validationMessage => "You must enter a number between 0 and 15 (for example: 54<b>.6</b>)",
+    :tt_pageStyleClass => "unknownButton"} %>
+
+  <%= text_field_tag("observations[][value_numeric]", nil, options ) %>
+  <%= hidden_field_tag("observations[][value_text]", nil) %>
+  <%= hidden_field_tag("observations[][concept_name]", "BIRTH WEIGHT") %>
+  <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
+
+  <% htext10 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Length (CM)" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Length (CM)"%>
+
+  <% options =  {
+    :id => "height",
+    :field_type => 'number',
+    :tt_onLoad => "$('clearButton').style.display = 'inline'; $('Unknown').style.display = 'block'; ",
+    :tt_onUnLoad => "$('Unknown').style.display = 'block'; ",
+    :min => number_with_precision(15, :precision => 1),
+    :max => number_with_precision(60, :precision => 1),
+    :absoluteMin => 0,
+    :absoluteMax => 100,
+    :units => 'cm',
+    :validationRule => "^([0-9]+)|Unknown$",
+    :validationMessage => "You must enter numbers only (for example 157)",
+    :tt_pageStyleClass => "unknownButton ",
+    :helptext =>"#{htext10}" } %>
+
+  <%= text_field_tag("observations[][value_numeric]", nil, options ) %>
+  <%= hidden_field_tag("observations[][value_text]", nil) %>
+  <%= hidden_field_tag("observations[][concept_name]", "BIRTH LENGTH") %>
+  <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+  <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
+
+  <%= hidden_field_tag("skip_check", "true") %>
+
+  <%= submit_tag "Finish" %>
+
+</form>

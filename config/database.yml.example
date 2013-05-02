@@ -1,13 +1,13 @@
 production:
   adapter: mysql
-  database: maternity_stable
+  database: maternity
   username: root
   password: password
   host: localhost
 
 development:
   adapter: mysql
-  database: maternity_stable
+  database: maternity
   username: root
   password: password
   host: localhost

@@ -4,14 +4,14 @@ class PatientsController < ApplicationController
   before_filter :find_patient, :except => [:void]
   
   def show
-    # raise link_to_anc.to_yaml
+   
     @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil
-	identifier = PatientIdentifier.find(:last, :conditions => ["patient_id = ? AND identifier_type = ?", @patient.id, PatientIdentifierType.find_by_name("National id")]).identifier rescue ""
+    identifier = PatientIdentifier.find(:last, :conditions => ["patient_id = ? AND identifier_type = ?", @patient.id, PatientIdentifierType.find_by_name("National id")]).identifier rescue ""
  
     if((CoreService.get_global_property_value("create.from.dde.server") == true) && !@patient.nil? && identifier.length != 6)
-      dde_patient = DDEService::Patient.new(@patient)
+			dde_patient = DDEService::Patient.new(@patient)
       identifier = dde_patient.get_full_identifier("National id").identifier rescue nil
-      national_id_replaced = dde_patient.check_old_national_id(identifier)
+      national_id_replaced = dde_patient.check_old_national_id(identifier) rescue nil
       if national_id_replaced.to_s == "true"
         print_and_redirect("/patients/national_id_label?patient_id=#{@patient.id}", "/patients/show?patient_id=#{@patient.id}") and return
       end
@@ -29,17 +29,23 @@ class PatientsController < ApplicationController
         session["patient_anc_map"][@patient.id] = AncConnection::PatientIdentifier.search_by_identifier(@maternity_patient.national_id).id
       end
     end
-    
-    @last_location = @patient.encounters.find(:last).location_id rescue nil
+    @registration = (['registration'].include?(Location.find(session[:location_id]).name.downcase)) rescue false
+    @at_registration_desk = (['registration', 'labour ward'].include?(Location.find(session[:location_id]).name.downcase))  rescue  nil
+    @is_registered = @patient.encounters.collect{|enc|
+      enc.name.upcase if enc.date_created >= 7.days.ago
+    }.include?("REGISTRATION")
+
+
+    @last_location = Encounter.find(:last, :order => ["date_created"], 
+      :conditions => ["patient_id =? AND encounter_type = ? AND date_created >= ?", @patient.patient_id, EncounterType.find_by_name("ADMIT PATIENT").id, 2.days.ago]).location_id  rescue nil
+	
     @last_visit_closed = !last_visit.end_date.nil? rescue true
-    
-    if ((session[:location_id] != @last_location)  || @last_visit_closed) && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : true)
+
+    if !@at_registration_desk && ((session[:location_id] != @last_location)  || @last_visit_closed) && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : true)
       params[:skip_check] = false
       redirect_to "/encounters/new/admit_patient?patient_id=#{@patient.id}" and return
-    end
-
-
-    #find the user priviledges
+    end  
+   
     @super_user = false
     @clinician  = false
     @doctor     = false
@@ -95,9 +101,14 @@ class PatientsController < ApplicationController
     }
 
     @link_to_anc = link_to_anc
-    
-    # raise @encounter_names.include?("Refer patient out?".upcase).to_yaml
 
+    #check for pending birth report and enforce them to be sent, denying finish click
+
+    @pending_birth_reports = Relationship.find_by_sql("SELECT * FROM relationship r
+      WHERE person_a = #{@patient.patient_id} AND (SELECT COUNT(*) FROM birth_report WHERE person_id = r.person_b) = 0
+      AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
+      ")
+    #raise @pending_birth_reports.to_yaml
     @past_treatments = @patient.visit_treatments
     session[:auto_load_forms] = false if params[:auto_load_forms] == 'false'
     session[:outcome_updated] = true if !outcome.nil?
@@ -141,7 +152,16 @@ class PatientsController < ApplicationController
   end
   
   def national_id_label
-    print_string = Patient.find(params[:patient_id]).national_id_label rescue (raise "Unable to find patient (#{params[:patient_id]}) or generate a national id label for that patient")
+    if (params[:cat] && params[:cat].downcase == "baby")
+      print_string = Patient.find(params[:patient_id]).national_id_label(1) rescue (raise "Unable to find patient (#{params[:patient_id]}) or generate a national id label for that patient")
+    else
+      @registration = (['registration'].include?(Location.find(session[:location_id]).name.downcase)) rescue false
+      if @registration
+        print_string = Patient.find(params[:patient_id]).national_id_label(1) rescue (raise "Unable to find patient (#{params[:patient_id]}) or generate a national id label for that patient")
+      else
+        print_string = Patient.find(params[:patient_id]).national_id_label rescue (raise "Unable to find patient (#{params[:patient_id]}) or generate a national id label for that patient")
+      end
+    end
     send_data(print_string,:type=>"application/label; charset=utf-8", :stream=> false, :filename=>"#{params[:patient_id]}#{rand(10000)}.lbl", :disposition => "inline")
   end
   
@@ -233,7 +253,7 @@ class PatientsController < ApplicationController
 
     @baby = (!params[:cat].nil? ? (params[:cat].downcase == "baby" ? true : false) : false)
 
-    render :template => 'patients/demographics', :layout => 'menu'
+    render :template => 'patients/demographics'
 
   end
 
@@ -782,8 +802,8 @@ class PatientsController < ApplicationController
   end
 
   def general_demographics
-    @children = @maternity_patient.children rescue []
-    
+
+    @children = @maternity_patient.kids rescue []
     render :layout => false
   end
 
@@ -815,21 +835,21 @@ class PatientsController < ApplicationController
 
     unless @serial_number
       id_type = PatientIdentifierType.find_by_name("Serial Number").patient_identifier_type_id
-        serial_num = SerialNumber.find(:first, :conditions => ["national_id IS NULL"])
+      serial_num = SerialNumber.find(:first, :conditions => ["national_id IS NULL"])
 
-        PatientIdentifier.create(:patient_id => @person.id,
-          :identifier => serial_num.serial_number,
-          :creator => session[:user_id],
-          :location_id => session[:facility],
-          :identifier_type => id_type) if serial_num and !@person.blank?
+      PatientIdentifier.create(:patient_id => @person.id,
+        :identifier => serial_num.serial_number,
+        :creator => session[:user_id],
+        :location_id => session[:facility],
+        :identifier_type => id_type) if serial_num and !@person.blank?
 
-        serial_num.national_id = @person.national_id
-        serial_num.date_assigned = Date.today
-        serial_num.save
+      serial_num.national_id = @person.national_id
+      serial_num.date_assigned = Date.today
+      serial_num.save
 
-        @serial_number = PatientIdentifier.find(:first, :conditions => ["patient_id = ? AND identifier_type = ?",
-        @person.id,
-        PatientIdentifierType.find_by_name("Serial Number").id]).identifier rescue "?"
+      @serial_number = PatientIdentifier.find(:first, :conditions => ["patient_id = ? AND identifier_type = ?",
+          @person.id,
+          PatientIdentifierType.find_by_name("Serial Number").id]).identifier rescue "?"
 
     end
     
@@ -906,9 +926,22 @@ class PatientsController < ApplicationController
 
     uri = CoreService.get_global_property_value("birth_registration_url") rescue nil
 
-    result = RestClient.post(uri, data) rescue "birth report couldnt be sent"
-    
-    if ((result.downcase rescue "") == "baby added") and params[:update].nil?
+    @patient =  Patient.find(params[:id]) || Patient.find(params[:person_id]) rescue nil
+    @anc_patient = ANCService::ANC.new(@patient) rescue nil
+
+    hospital_date = @anc_patient.get_attribute("Hospital Date")
+    health_center = @anc_patient.get_attribute("Health Center")
+    health_district = @anc_patient.get_attribute("Health District")    
+    provider_title = @anc_patient.get_attribute("Provider Title")    
+    provider_name = @anc_patient.get_attribute("Provider Name")   
+
+    @provider_details_available = true if (hospital_date and health_center and health_district and provider_title and provider_name)
+    if @provider_details_available
+      result = RestClient.post(uri, data) rescue "birth report couldnt be sent"
+    end
+    if !@provider_details_available
+      flash[:error] = "Provider Details Incomplete"
+    elsif ((result.downcase rescue "") == "baby added") and params[:update].nil?
       flash[:error] = "Birth Report Sent"
       BirthReport.create(:person_id => params[:id])
     else
@@ -974,20 +1007,20 @@ class PatientsController < ApplicationController
   end
 
   def create_provider
+    
     @patient = Patient.find(params[:person_id]) rescue nil
     @anc_patient = ANCService::ANC.new(@patient) rescue nil
 
-    if !params[:HospitalDate].nil? && !params[:HospitalDate].blank?
-      @anc_patient.set_attribute("Hospital Date", params[:HospitalDate])
-    end
+    @facility = CoreService.get_global_property_value("current_facility") rescue ''
 
-    if !params[:Hospital].nil? && !params[:Hospital].blank?
-      @anc_patient.set_attribute("Health Center", params[:Hospital])
-    end
-
-    if !params[:district].nil? && !params[:district].blank?
-      @anc_patient.set_attribute("Health District", params[:district])
-    end
+    @district = CoreService.get_global_property_value("current_district") rescue ''
+    
+   
+    @anc_patient.set_attribute("Hospital Date", Date.today)
+     
+    @anc_patient.set_attribute("Health Center", @facility)
+   
+    @anc_patient.set_attribute("Health District", @district)
 
     if !params[:ProviderTitle].nil? && !params[:ProviderTitle].blank?
       @anc_patient.set_attribute("Provider Title", params[:ProviderTitle])
@@ -998,6 +1031,122 @@ class PatientsController < ApplicationController
     end
     redirect_to "/patients/birth_report?person_id=#{params[:person_id]}&patient_id=#{params[:patient_id]}"
   end
-  
+
+	def children
+    @super_user = false
+    @clinician  = false
+    @doctor     = false
+    @regstration_clerk  = false
+
+    @user = User.find(session[:user_id])
+    @user_privilege = @user.user_roles.collect{|x|x.role.downcase}
+
+    if @user_privilege.include?("superuser")
+      @super_user = true
+    elsif @user_privilege.include?("clinician")
+      @clinician  = true
+    elsif @user_privilege.include?("doctor")
+      @doctor     = true
+    elsif @user_privilege.include?("regstration_clerk")
+      @regstration_clerk  = true
+    end
+
+    @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil    
+		@mother = MaternityService::Maternity.new(@patient) rescue nil
+
+		@children = @mother.kids		
+		
+		@children_names = @children.collect{|child| PersonName.find_by_person_id(child.person_b).given_name + "  " + 				PersonName.find_by_person_id(child.person_b).family_name }
+		
+		@child_date_map = Hash.new
+		@gender = Hash.new
+		@children.each do |child|
+			name =  PersonName.find_by_person_id(child.person_b).given_name + "  " + PersonName.find_by_person_id(child.person_b).family_name
+			cc_person = Person.find(child.person_b)
+			@child_date_map["#{name}"] = cc_person.birthdate.strftime("%d/%b/%Y")
+			@gender["#{name}"] = "female" if cc_person.gender.match(/F/i)
+			@gender["#{name}"] = "male"  if !cc_person.gender.match(/F/i)
+		end
+		
+		@encounter_map = Hash.new
+
+		@children.each do |child|
+      name =  PersonName.find_by_person_id(child.person_b).given_name + "  " +		PersonName.find_by_person_id(child.person_b).family_name
+      @encounter_map["#{name}"] = Hash.new
+      baby_encounters = Encounter.find(:all, :conditions => ["patient_id = ? AND encounter_type = ?", child.person_b, EncounterType.find_by_name("UPDATE OUTCOME").id]) rescue []
+      baby_encounters.each do |enc|
+        enc_name = enc.name
+        @encounter_map["#{name}"]["#{enc_name}"] = Hash.new if !@encounter_map["#{name}"]["#{enc_name}"]
+        enc.observations.each do |o|
+          concept = ConceptName.find_by_concept_id(o.concept_id).name
+          @encounter_map["#{name}"]["#{enc_name}"]["#{concept}"] = o.answer_string
+        end
+			end
+		end rescue nil
+		
+		#Lazy bones never build interfaces in HTML only, Baby encounters come here
+		@output = Hash.new
+		
+		@children_names.each do |cd|
+			@display_text = ""
+			@encounter_map["#{cd}"].each do |enc_name|
+        @display_text += "<table style='font-size: 1.0em; width: 100%;'><tr style='font-size: 0.8em; color: white; background: gray;'><th>" + enc_name.first + "</th><th>" + "</th></tr>"
+        enc = enc_name.first
+        cycle = 0
+
+        apgar_values = Hash.new
+        apgar_values2 = Hash.new
+        
+        ["APGAR Minute One", "Appearance Minute One", "Pulse Minute One", "Grimance Minute One", "Activity Minute One", "Respiration Minute One"].each do |field|
+          apgar_values["#{field}"] = @encounter_map["#{cd}"]["#{enc}"][field] rescue nil if @encounter_map["#{cd}"]["#{enc}"][field]
+          @encounter_map["#{cd}"]["#{enc}"].delete(field)
+        end
+        apgar = Hash.new
+        apgar_values = apgar_values.sort.map do |key, value|
+          apgar["#{key}"] = value
+        end
+        
+        ["APGAR Minute Five", "Appearance Minute Five", "Pulse Minute Five", "Grimance Minute Five", "Activity Minute Five", "Respiration Minute Five"].each do |field|
+          apgar_values2["#{field}"] = @encounter_map["#{cd}"]["#{enc}"][field] rescue nil if @encounter_map["#{cd}"]["#{enc}"][field]
+          @encounter_map["#{cd}"]["#{enc}"].delete(field)
+        end
+        apgar2 = Hash.new
+        apgar_values2 = apgar_values2.sort.map do |key, value|
+          apgar2["#{key}"] = value
+        end
+
+        @encounter_map["#{cd}"]["#{enc}"].each do |concept|
+					if cycle%2 == 1				
+            @display_text  += "<tr class = 'odd'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge").gsub("Gender of contact", "Gender") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
+					else
+            @display_text  += "<tr class = 'even'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge").gsub("Gender of contact", "Gender") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
+					end
+					cycle += 1					
+				end
+
+        apgar.each do |concept|
+					if cycle%2 == 1
+            @display_text  += "<tr class = 'odd'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge").gsub("Gender of contact", "Gender") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
+					else
+            @display_text  += "<tr class = 'even'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge").gsub("Gender of contact", "Gender") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
+					end
+					cycle += 1
+				end
+
+        apgar2.each do |concept|
+					if cycle%2 == 1
+            @display_text  += "<tr class = 'odd'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge").gsub("Gender of contact", "Gender") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
+					else
+            @display_text  += "<tr class = 'even'><td class ='concept'>" + concept.first.gsub("confinement" , "delivery").gsub("Status of baby", "Status at discharge").gsub("Gender of contact", "Gender") + " </td><td class ='obs'>" +  concept.second + "</td></tr>"
+					end
+					cycle += 1
+				end
+        
+        @display_text += "</table>"
+		
+			end
+      @output["#{cd}"] = @display_text
+		end
+  end
 end
 

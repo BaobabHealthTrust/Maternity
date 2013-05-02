@@ -1,0 +1,35 @@
+<style>
+  #nav {
+    background-color: #333333;
+    border-top:3px solid #99AAB7;
+    color:#CADCEA;
+    height:80px;
+    width:100%;
+    bottom:0px;
+    position:absolute;
+    overflow:hidden;
+    z-index: 1000;
+  }
+  #footer {
+    background-color: #333333;
+  }
+  #main {
+    width: 100%;
+    height: 95%;
+		border: 0px;
+  }
+	#title{
+		text-align: center;
+		vertical-align: middle;
+		font-weight: bold;
+		width: 100%;
+		height: 98%;
+		font-size: 1.1em;
+	}
+  button{
+    margin: 5px;
+  }
+</style>
+<div id = "title"><span style ="font-size: 1.3em;">BABIES MATRIX</span> <br><span>(Adapted to Capture Data Quality)</span><div>
+<iframe id="main" src="/cohort/baby_matrix_printable?end_date=<%=params[:end_date]%>&start_date=<%=params[:start_date]%>"></iframe>
+

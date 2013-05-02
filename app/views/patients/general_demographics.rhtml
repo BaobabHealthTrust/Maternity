@@ -181,7 +181,7 @@
                 }
 
               %>
-                <% (1..(@maternity_patient.kids.length)).each do |baby| %>
+                <% (1..(@maternity_patient.live_kids.length)).each do |baby| %>
                   <% if baby == 1 %>
                     <table style=" width: 97%;">
                       <tr>
@@ -211,8 +211,8 @@
                         </td>
                         <td>
                           <button style="min-width: 300px;" onclick="window.location='/patients/birth_report?person_id=<%=
-                                  (@maternity_patient.kids.length >= baby ? 
-                                      @maternity_patient.kids[baby - 1].person_b : "") %>&patient_id=<%= @patient.id %>'">
+                                  (@maternity_patient.live_kids.length >= baby ? 
+                                      @maternity_patient.live_kids[baby - 1].person_b : "") %>&patient_id=<%= @patient.id %>'">
                             <span>
                               <%= "#{baby}#{prefixes[baby]}" %> Baby
                             </span>
@@ -223,18 +223,18 @@
                         </td>
                         <td>
                           <button style="min-width: 300px;" onclick="window.location='/patients/<%=
-                          (@maternity_patient.kids.length < baby ?
+                          (@maternity_patient.live_kids.length < baby ?
                               "search" : "demographics") %>?patient_id=<%=
-                          @patient.id %>&person_id=<%= (@maternity_patient.kids.length >= baby ?
-                                      @maternity_patient.kids[baby - 1].person_b : "") %>&cat=baby&gender='">
+                          @patient.id %>&person_id=<%= (@maternity_patient.live_kids.length >= baby ?
+                                      @maternity_patient.live_kids[baby - 1].person_b : "") %>&cat=baby&gender='">
                             <span>
                               <%= "#{baby}#{prefixes[baby]}" %> Baby
                             </span>
                           </button>
                         </td>
                         <td>
-                          <% if !@maternity_patient.kids[baby - 1].nil?  %>
-                            <div class="void" relationship="<%= @maternity_patient.kids[baby - 1].id %>"
+                          <% if !@maternity_patient.live_kids[baby - 1].nil?  %>
+                            <div class="void" relationship="<%= @maternity_patient.live_kids[baby - 1].id %>"
                                  style="margin-top: 20px; margin-right: 30px;">
                               <img src="/images/cancel_flat_small_red.png" alt="X" />
                             </div>
@@ -242,7 +242,7 @@
                           &nbsp;
                         </td>
                       </tr>
-                      <% if baby == @maternity_patient.kids.length %>
+                      <% if baby == @maternity_patient.live_kids.length %>
                       </table>
                     </div>
                   <% end %>

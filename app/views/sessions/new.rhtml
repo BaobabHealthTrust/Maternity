@@ -14,7 +14,7 @@ end
   }
 
   function inform() {
-    $('infoBar'+tstCurrentPage).innerHTML = "<%= welcome_message %>";
+    __$('infoBar'+tstCurrentPage).innerHTML = "<%= welcome_message %>";
   }
 
   function hideMessage(){
@@ -38,12 +38,12 @@ end
   <label for="login">Username</label>
   <%= text_field_tag(:login, nil, :helpText => "Enter user name", :textCase => "lower",
     :tt_onLoad => "inform(); barcodeId = 'touchscreenInput1';",
-    :condition => "if($('login_barcode')){$('login_barcode').value == ''}") %><br />
+    :condition => "if(__$('login_barcode')){__$('login_barcode').value == ''}") %><br />
 
   <label for="password">Password</label>
   <%= password_field_tag(:password, nil, :helpText => "Enter password", :textCase => "lower",
     :tt_onLoad => "inform(); barcodeId = 'touchscreenInput2';",
-    :condition => "if($('login_barcode')){$('login_barcode').value == ''}") %><br />
+    :condition => "if(__$('login_barcode')){__$('login_barcode').value == ''}") %><br />
 
   <%= submit_tag value="Submit"%>
 <% end %>

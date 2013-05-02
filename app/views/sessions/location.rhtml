@@ -9,11 +9,11 @@
   }
 
   function inform() {
-    $('infoBar'+tstCurrentPage).innerHTML = "<%= welcome_message %>";
+    __$('infoBar'+tstCurrentPage).innerHTML = "<%= welcome_message %>";
   }
 
   function updateUserProperty(){
-    var aUrl = "/user/add_update_property?username="+ tstUsername + "&property=last_login_location&property_value=" + $('ward').value;
+    var aUrl = "/user/add_update_property?username="+ tstUsername + "&property=last_login_location&property_value=" + __$('ward').value;
     var xmlhttp = new XMLHttpRequest();
     xmlhttp.open('GET', aUrl, true);
     xmlhttp.send(null);
@@ -21,7 +21,7 @@
   }
 
   function updateNextButton() {
-    $('nextButton').setAttribute("onmousedown", "updateUserProperty(); gotoNextPage();");
+    __$('nextButton').setAttribute("onmousedown", "updateUserProperty(); gotoNextPage();");
   }
 
   setTimeout("initVars()", 300);
@@ -34,13 +34,16 @@
   <%= hidden_field_tag(:location, @location, :helpText=> "Workstation Location", :field_type => "number", :tt_onLoad => "inform();") %><br>
 
   <label for="ward">Ward</label>
+  <%if CoreService.get_global_property_value('current_facility').match('Bwaila Maternity Wing')%>
+    <%@login_wards.delete("Post-Natal Ward")%>
+  <%end%>
   <%if !CoreService.get_global_property_value('hdu_pog_theater_wards')%>
-	  <%@login_wards.delete("High Dependency Unit (HDU)")%>
-	  <%@login_wards.delete("Private Obstetric and Gynaecology")%> 
-      <%@login_wards.delete("Theater")%>
+    <%@login_wards.delete("High Dependency Unit (HDU)")%>
+    <%@login_wards.delete("Private Obstetric and Gynaecology")%>
+    <%@login_wards.delete("Theater")%>
   <%else%>
-	  <%@login_wards.delete("Post-Natal Ward (High Risk)")%> 
-      <%@login_wards.delete("Post-Natal Ward (Low Risk)")%> 
+    <%@login_wards.delete("Post-Natal Ward (High Risk)")%>
+    <%@login_wards.delete("Post-Natal Ward (Low Risk)")%>
   <%end%>
 
   <%= select_tag("ward", options_for_select(@login_wards), {:helpText => 'Select Ward', :tt_requireNextClick => 'true', :tt_onload => 'updateNextButton();'})%> <br>

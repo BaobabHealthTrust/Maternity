@@ -35,6 +35,8 @@
     :helptext => "Provider Title"
   } %>
 
+<%if false %>
+
   <p><label for="region_region_name">Region</label></br>
     <%= text_field "region" , 'region_name',
       :helpText => "Region",
@@ -57,10 +59,13 @@
     :tt_onLoad => "$('nextButton').style.display = 'block';  $('touchscreenInput'+tstCurrentPage).value = facility; "
   } %>
 
+
   <%= text_field_tag "HospitalDate", nil,
     {
     :helptext => "HospitalDate",
     :field_type => "date"
   } %>
+
+    <%end%>
 
 <% end %>
