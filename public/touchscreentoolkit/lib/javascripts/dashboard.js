@@ -38,10 +38,6 @@ function __$(id){
 }
 
 function checkCtrl(obj){
-    if(obj == null){
-        return [null, null, null, null];
-    }
-    
     var o = obj;
     var t = o.offsetTop;
     var l = o.offsetLeft + 1;
@@ -115,30 +111,30 @@ function generateHomepage(){
         }
     }
 
-    sitecol1.innerHTML = "<b>Facility:</b> " + (__$("facility") ? site : "&nbsp;");
+    sitecol1.innerHTML = "<b>Mudzi:</b> " + (__$("facility") ? site : "&nbsp;");
 
     siterow.appendChild(sitecol1);
 
-    var sitecol2 = document.createElement("div");
-    sitecol2.id = "sitecol2";
+    //var sitecol2 = document.createElement("div");
+    //sitecol2.id = "sitecol2";
 
     if(__$("location")) {
         var location = __$("location").innerHTML.trim().replace(/\(/g, "").replace(/\)/g, "");
 
         if(location.trim().length > 0){
-            if(location.trim().length > 20) {
+            if(location.trim().length > 30) {
                 var s = location.trim().split(" ");
 
                 if(s.length > 0){
                     for(var i = 0; i < s.length; i++){
-                        if(s[0].trim().length < 15 && i == 0){
+                        if(s[0].trim().length < 25 && i == 0){
                             loc += s[i].trim() + " ";
                         } else {
                             loc += s[i].substr(0,1).toUpperCase() + ".";
                         }
                     }
                 } else {
-                    loc = location.trim().substr(0, 18) + " ...";
+                    loc = location.trim().substr(0, 28) + " ...";
                 }
             } else {
                 loc = location.trim();
@@ -146,9 +142,9 @@ function generateHomepage(){
         }
     }
 
-    sitecol2.innerHTML = "<b>Location:</b> " + (__$("location") ? loc : "&nbsp;");
+    //sitecol2.innerHTML = "<b>Location:</b> " + (__$("location") ? loc : "&nbsp;");
 
-    siterow.appendChild(sitecol2);
+    //siterow.appendChild(sitecol2);
 
     var logininfo = document.createElement("div");
     logininfo.id = "logininfo";
@@ -201,15 +197,15 @@ function generateHomepage(){
 
     if(__$('date').getAttribute('retrospective') != null){
 
-        login.innerHTML = "<b>Date:</b> <span  style='" + (__$('date').getAttribute('retrospective') == 'true' ? "color: #f00;" : "") +
+        login.innerHTML = "<b>Tsiku:</b> <span  style='" + (__$('date').getAttribute('retrospective') == 'true' ? "color: #f00;" : "") +
         "'>" + (__$("date") ? current_date : datenow) + "</span><br /><div id='user'>" +
-        "<b>User:</b> " + (__$("user") ? user : "&nbsp;") + "</div>";
+        "<b>Inuyo:</b> " + (__$("user") ? user : "&nbsp;") + "</div>";
     
     } else {
 
-        login.innerHTML = "<b>Date:</b> <span  style='" + (current_date.trim() != datenow.trim() ? "color: #f00;" : "") +
+        login.innerHTML = "<b>Tsiku:</b> <span  style='" + (current_date.trim() != datenow.trim() ? "color: #f00;" : "") +
         "'>" + (__$("date") ? current_date : datenow) + "</span><br /><div id='user'>" +
-        "<b>User:</b> " + (__$("user") ? user : "&nbsp;") + "</div>";
+        "<b>Inuyo:</b> " + (__$("user") ? user : "&nbsp;") + "</div>";
     
     }
 
@@ -227,7 +223,7 @@ function generateHomepage(){
 
     var scanlabel = document.createElement("div");
     scanlabel.id = "scanlabel";
-    scanlabel.innerHTML = "Scan Patient Barcode :";
+    scanlabel.innerHTML = "Pangani scan barcode :";
 
     bannerrow.appendChild(scanlabel);
 
@@ -455,7 +451,7 @@ function generateDashboard(){
     if(__$('patient_id')){
         var patientid = document.createElement("div");
         patientid.id = "id";
-        patientid.innerHTML = "Patient ID"
+        patientid.innerHTML = "Nambala yachiphaso"
 
         nameRow.appendChild(patientid);
 
@@ -474,7 +470,7 @@ function generateDashboard(){
 
         var residence = document.createElement("div");
         residence.id = "residence";
-        residence.innerHTML = "Residence"
+        residence.innerHTML = "Mudzi"
 
         residenceRow.appendChild(residence);
 
@@ -494,7 +490,7 @@ function generateDashboard(){
 
         var age = document.createElement("div");
         age.id = "age";
-        age.innerHTML = "Age";
+        age.innerHTML = "Zaka";
         age.className = "patientLabel";
 
         ageRow.appendChild(age);
@@ -567,31 +563,8 @@ function generateDashboard(){
 
     var links = document.createElement("div");
     links.id = "buttonlinks";
-    links.style.height = "30%";
 
     content.appendChild(links);
-
-    var start = document.createElement("button");
-    start.id = "btnStart";
-    start.className = "menu_start_button blue";
-    start.style.position = "absolute";
-    start.style.width = "220px";
-    start.style.height = "220px";
-    start.style.margin = "10px";
-    start.style.fontSize = "32px";
-    start.style.right = "10px";
-    start.style.zIndex = 100;
-    start.innerHTML = "<img src='/touchscreentoolkit/lib/images/emblem.gif' height='80' style='margin: 10px;' /><br />Tasks";
-
-    start.onclick = function(){
-        if(__$('menu')){
-            collapse()
-        } else {
-            expand(this)
-        }
-    }
-
-    links.appendChild(start);
 
     var main = document.createElement("div");
     main.id = "patient-dashboard-main";
@@ -606,7 +579,7 @@ function generateDashboard(){
     if(tt_cancel_show){
         var finish = document.createElement("button");
         finish.id = "btnNext";
-        finish.innerHTML = "<span>Finish</span>";
+        finish.innerHTML = "<span>Maliza</span>";
         finish.className = "green";
         finish.style.cssFloat = "right";
         finish.style.margin = "10px";
@@ -651,7 +624,7 @@ function generateDashboard(){
         generateTab(heading, __$("patient-dashboard-main"))
     }
 
-    /*if(__$("links")){
+    if(__$("links")){
         var childlinks = __$("links").options;
 
         if(childlinks.length <= 4){
@@ -677,7 +650,7 @@ function generateDashboard(){
             links.appendChild(button);
         }
 
-    }*/
+    }
 
     if(__$("navigation_links")){
         var childlinks = __$("navigation_links").options;
@@ -764,7 +737,7 @@ function generateGeneralDashboard(){
 
     var finish = document.createElement("button");
     finish.id = "btnNext";
-    finish.innerHTML = "<span>Finish</span>";
+    finish.innerHTML = "<span>Maliza</span>";
     finish.className = "green";
     finish.style.cssFloat = "right";
     finish.style.margin = "10px";
@@ -1103,8 +1076,8 @@ function confirmOperation(message, responseAction, okOnly) {
     
     __$("tstMessageBar").innerHTML = (message ? message : "Some important tasks are yet to be done. " +
         "Are you sure you still want to continue?") + "<br/>" +
-    (okOnly ? "" : "<button onmousedown='hideMessage(); cancelOperation(\"" + responseAction + "\");'><span>Yes</span></button>") +
-    "<button onmousedown='hideMessage();'><span>" + (okOnly ? "OK" : "No") + "</span></button>";
+    (okOnly ? "" : "<button onmousedown='hideMessage(); cancelOperation(\"" + responseAction + "\");'><span>Eya</span></button>") +
+    "<button onmousedown='hideMessage();'><span>" + (okOnly ? "Eya" : "Ayi") + "</span></button>";
     __$("tstMessageBar").style.display = "block";
     
 }
@@ -1130,8 +1103,8 @@ function confirmYesNo(message, yes, no) {
     }
     confirmation.innerHTML = ''+
     '<div class="confirmation" >'+ message+ '<div>'+
-    '<button id="yes"><span>Yes</span></button>'+
-    '<button id="no"><span>No</span></button></div>'+
+    '<button id="yes"><span>Eya</span></button>'+
+    '<button id="no"><span>Ayi</span></button></div>'+
     '</div>';
 
     __$("yes").onmousedown = yes;   
@@ -1145,108 +1118,6 @@ function confirmYesNo(message, yes, no) {
 function hideConfirmation(){
     if (confirmation != null) confirmation.setAttribute('style', 'display:none');
     if (confirmationTimeout != null) window.clearTimeout(confirmationTimeout);
-}
-
-function expand(ctrl){
-    branches = {};
-
-    // [w, h, t, l]
-    var o = checkCtrl(ctrl);
-
-    var shield = document.createElement("div");
-    shield.id = "lyrShield";
-    shield.style.position = "absolute";
-    shield.style.width = "100%";
-    shield.style.height = "100%";
-    shield.style.left = "0px";
-    shield.style.top = "0px";
-    shield.style.backgroundColor = "#333"; // "#0088CC";
-    shield.style.opacity = "0.5";
-    shield.style.zIndex = 90;
-
-    document.body.appendChild(shield);
-
-    var menu = document.createElement("div");
-    menu.id = "menu";
-    menu.style.position = "absolute";
-    menu.style.left = (o[3] - 285) + "px";
-    menu.style.top = (o[2]) + "px";
-    menu.style.width = "280px";
-    menu.style.height = "650px";
-    menu.style.zIndex = 100;
-    menu.style.overflowY = "auto";
-    menu.style.overflowX = "hidden";
-
-    document.body.appendChild(menu);
-
-    var submenu = document.createElement("div");
-    submenu.id = "submenu";
-    submenu.style.position = "absolute";
-    submenu.style.left = (o[3] - (284 * 2)) + "px";
-    submenu.style.top = (o[2]) + "px";
-    submenu.style.width = "280px";
-    submenu.style.height = "650px";
-    submenu.style.zIndex = 100;
-    submenu.style.overflowY = "auto";
-    submenu.style.overflowX = "hidden";
-
-    document.body.appendChild(submenu);
-
-    var topLevelOptions = __$("links").getElementsByTagName("optgroup");
-
-    for(var i = 0; i < topLevelOptions.length; i++){
-        var middleLevelOptions = topLevelOptions[i].getElementsByTagName("option");
-
-        if(middleLevelOptions.length > 0){
-            branches[topLevelOptions[i].getAttribute("label")] = middleLevelOptions;
-        }
-
-        var button = document.createElement("button");
-        button.className = "menu_button blue";
-        button.style.width = "99%";
-        button.setAttribute("path", topLevelOptions[i].getAttribute("value"));
-        button.innerHTML = topLevelOptions[i].getAttribute("label");
-
-        button.onclick = function(){
-            if(branches[this.innerHTML]){
-                expandSub(this.innerHTML);
-            } else {
-                collapse(this.getAttribute("path"));
-            }
-        }
-
-        menu.appendChild(button);
-    }
-
-}
-
-function expandSub(group){
-    __$("submenu").innerHTML = "";
-
-    for(var i = 0; i < branches[group].length; i++){
-
-        var button = document.createElement("button");
-        button.className = "menu_button blue";
-        button.style.width = "99%";
-        button.setAttribute("path", branches[group][i].value);
-        button.innerHTML = branches[group][i].innerHTML;
-
-        button.onclick = function(){
-            collapse(this.getAttribute("path"));
-        }
-
-        __$("submenu").appendChild(button);
-    }
-}
-
-function collapse(path){
-    if(typeof(path) != "undefined"){
-        window.location = path;
-    }
-    
-    document.body.removeChild(__$("lyrShield"))
-    document.body.removeChild(__$("menu"));
-    document.body.removeChild(__$("submenu"));
 }
 
 //window.addEventListener("load", createPage, false);

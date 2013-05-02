@@ -1070,10 +1070,10 @@ function confirmOperation(message, responseAction, okOnly) {
     
     }
     
-    __$("tstMessageBar").innerHTML = (message ? message : "Some important tasks are yet to be done. " +
-        "Are you sure you still want to continue?") + "<br/>" +
-    (okOnly ? "" : "<button onmousedown='hideMessage(); cancelOperation(\"" + responseAction + "\");'><span>Yes</span></button>") +
-    "<button onmousedown='hideMessage();'><span>" + (okOnly ? "OK" : "No") + "</span></button>";
+    __$("tstMessageBar").innerHTML = (message ? message : "Zinthu zina zikuyenera muzichite. " +
+        "Kodi mukufuna kupitiliza ndi zimene mukufuna kuchita?") + "<br/>" +
+    (okOnly ? "" : "<button onmousedown='hideMessage(); cancelOperation(\"" + responseAction + "\");'><span>Eya</span></button>") +
+    "<button onmousedown='hideMessage();'><span>" + (okOnly ? "Eya" : "Ayi") + "</span></button>";
     __$("tstMessageBar").style.display = "block";
     
 }
@@ -1099,8 +1099,8 @@ function confirmYesNo(message, yes, no) {
     }
     confirmation.innerHTML = ''+
     '<div class="confirmation" >'+ message+ '<div>'+
-    '<button id="yes"><span>Yes</span></button>'+
-    '<button id="no"><span>No</span></button></div>'+
+    '<button id="yes"><span>Eya</span></button>'+
+    '<button id="no"><span>Ayi</span></button></div>'+
     '</div>';
 
     __$("yes").onmousedown = yes;   

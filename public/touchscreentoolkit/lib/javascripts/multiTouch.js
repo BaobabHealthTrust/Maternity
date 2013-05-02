@@ -1915,14 +1915,14 @@ function generatePage(action, method, section){
 
     var btnNext = document.createElement("button");
     btnNext.id = "btnNext";
-    btnNext.innerHTML = (tstCurrentPage >= sections.length ? "<span>Finish</span>" : "<span>Next</span>");
+    btnNext.innerHTML = (tstCurrentPage >= sections.length ? "<span>Maliza</span>" : "<span>Patsogolo</span>");
     btnNext.style.cssFloat = "right";
     btnNext.className = "green navButton";
     btnNext.onclick = function(){
         if(checkFields()){
             tstCurrentPage += 1;
             navigateTo(tstCurrentPage);
-            $("btnNext").innerHTML = (tstCurrentPage >= sections.length ? "<span>Finish</span>" : "<span>Next</span>");
+            $("btnNext").innerHTML = (tstCurrentPage >= sections.length ? "<span>Maliza</span>" : "<span>Patsogolo</span>");
         }
     }
 
@@ -1958,7 +1958,7 @@ function generatePage(action, method, section){
 
     var btnBack = document.createElement("button");
     btnBack.id = "btnBack";
-    btnBack.innerHTML = "<span>Back</span>";
+    btnBack.innerHTML = "<span>Bwelera</span>";
     btnBack.style.cssFloat = "right";
     btnBack.className = "blue navButton";
     btnBack.style.display = (tstCurrentPage > 0 ? "block" : "none");
@@ -1971,7 +1971,7 @@ function generatePage(action, method, section){
 
     var btnCancel = document.createElement("button");
     btnCancel.id = "btnCancel";
-    btnCancel.innerHTML = "<span>Cancel</span>";
+    btnCancel.innerHTML = "<span>Leka</span>";
     btnCancel.style.cssFloat = "left";
     btnCancel.className = "red navButton";
     btnCancel.onclick = function(){
@@ -2459,14 +2459,14 @@ function showSummary(){
 
     var btnNext = document.createElement("button");
     btnNext.id = "btnNext";
-    btnNext.innerHTML = (tstCurrentPage >= sections.length - 1 ? "<span>Finish</span>" : "<span>Next</span>");
+    btnNext.innerHTML = (tstCurrentPage >= sections.length - 1 ? "<span>Maliza</span>" : "<span>Patsogolo</span>");
     btnNext.style.cssFloat = "right";
     btnNext.className = "green navButton";
     btnNext.onclick = function(){
         if(checkFields()){
             tstCurrentPage += 1;
             navigateTo(tstCurrentPage);
-            $("btnNext").innerHTML = (tstCurrentPage >= sections.length - 1? "<span>Finish</span>" : "<span>Next</span>");
+            $("btnNext").innerHTML = (tstCurrentPage >= sections.length - 1? "<span>Maliza</span>" : "<span>Patsogolo</span>");
         }
     }
 
@@ -2474,7 +2474,7 @@ function showSummary(){
 
     var btnClear = document.createElement("button");
     btnClear.id = "btnClear";
-    btnClear.innerHTML = "<span>Clear</span>";
+    btnClear.innerHTML = "<span>Fafaniza</span>";
     btnClear.style.cssFloat = "right";
     btnClear.className = "blue navButton";
     btnClear.onclick = function(){
@@ -2502,7 +2502,7 @@ function showSummary(){
 
     var btnBack = document.createElement("button");
     btnBack.id = "btnBack";
-    btnBack.innerHTML = "<span>Back</span>";
+    btnBack.innerHTML = "<span>Bwelera</span>";
     btnBack.style.cssFloat = "right";
     btnBack.className = "blue navButton";
     btnBack.style.display = (tstCurrentPage > 0 ? "block" : "none");

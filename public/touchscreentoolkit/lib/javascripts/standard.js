@@ -221,14 +221,14 @@ function createButtons() {
     buttonsDiv.innerHTML = "<button id='showDataButton' class='button blue navButton' onMouseDown='toggleShowProgress()'><span>Show Data</span></button>";
 
     // create next/finish button
-    buttonsDiv.innerHTML += "<button id='nextButton' class='button green navButton' onMouseDown='gotoNextPage()'><span>Next</span></button>";
+    buttonsDiv.innerHTML += "<button id='nextButton' class='button green navButton' onMouseDown='gotoNextPage()'><span> >| </span></button>";
 
     // create back button
-    buttonsDiv.innerHTML += "<button id='backButton' class='button blue navButton'><span>Back</span></button>";
+    buttonsDiv.innerHTML += "<button id='backButton' class='button blue navButton'><span> |< </span></button>";
 
     // create clear button or new patient button if on search page
     if (!tstSearchPage) {
-        buttonsDiv.innerHTML += "<button id='clearButton' class='button blue navButton' onMouseDown='clearInput()'><span>Clear</span></button>";
+        buttonsDiv.innerHTML += "<button id='clearButton' class='button blue navButton' onMouseDown='clearInput()'><span>Fufuta</span></button>";
     } else {
         var buttonLabel = "New Patient";
         if (tstSearchMode && (tstSearchMode == "guardian")) {
@@ -242,7 +242,7 @@ function createButtons() {
     buttonsDiv.innerHTML += "<div id='tt_extraButtons'></div>";
 
     // create cancel button
-    buttonsDiv.innerHTML += "<button class='button navButton red' id='cancelButton' onMouseDown='confirmCancelEntry(" + (typeof(save_state) != "undefined"?"true":"") + ");'><span>Cancel</span></button>";
+    buttonsDiv.innerHTML += "<button class='button navButton red' id='cancelButton' onMouseDown='confirmCancelEntry(" + (typeof(save_state) != "undefined"?"true":"") + ");'><span>Leka</span></button>";
 
     return buttonsDiv
 }
@@ -846,7 +846,7 @@ function addSummary(position){
     summaryContainer.style.border = "1px solid #000";
     summaryContainer.style.height = "255px";
     summaryContainer.style.margin = "25px";
-    summaryContainer.style.width = "97%";
+    summaryContainer.style.width = "94.5%";
     summaryContainer.style.backgroundColor = "#ccf";
     summaryContainer.style.fontSize = "1.5em";
     summaryContainer.style.marginBottom = "15px";
@@ -1450,9 +1450,9 @@ function navigateToPage(destPage, validate, navback){
 
         var nextButton = tstNextButton;
         if (destPage+1 == tstPages.length) {
-            nextButton.innerHTML = "<span>Finish</span>";
+            nextButton.innerHTML = "<span>Maliza</span>";
         } else {
-            nextButton.innerHTML = "<span>Next</span>";
+            nextButton.innerHTML = "<span> >| </span>";
         }
         showBestKeyboard(destPage);
 
@@ -1522,7 +1522,7 @@ function inputIsValid() {
             ". Are you sure about this value?</p><div style='display: block;'>" +
             "<button class='button' style='float: none;' onclick='this.offsetParent.style.display=\"none\"; " +
             "gotoPage(tstCurrentPage+1, false);' onmousedown='this.offsetParent.style.display=\"none\"; " +
-            "gotoPage(tstCurrentPage+1, false);'><span>Yes</span></button><button class='button' " +
+            "gotoPage(tstCurrentPage+1, false);'><span>Eya</span></button><button class='button' " +
             "style='float: none; right: 3px;' onmousedown='this.offsetParent.style.display=\"none\"; '>" +
             "<span>No</span></button>";
 
@@ -1548,8 +1548,8 @@ function confirmValue() {
     confirmationBar.appendChild(username);
 
     confirmationBar.innerHTML += "<div style='display: block; margin-top: 15px;'><input type='submit'" +
-    " value='OK' class='btn' style='float: left;' onclick='validateConfirmUsername()'" + 
-    " onmousedown='validateConfirmUsername()'/><input type='submit' value='Cancel' " + 
+    " value='Chabwino' class='btn' style='float: left;' onclick='validateConfirmUsername()'" + 
+    " onmousedown='validateConfirmUsername()'/><input type='submit' value='Leka' " + 
     " class='btn' style='float: right; right: 3px;' onmousedown='cancelConfirmValue()' />";
 
     confirmationBar.style.display = "block";
@@ -1642,9 +1642,9 @@ function showMessage(aMessage, withCancel, timed) {
     messageBar.innerHTML = aMessage +
     "<br />" + (typeof(withCancel) != "undefined" ? (withCancel == true ?
         "<button onmousedown='tstMessageBar.style.display = \"none\"; " +
-        "clearTimeout(tstTimerHandle);'><span>Cancel</span></button>" : "") : "") +
-    "<button style='width: 200px;' onmousedown='tstMessageBar.style.display = \"none\"; " +
-    "clearTimeout(tstTimerHandle); eval(tstTimerFunctionCall);'><span>OK</span></button>";
+        "clearTimeout(tstTimerHandle);'><span>Leka</span></button>" : "") : "") +
+    "<button style='width: 220px;' onmousedown='tstMessageBar.style.display = \"none\"; " +
+    "clearTimeout(tstTimerHandle); eval(tstTimerFunctionCall);'><span>Chabwino</span></button>";
     if (aMessage.length > 0) {
         messageBar.style.display = 'block'
         if((typeof(timed) == "undefined" ? true : timed) == true){
@@ -1672,12 +1672,12 @@ function disableTouchscreenInterface(){
 function confirmCancelEntry(save) {     // If you want to save state set save =
     // true
     if (tstConfirmCancel) {
-        tstMessageBar.innerHTML = "Are you sure you want to Cancel?<br/>" +
-        "<button onmousedown='hideMessage(); cancelEntry();'><span>Yes</span></button>" +
+        tstMessageBar.innerHTML = "Mwatsimikiza mukufuna kuleka?<br/>" +
+        "<button onmousedown='hideMessage(); cancelEntry();'><span>Eya</span></button>" +
         (save?"<button onmousedown='var completeField = document.createElement(\"input\"); \n\
 				completeField.type = \"hidden\"; completeField.value = \"false\"; completeField.name = \"complete\"; \n\
 				document.forms[0].appendChild(completeField); document.forms[0].submit(); hideMessage();'><span>Save</span></button>":"") +
-        "<button onmousedown='hideMessage();'><span>No</span></button>";
+        "<button onmousedown='hideMessage();'><span>Ayi</span></button>";
         tstMessageBar.style.display = "block";
     } else {
         cancelEntry();
@@ -1892,7 +1892,7 @@ function getQwertyKeyboard(){
     "<span class='qwertyKeyboard'>" +
     "<span class='buttonLine'>" +
     getButtons("QWERTYUIOP") +
-    getButtonString('backspace','Delete') +
+    getButtonString('backspace','fufuta') +
     // getButtonString('date','Date') +
     "</span><span style='padding-left:0px' class='buttonLine'>" +
     getButtons("ASDFGHJKL") +
@@ -1907,7 +1907,7 @@ function getQwertyKeyboard(){
     keyboard = keyboard +
     "</span><span style='padding-left:0px' class='buttonLine'>" +
     getButtons("ZXCVBNM,.") + (tstFormElements[tstCurrentPage].tagName == "TEXTAREA" ? "" :
-        getButtonString('whitespace','Space', 'width: 85px;')) +
+        getButtonString('whitespace','mpata', 'width: 85px;')) +
     getButtonString('abc','A-Z') +
     getButtonString('SHIFT','aA') +
     "</span>";
@@ -1915,7 +1915,7 @@ function getQwertyKeyboard(){
     if(tstFormElements[tstCurrentPage].tagName == "TEXTAREA") {
         keyboard = keyboard +
         "</span><span style='padding-left:0px' class='buttonLine'>" +
-        getButtonString('whitespace','Space', 'width: 520px;') +
+        getButtonString('whitespace','mpata', 'width: 520px;') +
         getButtonString('return',"ENTER", 'width: 120px;') +
         "</span>";
     }
@@ -1932,7 +1932,7 @@ function getABCKeyboard(){
     "<span class='buttonLine'>" +
     getButtons("ABCDEFGH") +
     getButtonString('apostrophe',"'") +
-    getButtonString('backspace','Delete') +
+    getButtonString('backspace','fufuta') +
     getButtonString('num','0-9') +
     "</span><span class='buttonLine'>" +
     getButtons("IJKLMNOP") +
@@ -1945,17 +1945,17 @@ function getABCKeyboard(){
     // }
 
     keyboard = keyboard +
-    getButtonString('Unknown','Unknown') +
+    getButtonString('Kaya','Kaya') +
     getButtonString('na','N/A') +
     "</span><span class='buttonLine'>" +
     getButtons("QRSTUVWXYZ") + (tstFormElements[tstCurrentPage].tagName == "TEXTAREA" ? "" : 
-        getButtonString('whitespace','Space', 'width: 85px;')) +
+        getButtonString('whitespace','mpata', 'width: 85px;')) +
     "</span>";
 
     if(tstFormElements[tstCurrentPage].tagName == "TEXTAREA") {
         keyboard = keyboard +
         "</span><span style='padding-left:0px' class='buttonLine'>" +
-        getButtonString('whitespace','Space', 'width: 520px;') +
+        getButtonString('whitespace','mpata', 'width: 520px;') +
         getButtonString('return',"ENTER", 'width: 120px;') +
         "</span>";
     }
@@ -1989,8 +1989,8 @@ function getNumericKeyboard(){
     // getCharButtonSetID("0","zero") +
     getCharButtonSetID(".","decimal") +
     getCharButtonSetID(",","comma") +
-    getButtonString('backspace','Delete') +
-    getButtonString('Unknown','Unknown') +
+    getButtonString('backspace','fufuta') +
+    getButtonString('Kaya','Kaya') +
     getButtonString('SHIFT','aA') +
     "</span>" +
     "</span><span id='buttonLine3' class='buttonLine'>" +
@@ -2125,7 +2125,7 @@ function getDayOfMonthPicker(aYear, aMonth) {
         /* break on the seventh button, implying the end of the week */
         if(i%7 == 0) keyboard.innerHTML +="<span><br/></span>";
     }
-    keyboard.innerHTML += getButtonString("Unknown","Unknown")
+    keyboard.innerHTML += getButtonString("Kaya","Kaya")
 
     if (tstInputTarget.value > numberOfDays) {
         tstInputTarget.value = numberOfDays;
@@ -2199,7 +2199,7 @@ function press(pressedChar){
             case 'done':
                 touchScreenEditFinish(inputTarget);
                 break;
-            case 'space':
+            case 'mpata':
                 inputTarget.value += ' ';
                 break;
             case 'whitespace':
@@ -2243,7 +2243,7 @@ function press(pressedChar){
             case 'SHIFT':
                 toggleShift();
                 break;
-            case 'Unknown':
+            case 'Kaya':
                 inputTarget.value = "Unknown";
                 break;
 
@@ -2503,7 +2503,7 @@ TTInput.prototype = {
         // check for existence
         this.value = this.element.value
         if (this.value.length<1 && this.element.getAttribute("optional") == null) {
-            return "You must enter a value to continue";
+            return "Chonde sankhanipo chimodzi pa zimene mwapatsidwa kuti mupitilire";
         }
         return "";
     },
@@ -3047,28 +3047,28 @@ function dispatchMessage(message, messageBoxType) {
 
     switch(messageBoxType){
         case tstMessageBoxType.OKOnly:
-            buttons = "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\"; gotoPage(tstCurrentPage+1, false);'> <span> OK </span> </button>"
+            buttons = "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\"; gotoPage(tstCurrentPage+1, false);'> <span> Eya </span> </button>"
             break;
 
         case tstMessageBoxType.OKCancel:
-            buttons = "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\"; gotoPage(tstCurrentPage+1, false);'> <span> OK </span> </button>" +
-            "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\";'> <span> Cancel </span> </button>"
+            buttons = "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\"; gotoPage(tstCurrentPage+1, false);'> <span> Eya </span> </button>" +
+            "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\";'> <span> Leka </span> </button>"
             break;
 
         case tstMessageBoxType.YesNo:
-            buttons = "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\"; gotoPage(tstCurrentPage+1, false);'> <span> Yes </span> </button>" +
-            "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\";'> <span>No</span> </button>"
+            buttons = "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\"; gotoPage(tstCurrentPage+1, false);'> <span> Eya </span> </button>" +
+            "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\";'> <span>Ayi</span> </button>"
             break;
 
         case tstMessageBoxType.YesNoCancel:
-            buttons = "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\"; gotoPage(tstCurrentPage+1, false);'> <span> Yes </span> </button>" +
-            "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\";'> <span> No </span> </button>" +
-            "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\";'> <span> Cancel </span> </button>"
+            buttons = "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\"; gotoPage(tstCurrentPage+1, false);'> <span> Eya </span> </button>" +
+            "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\";'> <span> Ayi </span> </button>" +
+            "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\";'> <span> Leka </span> </button>"
             break;
 
         default:
-            buttons = "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\"; gotoPage(tstCurrentPage+1, false);'> <span> OK </span> </button>" +
-            "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\";'> <span> Cancel </span> </button>"
+            buttons = "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\"; gotoPage(tstCurrentPage+1, false);'> <span> Eya </span> </button>" +
+            "<button class = 'button' onclick = 'this.offsetParent.style.display=\"none\";'> <span> Leka </span> </button>"
             break;
 
     }
@@ -3099,7 +3099,7 @@ function confirmRecordDeletion(message, form) {
         tstMessageBar.className = "messageBar";
 
         tstMessageBar.innerHTML = message + "<br/>" + "<button onmousedown=\"document.getElementById('content').removeChild(document.getElementById('messageBar')); if(document.getElementById('" + form + "')) document.getElementById('"
-        + form + "').submit();\"><span>Yes</span></button><button onmousedown=\"document.getElementById('content').removeChild(document.getElementById('messageBar'));\"><span>No</span></button>";
+        + form + "').submit();\"><span>Eya</span></button><button onmousedown=\"document.getElementById('content').removeChild(document.getElementById('messageBar'));\"><span>Ayi</span></button>";
 
         tstMessageBar.style.display = "block";
         document.getElementById("content").appendChild(tstMessageBar);
@@ -3216,9 +3216,9 @@ DateSelector.prototype = {
 			</td><td> \
                         <button id="today" ' + (tstCurrentDate ? (tstCurrentDate == tstInternalCurrentDate ? 
             'class="blue" ' : 'class="red" ') : 'class="blue" ') + 
-        ' onmousedown="setToday()" style="width: 150px;"><span>Today</span></button> \
+        ' onmousedown="setToday()" style="width: 150px;"><span>Lero</span></button> \
 			<!--button id="num" onmousedown="updateKeyColor(this);press(this.id);" style="width: 150px;"><span>Num</span></button--> \
-			<button id="Unknown" onmousedown="updateKeyColor(this);press(this.id);" style="width: 150px;"><span>Unknown</span></button> \
+			<button id="Unknown" onmousedown="updateKeyColor(this);press(this.id);" style="width: 150px;"><span>Kaya</span></button> \
 			</tr></table> \
 			</div> \
 		';
@@ -3522,7 +3522,7 @@ TimeSelector.prototype = {
 				<button id="timeselector_preSecond" onmousedown="ds.decrementSecond();"><span>-</span></button> \
 			</div--> \
 			</td><td> \
-			<!--button id="Unknown" onmousedown="updateKeyColor(this);press(this.id);" style=""><span>Unknown</span></button--> \
+			<!--button id="Unknown" onmousedown="updateKeyColor(this);press(this.id);" style=""><span>Kaya</span></button--> \
 			</tr></table> \
 			</div> \
 		';
@@ -3671,7 +3671,7 @@ function showKeyboard(full_keyboard, qwerty){
     var row1 = (qwerty ? ["q","w","e","r","t","y","u","i","o","p"] : ["a","b","c","d","e","f","g","h","i","j"]);
     var row2 = (qwerty ? ["a","s","d","f","g","h","j","k","l",":"] : ["k","l","m","n","o","p","q","r","s",":"]);
     var row3 = (qwerty ? ["z","x","c","v","b","n","m",",",".","?"] : ["t","u","v","w","x","y","z",",",".","?"]);
-    var row4 = ["CAP","space","delete"];
+    var row4 = ["CAP","mpata","fufuta"];
     var row5 = ["1","2","3","4","5","6","7","8","9","0"];
     var row6 = ["_","-","@","(",")","+",";","=","\\","/"];
 
@@ -3692,13 +3692,12 @@ function showKeyboard(full_keyboard, qwerty){
         td5.vAlign = "middle";
         td5.style.cursor = "pointer";
         td5.bgColor = "#ffffff";
-        td5.style.minWidth = "30px";
+        td5.width = "30px";
 
         tr5.appendChild(td5);
 
         var btn = document.createElement("button");
         btn.className = "blue";
-        btn.style.width = "80%";
         btn.innerHTML = "<span>" + row5[i] + "</span>";
         btn.onclick = function(){
             if(!this.innerHTML.match(/^$/)){
@@ -3722,13 +3721,12 @@ function showKeyboard(full_keyboard, qwerty){
         td1.vAlign = "middle";
         td1.style.cursor = "pointer";
         td1.bgColor = "#ffffff";
-        td1.style.minWidth = "30px";
+        td1.width = "30px";
 
         tr1.appendChild(td1);
 
         var btn = document.createElement("button");
         btn.className = "blue";
-        btn.style.width = "80%";
         btn.innerHTML = "<span>" + row1[i] + "</span>";
         btn.onclick = function(){
             if(!this.innerHTML.match(/^$/)){
@@ -3750,13 +3748,12 @@ function showKeyboard(full_keyboard, qwerty){
         td2.vAlign = "middle";
         td2.style.cursor = "pointer";
         td2.bgColor = "#ffffff";
-        td2.style.minWidth = "30px";
+        td2.width = "30px";
 
         tr2.appendChild(td2);
 
         var btn = document.createElement("button");
         btn.className = "blue";
-        btn.style.width = "80%";
         btn.innerHTML = "<span>" + row2[i] + "</span>";
         btn.onclick = function(){
             if(!this.innerHTML.match(/^$/)){
@@ -3778,13 +3775,12 @@ function showKeyboard(full_keyboard, qwerty){
         td3.vAlign = "middle";
         td3.style.cursor = "pointer";
         td3.bgColor = "#ffffff";
-        td3.style.minWidth = "30px";
+        td3.width = "30px";
 
         tr3.appendChild(td3);
 
         var btn = document.createElement("button");
         btn.className = "blue";
-        btn.style.width = "80%";
         btn.innerHTML = "<span>" + row3[i] + "</span>";
         btn.onclick = function(){
             if(!this.innerHTML.match(/^$/)){
@@ -3806,13 +3802,12 @@ function showKeyboard(full_keyboard, qwerty){
         td6.vAlign = "middle";
         td6.style.cursor = "pointer";
         td6.bgColor = "#ffffff";
-        td6.style.minWidth = "30px";
+        td6.width = "30px";
 
         tr6.appendChild(td6);
 
         var btn = document.createElement("button");
         btn.className = "blue";
-        btn.style.width = "80%";
         btn.innerHTML = "<span>" + row6[i] + "</span>";
         btn.onclick = function(){
             if(!this.innerHTML.match(/^$/)){
@@ -3841,10 +3836,10 @@ function showKeyboard(full_keyboard, qwerty){
             case "cap":
                 td4.colSpan = 2;
                 break;
-            case "space":
+            case "mpata":
                 td4.colSpan = 6;
                 break;
-            case "delete":
+            case "fufuta":
                 td4.colSpan = 2;
                 break;
             default:
@@ -3856,8 +3851,8 @@ function showKeyboard(full_keyboard, qwerty){
         var btn = document.createElement("button");
         btn.innerHTML = (row4[i].trim().length > 0 ? "<span>" + row4[i] + "</span>" : "");
         
-        if(row4[i] == "space"){
-            btn.style.minWidth = "60%";
+        if(row4[i] == "mpata"){
+            btn.style.width = "80%";
         }
         
         btn.onclick = function(){
@@ -3870,7 +3865,7 @@ function showKeyboard(full_keyboard, qwerty){
                     for(var c = 0; c < cells.length; c++){
                         if(cells[c].innerHTML.match(/<span>(.+)<\/span>/)[1].toLowerCase() != "cap"
                             && cells[c].innerHTML.match(/<span>(.+)<\/span>/)[1].toLowerCase() != "clear"
-                            && cells[c].innerHTML.match(/<span>(.+)<\/span>/)[1].toLowerCase() != "space"
+                            && cells[c].innerHTML.match(/<span>(.+)<\/span>/)[1].toLowerCase() != "mpata"
                             && cells[c].innerHTML.match(/<span>(.+)<\/span>/)[1].toLowerCase() != "full"
                             && cells[c].innerHTML.match(/<span>(.+)<\/span>/)[1].toLowerCase() != "basic" ){
 
@@ -3886,8 +3881,8 @@ function showKeyboard(full_keyboard, qwerty){
 
                     for(var c = 0; c < cells.length; c++){
                         if(cells[c].innerHTML.match(/<span>(.+)<\/span>/)[1].toLowerCase() != "cap"
-                            && cells[c].innerHTML.match(/<span>(.+)<\/span>/)[1].toLowerCase() != "delete"
-                            && cells[c].innerHTML.match(/<span>(.+)<\/span>/)[1].toLowerCase() != "space"
+                            && cells[c].innerHTML.match(/<span>(.+)<\/span>/)[1].toLowerCase() != "fufuta"
+                            && cells[c].innerHTML.match(/<span>(.+)<\/span>/)[1].toLowerCase() != "mpata"
                             && cells[c].innerHTML.match(/<span>(.+)<\/span>/)[1].toLowerCase() != "full"
                             && cells[c].innerHTML.match(/<span>(.+)<\/span>/)[1].toLowerCase() != "basic" ){
 
@@ -3901,11 +3896,11 @@ function showKeyboard(full_keyboard, qwerty){
                 if(!this.innerHTML.match(/^$/)){
                     $(global_control).value += "\n";
                 }
-            } else if(this.innerHTML.match(/<span>(.+)<\/span>/)[1].toLowerCase() == "space"){
+            } else if(this.innerHTML.match(/<span>(.+)<\/span>/)[1].toLowerCase() == "mpata"){
 
                 $(global_control).value += " ";
 
-            } else if(this.innerHTML.match(/<span>(.+)<\/span>/)[1].toLowerCase() == "delete"){
+            } else if(this.innerHTML.match(/<span>(.+)<\/span>/)[1].toLowerCase() == "fufuta"){
 
                 $(global_control).value = $(global_control).value.substring(0,$(global_control).value.length - 1);
 
@@ -4015,7 +4010,7 @@ function showStatus(){
         popupBox.id = "popupBox";
         popupBox.style.display = "none";
        
-        popupBox.innerHTML = "<p>Processing. Please Wait ...</p>"
+        popupBox.innerHTML = "<p>Chonde dikilani ...</p>"
        
         __$("content").appendChild(popupBox);
     }
