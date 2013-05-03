@@ -24,8 +24,44 @@ end
 %>
   var total_not_sent = "<%= @pending_birth_reports.length%>"
   var lockFinish = "<%= params[:lock].to_s rescue "false"%>";
+  var unsent_birth_reports = ("<%= (@user_unsent_birth_reports.concat(@pending_birth_reports)).uniq.join(',') rescue ""%>")
+     
+  unsent_birth_reports = (unsent_birth_reports == "")? [] : unsent_birth_reports.split(",")
 
- function lockFinishButton(){
+  var opacity = 1;
+  alerted = 0;
+  function createAlert(){
+    try{
+      if (unsent_birth_reports.length > 0){
+        msgDiv = document.createElement("div");
+        msgDiv.id = "msg-div";
+        msgDiv.innerHTML = "<span>Mother has " + unsent_birth_reports.length + " Unsent</br> Birth Report" + ((unsent_birth_reports.length == 1) ? "" : "s") + "</span>";
+        __$("content").appendChild(msgDiv);
+        alerted ++;
+        hideMsg("msg-div");
+        // alert("there")
+      }
+    }catch(ex){
+      
+    }
+    if (alerted == 0){
+      setTimeout(function(){createAlert()}, 100);
+    }
+  }
+
+  function hideMsg(div){
+    setTimeout(function(){fade(div, 1);}, 2500);
+  }
+
+  function fade(div, opacity){
+    __$(div).style.opacity = opacity;
+    if (opacity >= 0){
+      opacity = opacity - 0.01;
+      setTimeout(function(){fade(div, opacity)}, 20)
+    }
+  }
+
+  function lockFinishButton(){
     clickE = "";
     try{
       clickE = __$("btnNext").onclick;
@@ -39,7 +75,7 @@ end
       }
     
       __$("btnNext").onmousedown = function(){
-        showMessage("Patient Exit Denied! </br>" + total_not_sent + " Unsent Birth Report" + ((parseInt(total_not_sent) == 1)? "" : "s") + " Found", false, false);
+        showMessage("Patient Exit Denied! </br>" + total_not_sent + " Unattempted Birth Report" + ((parseInt(total_not_sent) == 1)? "" : "s") + " Found", false, false);
       };      
     }else{       
     }
@@ -51,8 +87,27 @@ end
   }
   
     </script>
+
+    <style>
+      #msg-div{
+        position: absolute;
+        left: 46%;
+        top: 30%;
+        font-weight: bold;
+        background: red;
+        z-index: 100;
+        width: 25%;
+        padding: 10px;
+        font-size: 1.3em;
+        height: 8%;
+        text-align: center;
+        vertical-align: middle;
+        border-radius: 5px;
+      }
+    </style>
+
   </head>
-  <body  onload='lockFinishButton()'><div id='content' >
+  <body  onload='lockFinishButton(); setTimeout(function(){createAlert()}, 500)'><div id='content' >
       <div  id='description' style='color:#777;position:absolute;margin-top:-70px;'></div><center>
         <form id = 'dashboard' action=''>
           <table cellpadding=10>
