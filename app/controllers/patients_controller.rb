@@ -62,7 +62,8 @@ class PatientsController < ApplicationController
       @doctor     = true
     elsif @user_privilege.include?("regstration_clerk")
       @regstration_clerk  = true
-    end  
+    end
+
     
     outcome = @patient.current_outcome
     @encounters = @patient.current_visit.encounters.active.find(:all) rescue []
@@ -112,6 +113,8 @@ class PatientsController < ApplicationController
       AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
       ") rescue []
 
+    @user_unsent_birth_reports = BirthReport.unsent_babies(session[:user_id], @patient.id).map(& :person_b) if session[:user_id].present?
+    
     @past_treatments = @patient.visit_treatments
     session[:auto_load_forms] = false if params[:auto_load_forms] == 'false'
     session[:outcome_updated] = true if !outcome.nil?
