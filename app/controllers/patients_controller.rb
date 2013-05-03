@@ -105,10 +105,13 @@ class PatientsController < ApplicationController
     #check for pending birth report and enforce them to be sent, denying finish click
 
     @pending_birth_reports = Relationship.find_by_sql("SELECT * FROM relationship r
-      WHERE person_a = #{@patient.patient_id} AND (SELECT COUNT(*) FROM birth_report WHERE person_id = r.person_b) = 0
+      INNER JOIN person p ON p.person_id = r.person_b AND p.dead = 0 AND r.voided = 0
+      WHERE r.person_a = #{@patient.patient_id} AND (SELECT COUNT(*) FROM birth_report WHERE person_id = r.person_b) = 0
+      AND (SELECT value_datetime FROM obs WHERE person_id = r.person_b AND concept_id = (SELECT concept_id FROM concept_name
+      WHERE name = 'Date Of Delivery' LIMIT 1)) >= DATE_ADD(NOW(), INTERVAL -14 DAY)
       AND r.relationship = (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child')
-      ")
-    #raise @pending_birth_reports.to_yaml
+      ") rescue []
+
     @past_treatments = @patient.visit_treatments
     session[:auto_load_forms] = false if params[:auto_load_forms] == 'false'
     session[:outcome_updated] = true if !outcome.nil?
@@ -936,16 +939,53 @@ class PatientsController < ApplicationController
     provider_name = @anc_patient.get_attribute("Provider Name")   
 
     @provider_details_available = true if (hospital_date and health_center and health_district and provider_title and provider_name)
+
     if @provider_details_available
       result = RestClient.post(uri, data) rescue "birth report couldnt be sent"
     end
+    
+    birth_report = BirthReport.find_by_person_id(params[:id]) rescue nil
+      
     if !@provider_details_available
       flash[:error] = "Provider Details Incomplete"
     elsif ((result.downcase rescue "") == "baby added") and params[:update].nil?
+      
       flash[:error] = "Birth Report Sent"
-      BirthReport.create(:person_id => params[:id])
+      
+      if birth_report.present?
+        birth_report.update_attributes(:date_updated => Time.now, :acknowledged => Time.now)
+      else
+        BirthReport.create(:person_id => params[:id],
+          :date_created => Time.now,
+          :acknowledged => Time.now)
+      end
+
+    elsif ((result.downcase rescue "") == "baby added") and params[:update].present?
+      
+      flash[:error] = "Birth Report Updated"
+      
+      if birth_report.present?
+        birth_report.update_attributes(:date_updated => Time.now, :acknowledged => Time.now)
+      else
+        BirthReport.create(:person_id => params[:id],
+          :date_created => Time.now,
+          :acknowledged => Time.now)
+      end
+      
+    elsif ((result.downcase rescue "") == "baby not added") and params[:update].nil?
+      flash[:error] = "Remote System Could Not Add Birth Report"
+      
+        BirthReport.create(:person_id => params[:id],
+          :date_created => Time.now) if birth_report.blank?
+    
+    elsif ((result.downcase rescue "") == "baby not added") and params[:update].present?
+      flash[:error] = "Remote System Could Not Update Birth Report"
+       BirthReport.create(:person_id => params[:id],
+          :date_created => Time.now) if birth_report.blank?
     else
-      flash[:error] = "Sending failed. Check configurations and make sure you are not resending"
+      flash[:error] = "Sending failed"
+       BirthReport.create(:person_id => params[:id],
+          :date_created => Time.now) if birth_report.blank?
     end
 
     redirect_to "/patients/birth_report?person_id=#{params[:id]}&patient_id=#{params[:patient_id]}&today=1" and return

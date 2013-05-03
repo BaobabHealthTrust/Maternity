@@ -35,7 +35,7 @@
           id="backButton" style="margin-top: 10px;" ><span>Print</span>
   </button>
 
-  <% if @person.person.birth_report.nil? %>
+  <% if @person.person.birth_report.blank? || (@person.person.birth_report.present? && @person.person.birth_report.acknowledged.blank?) %>
     <button onclick="window.location = '/patients/send_birth_report/<%= @person.id %>?patient_id=<%= @patient.id %>';"
             class="button navButton blue"
             id="backButton" style="margin-top: 10px;" ><span>Send Birth Report</span>

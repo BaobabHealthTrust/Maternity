@@ -2,6 +2,7 @@
   <head>
     <title>Patient Dashboard</title>
     <meta http-equiv='content-type' content='text/html;charset=UTF-8' />
+    <script type="text/javascript" language="javascript" src="/touchscreentoolkit/lib/javascripts/standard.js" defer ></script>
     <script language="javascript">
       tstUsername = "";
       tstCurrentDate = "2010/03/12";
@@ -9,13 +10,50 @@
     (@discharged.to_s.upcase.include?("DISCHARGED") == true && @result.length > 0) ?
     ("/encounters/print_discharge_note/?patient_id=#{@patient.id}&encounter_id=#{@result[0][0]}") :
     '/people/index') %>";
-          
-  tt_cancel_destination = '/people/index';
-  // tt_cancel_show = '/people/index';
+<%
+@assign_serial_numbers = CoreService.get_global_property_value("assign_serial_numbers").to_s == "true" rescue false
+@registration = (['registration'].include?(Location.find(session[:location_id]).name.downcase)) rescue false
+
+if !@registration && @assign_serial_numbers && @pending_birth_reports.length > 0
+  params[:lock] = "true"
+else
+  params[:lock] = "false"
+end
+
+#raise @pending_birth_reports.length.to_yaml
+%>
+  var total_not_sent = "<%= @pending_birth_reports.length%>"
+  var lockFinish = "<%= params[:lock].to_s rescue "false"%>";
+
+ function lockFinishButton(){
+    clickE = "";
+    try{
+      clickE = __$("btnNext").onclick;
+    }catch(exx){
+      
+    }
+
+    if (lockFinish == "true" && clickE != ""){
+      __$("btnNext").onclick = function(){
+
+      }
+    
+      __$("btnNext").onmousedown = function(){
+        showMessage("Patient Exit Denied! </br>" + total_not_sent + " Unsent Birth Report" + ((parseInt(total_not_sent) == 1)? "" : "s") + " Found", false, false);
+      };      
+    }else{       
+    }
+    setTimeout(function(){lockFinishButton()}, 100);
+  }
+  
+  function __$(id){
+    return document.getElementById(id);
+  }
+  
     </script>
   </head>
-  <body><div id='content'>
-      <div id='description' style='color:#777;position:absolute;margin-top:-70px;'></div><center>
+  <body  onload='lockFinishButton()'><div id='content' >
+      <div  id='description' style='color:#777;position:absolute;margin-top:-70px;'></div><center>
         <form id = 'dashboard' action=''>
           <table cellpadding=10>
             <tr>
@@ -34,16 +72,16 @@
             <select id="tabs">
               <option value='/patients/visit_summary?patient_id=<%= @patient.id %>'>Visit Summary</option>
               <option value='/patients/visit_history?patient_id=<%= @patient.id %>'>Visit History</option>
-							<option value='/patients/children?patient_id=<%= @patient.id %>'>Children</option>
+              <option value='/patients/children?patient_id=<%= @patient.id %>'>Children</option>
 
 
               <% if @link_to_anc %>
-              
+
                 <option value='/patients/tab_obstetric_history?patient_id=<%= session["patient_anc_map"][@patient.id]  %>' >
                   Obstetric History
                 </option>
-                <option value='/patients/tab_medical_history?patient_id=<%= 
-                            session["patient_anc_map"][@patient.id]  %>&internal_id=<%= @patient.id %>' >
+                <option value='/patients/tab_medical_history?patient_id=<%=
+                        session["patient_anc_map"][@patient.id]  %>&internal_id=<%= @patient.id %>' >
                   Medical History
                 </option>
                 <option value='/patients/tab_social_history?patient_id=<%= session["patient_anc_map"][@patient.id] %>' >
@@ -69,7 +107,7 @@
             </select>
             <select id="navigation_links">
 
-              <% 
+              <%
               assign_serial_numbers = CoreService.get_global_property_value("assign_serial_numbers").to_s == "true" rescue false
               unless   @registration || !assign_serial_numbers %>
                 <option link='/patients/general_demographics?patient_id=<%= @patient.id %>'>
@@ -80,9 +118,9 @@
                   Demographics
                 </option>
               <%end%>
-              <!--option link='/patients/demographics?patient_id=<%= @patient.id %>&person_id=<%= @patient.person.id %>'>
-                Full Demographics
-              </option-->
+<!--option link='/patients/demographics?patient_id=<%= @patient.id %>&person_id=<%= @patient.person.id %>'>
+Full Demographics
+</option-->
               <option link='/patients/print_registration?patient_id=<%= @patient.id %>'>Print Registration</option>
 
             </select>
