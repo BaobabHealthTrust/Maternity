@@ -2,6 +2,8 @@ delimiter $$
 
 CREATE TABLE `birth_report` (
   `birth_report_id` int(11) NOT NULL AUTO_INCREMENT,
+  `created_by` int(11) NOT NULL,
+  `sent_by` int(11) DEFAULT NULL,
   `person_id` int(11) DEFAULT NULL,
   `date_created` datetime DEFAULT NULL,
   `acknowledged` datetime DEFAULT NULL,
