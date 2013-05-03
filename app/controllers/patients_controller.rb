@@ -953,9 +953,14 @@ class PatientsController < ApplicationController
       flash[:error] = "Birth Report Sent"
       
       if birth_report.present?
-        birth_report.update_attributes(:date_updated => Time.now, :acknowledged => Time.now)
+        birth_report.update_attributes(:created_by => session[:user_id],
+          :sent_by => session[:user_id],
+          :date_updated => Time.now,
+          :acknowledged => Time.now)
       else
         BirthReport.create(:person_id => params[:id],
+          :created_by => session[:user_id],
+          :sent_by => session[:user_id],
           :date_created => Time.now,
           :acknowledged => Time.now)
       end
@@ -965,9 +970,14 @@ class PatientsController < ApplicationController
       flash[:error] = "Birth Report Updated"
       
       if birth_report.present?
-        birth_report.update_attributes(:date_updated => Time.now, :acknowledged => Time.now)
+        birth_report.update_attributes(:created_by => session[:user_id],
+          :sent_by => session[:user_id],
+          :date_updated => Time.now,
+          :acknowledged => Time.now)
       else
         BirthReport.create(:person_id => params[:id],
+          :created_by => session[:user_id],
+          :sent_by => session[:user_id],
           :date_created => Time.now,
           :acknowledged => Time.now)
       end
@@ -975,17 +985,20 @@ class PatientsController < ApplicationController
     elsif ((result.downcase rescue "") == "baby not added") and params[:update].nil?
       flash[:error] = "Remote System Could Not Add Birth Report"
       
-        BirthReport.create(:person_id => params[:id],
-          :date_created => Time.now) if birth_report.blank?
+      BirthReport.create(:person_id => params[:id],
+        :created_by => session[:user_id],
+        :date_created => Time.now)  if birth_report.blank?
     
     elsif ((result.downcase rescue "") == "baby not added") and params[:update].present?
       flash[:error] = "Remote System Could Not Update Birth Report"
-       BirthReport.create(:person_id => params[:id],
-          :date_created => Time.now) if birth_report.blank?
+      BirthReport.create(:person_id => params[:id],
+        :created_by => session[:user_id],
+        :date_created => Time.now)  if birth_report.blank?
     else
       flash[:error] = "Sending failed"
-       BirthReport.create(:person_id => params[:id],
-          :date_created => Time.now) if birth_report.blank?
+      BirthReport.create(:person_id => params[:id],
+        :created_by => session[:user_id],
+        :date_created => Time.now)  if birth_report.blank?
     end
 
     redirect_to "/patients/birth_report?person_id=#{params[:id]}&patient_id=#{params[:patient_id]}&today=1" and return
