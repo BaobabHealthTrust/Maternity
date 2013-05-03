@@ -943,20 +943,49 @@ class PatientsController < ApplicationController
     if @provider_details_available
       result = RestClient.post(uri, data) rescue "birth report couldnt be sent"
     end
-
+    
+    birth_report = BirthReport.find_by_person_id(params[:id]) rescue nil
+      
     if !@provider_details_available
       flash[:error] = "Provider Details Incomplete"
     elsif ((result.downcase rescue "") == "baby added") and params[:update].nil?
+      
       flash[:error] = "Birth Report Sent"
-      BirthReport.create(:person_id => params[:id])
+      
+      if birth_report.present?
+        birth_report.update_attributes(:date_updated => Time.now, :acknowledged => Time.now)
+      else
+        BirthReport.create(:person_id => params[:id],
+          :date_created => Time.now,
+          :acknowledged => Time.now)
+      end
+
     elsif ((result.downcase rescue "") == "baby added") and params[:update].present?
-      flash[:error] = "Birth Report Updated"    
+      
+      flash[:error] = "Birth Report Updated"
+      
+      if birth_report.present?
+        birth_report.update_attributes(:date_updated => Time.now, :acknowledged => Time.now)
+      else
+        BirthReport.create(:person_id => params[:id],
+          :date_created => Time.now,
+          :acknowledged => Time.now)
+      end
+      
     elsif ((result.downcase rescue "") == "baby not added") and params[:update].nil?
       flash[:error] = "Remote System Could Not Add Birth Report"
+      
+        BirthReport.create(:person_id => params[:id],
+          :date_created => Time.now) if birth_report.blank?
+    
     elsif ((result.downcase rescue "") == "baby not added") and params[:update].present?
-       flash[:error] = "Remote System Could Not Update Birth Report"
+      flash[:error] = "Remote System Could Not Update Birth Report"
+       BirthReport.create(:person_id => params[:id],
+          :date_created => Time.now) if birth_report.blank?
     else
       flash[:error] = "Sending failed"
+       BirthReport.create(:person_id => params[:id],
+          :date_created => Time.now) if birth_report.blank?
     end
 
     redirect_to "/patients/birth_report?person_id=#{params[:id]}&patient_id=#{params[:patient_id]}&today=1" and return
