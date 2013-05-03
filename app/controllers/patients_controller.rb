@@ -939,16 +939,24 @@ class PatientsController < ApplicationController
     provider_name = @anc_patient.get_attribute("Provider Name")   
 
     @provider_details_available = true if (hospital_date and health_center and health_district and provider_title and provider_name)
+
     if @provider_details_available
       result = RestClient.post(uri, data) rescue "birth report couldnt be sent"
     end
+
     if !@provider_details_available
       flash[:error] = "Provider Details Incomplete"
     elsif ((result.downcase rescue "") == "baby added") and params[:update].nil?
       flash[:error] = "Birth Report Sent"
       BirthReport.create(:person_id => params[:id])
+    elsif ((result.downcase rescue "") == "baby added") and params[:update].present?
+      flash[:error] = "Birth Report Updated"    
+    elsif ((result.downcase rescue "") == "baby not added") and params[:update].nil?
+      flash[:error] = "Remote System Could Not Add Birth Report"
+    elsif ((result.downcase rescue "") == "baby not added") and params[:update].present?
+       flash[:error] = "Remote System Could Not Update Birth Report"
     else
-      flash[:error] = "Sending failed. Check configurations and make sure you are not resending"
+      flash[:error] = "Sending failed"
     end
 
     redirect_to "/patients/birth_report?person_id=#{params[:id]}&patient_id=#{params[:patient_id]}&today=1" and return
