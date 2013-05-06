@@ -30,7 +30,7 @@
     :tt_onLoad => "$('touchscreenInput'+tstCurrentPage).value = name",
   } %>
 
-  <%= select_tag "ProviderTitle", options_for_select(["","Dr","Mr","Mrs","Ms","Miss"]),
+  <%= select_tag "ProviderTitle", options_for_select(["","Nurse","Clinician","Midwife","Clerk"]),
     {
     :helptext => "Provider Title"
   } %>

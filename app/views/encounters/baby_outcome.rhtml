@@ -706,7 +706,7 @@
     :absoluteMin => 0,
     :absoluteMax => 10,
     :condition => "__$('baby_outcome').value.toUpperCase().trim() == 'ALIVE'",
-    :tt_onLoad => "showApgarControl(#{baby}, 'one')",
+    :tt_onLoad => "showApgarControl(#{baby}, 'one');  __$('touchscreenInput' + tstCurrentPage).setAttribute('absoluteMin', 1);",
     :tt_pageStyleClass => "NoKeyboard"
   } %>
 
@@ -766,7 +766,7 @@
     :absoluteMin => 0,
     :absoluteMax => 10,
     :condition => "__$('baby_outcome').value.toUpperCase().trim() == 'ALIVE'",
-    :tt_onLoad => "showApgarControl(#{baby}, 'five')",
+    :tt_onLoad => "showApgarControl(#{baby}, 'five');  __$('touchscreenInput' + tstCurrentPage).setAttribute('absoluteMin', 1);",
     :tt_pageStyleClass => "NoKeyboard"
   } %>
 
