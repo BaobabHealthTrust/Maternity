@@ -22,6 +22,8 @@ end
 
 #raise @pending_birth_reports.length.to_yaml
 %>
+  var check_birth_reports = "<%= @assign_serial_numbers %>"
+ 
   var total_not_sent = "<%= @pending_birth_reports.length%>"
   var lockFinish = "<%= params[:lock].to_s rescue "false"%>";
   var unsent_birth_reports = ("<%= (@user_unsent_birth_reports.concat(@pending_birth_reports)).uniq.join(',') rescue ""%>")
@@ -31,21 +33,23 @@ end
   var opacity = 1;
   alerted = 0;
   function createAlert(){
-    try{
-      if (unsent_birth_reports.length > 0){
-        msgDiv = document.createElement("div");
-        msgDiv.id = "msg-div";
-        msgDiv.innerHTML = "<span>Mother has " + unsent_birth_reports.length + " Unsent</br> Birth Report" + ((unsent_birth_reports.length == 1) ? "" : "s") + "</span>";
-        __$("content").appendChild(msgDiv);
-        alerted ++;
-        hideMsg("msg-div");
-        // alert("there")
-      }
-    }catch(ex){
+    if (check_birth_reports == "true"){
+      try{
+        if (unsent_birth_reports.length > 0){
+          msgDiv = document.createElement("div");
+          msgDiv.id = "msg-div";
+          msgDiv.innerHTML = "<span>Mother has " + unsent_birth_reports.length + " Unsent</br> Birth Report" + ((unsent_birth_reports.length == 1) ? "" : "s") + "</span>";
+          __$("content").appendChild(msgDiv);
+          alerted ++;
+          hideMsg("msg-div");
+          // alert("there")
+        }
+      }catch(ex){
       
-    }
-    if (alerted == 0){
-      setTimeout(function(){createAlert()}, 100);
+      }
+      if (alerted == 0){
+        setTimeout(function(){createAlert()}, 100);
+      }
     }
   }
 
