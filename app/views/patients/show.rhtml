@@ -157,12 +157,16 @@ end
 
             </select>
             <select id="links">
-			  
+
+              <%if @patient.person.age > 10%>
               <!--option value='/encounters/new/observations?patient_id=<%= @patient.id %>'>Admission Exams</option-->
-              <option label='Ante-Natal Exams' value='/encounters/new/antenatal?patient_id=<%= @patient.id %>'>Ante-Natal Exams</option>
-              <option label='Post-Natal Exams' value='/encounters/new/postnatal?patient_id=<%= @patient.id %>'>Post-Natal Exams</option>
-              <option label='Update Outcome' value='/encounters/new/outcome?patient_id=<%= @patient.id %>'>Update Outcome</option>
-              <option label='Update Hiv Status' value='/encounters/update_hiv_status?patient_id=<%= @patient.id %>'>Update Hiv Status</option>
+              <option value='/encounters/new/antenatal?patient_id=<%= @patient.id %>'>Ante-Natal Exams</option>
+              <option value='/encounters/new/postnatal?patient_id=<%= @patient.id %>'>Post-Natal Exams</option>
+              <option value='/encounters/new/outcome?patient_id=<%= @patient.id %>'>Update Outcome</option>
+               <%end%>
+              <option value='/encounters/update_hiv_status?patient_id=<%= @patient.id %>'>Update Hiv Status</option>
+             
+
             </select>
             <select id="navigation_links">
 

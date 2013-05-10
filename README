@@ -20,3 +20,18 @@ Instructions for running the application
  
  1. run script/initial_database_setup.sh your_environment your_site
  2. run script/activate_triggers.sql 
+ 
+================================
+
+ To synchronise failed birth reports with DC's Office  
+ 1. crontab -e
+ 2. Edit the line with ***** , uncomment it and it should read 
+ 
+ 	*/10 * * * * /var/www/Maternity/script/runner /var/www/Maternity/script/birth_report_sync.rb
+ 		to synchronise every 10 minutes (standard).
+ 		
+ 	*/10 * * * * bash -c 'source /home/vine/.rvm/scripts/rvm && /var/www/Maternity/script/runner /var/www/Maternity/script/birth_report_sync.rb'
+ 		to synchronise every 10 minutes if using rvm.
+ 		
+ 
+ 
