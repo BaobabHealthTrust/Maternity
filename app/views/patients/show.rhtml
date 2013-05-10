@@ -12,7 +12,7 @@
     '/people/index') %>";
 <%
 @assign_serial_numbers = CoreService.get_global_property_value("assign_serial_numbers").to_s == "true" rescue false
-@registration = (['registration'].include?(Location.find(session[:location_id]).name.downcase)) rescue false
+@registration = (['registration', "labour ward", "gynaecology ward", "ante-natal ward"].include?(Location.find(session[:location_id]).name.downcase)) rescue false
 
 if !@registration && @assign_serial_numbers && @pending_birth_reports.length > 0
   params[:lock] = "true"
@@ -22,7 +22,7 @@ end
 
 #raise @pending_birth_reports.length.to_yaml
 %>
-  var check_birth_reports = "<%= @assign_serial_numbers %>"
+  var check_birth_reports = "<%= @assign_serial_numbers && !@registration %>"
  
   var total_not_sent = "<%= @pending_birth_reports.length%>"
   var lockFinish = "<%= params[:lock].to_s rescue "false"%>";
