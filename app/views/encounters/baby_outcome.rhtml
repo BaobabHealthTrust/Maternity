@@ -644,8 +644,8 @@
       :id => "baby_delivery_mode_date"
     }) %>
 
-  <% htext6 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Gender" :
-    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Gender"%>
+  <% htext6 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Sex" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Sex"%>
 
   <% options = {
     :id => "baby_gender#{baby}",
