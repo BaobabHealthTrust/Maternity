@@ -97,12 +97,12 @@ params[:reg] = "true" if @registration || !@assign_serial_numbers
                  @person.id %>&cat=<%= (params["cat"] rescue "") %>&given_name=<%= @first_name %>">Edit</a></td>
         </tr>
         <% if @baby == true%>
-        <tr>
-          <td class='title'>Middle Name</td>
-          <td class='data'><%=@update_patient.middle_name%></td>
-          <td><a href="edit_demographics?patient_id=<%=@patient.id%>&field=middle_name&person_id=<%=
-                 @person.id %>&cat=<%= (params["cat"] rescue "") %>&middle_name=<%= @update_patient.middle_name %>">Edit</a></td>
-        </tr>
+          <tr>
+            <td class='title'>Middle Name</td>
+            <td class='data'><%=@update_patient.middle_name%></td>
+            <td><a href="edit_demographics?patient_id=<%=@patient.id%>&field=middle_name&person_id=<%=
+                   @person.id %>&cat=<%= (params["cat"] rescue "") %>&middle_name=<%= @update_patient.middle_name %>">Edit</a></td>
+          </tr>
         <% end %>
         <tr>
           <td class='title'>Last Name</td>
@@ -125,7 +125,8 @@ params[:reg] = "true" if @registration || !@assign_serial_numbers
                  @person.id %>&cat=<%= (params["cat"] rescue "") %>">Edit</a></td>
         </tr>
         <tr>
-          <td class='title'>Gender</td>
+          <%gender = params[:cat] == "baby"? "Sex" : "Gender"%>
+          <td class='title'><%= gender %></td>
           <td class='data'><%=@gender%></td>
           <td><a href="edit_demographics?patient_id=<%=@patient.id%>&field=gender&person_id=<%=
                  @person.id %>&cat=<%= (params["cat"] rescue "") %>&gender=<%= (@gender == "Male" ? "M" : "F") %>">Edit</a></td>
