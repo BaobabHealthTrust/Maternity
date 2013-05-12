@@ -359,9 +359,10 @@ end -%>
         :helpText => "#{params[:cat].titleize rescue nil} Last name",
         :ajaxURL => '/person_names/family_names?search_string=',
         :allowFreeText => true }%>
-
-      Gender: <%= select_tag :gender, options_for_select({"" => "", "Male" => "M", "Female" => "F"}),
-        {:helpText => "#{params[:cat].titleize rescue nil} Gender"} %>
+      <%  unless params[:cat] && (params[:cat].downcase == "mother" || params[:cat].downcase == "husband") %>
+        Gender: <%= select_tag :gender, options_for_select({"" => "", "Male" => "M", "Female" => "F"}),
+          {:helpText => "#{params[:cat].titleize rescue nil} Gender"} %>
+      <%end%>
       <%= hidden_field_tag :create_patient, params[:create_patient] %>
       <%= hidden_field_tag :relation, params[:relation] %>
       <input type="hidden" id="cat" name="cat" value="<%=h params[:cat] -%>" />
