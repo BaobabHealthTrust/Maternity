@@ -177,12 +177,12 @@ class EncountersController < ApplicationController
       observation[:person_id]     ||= encounter.patient_id      
       # observation[:location_id]     ||= encounter.location_id
      
-     x = Observation.create(observation) rescue nil
-     if x.blank?
-       observation[:value_text] = observation[:value_coded_or_text] if !observation[:value_coded_or_text].blank?
-       observation.delete(:value_coded_or_text)
-       Observation.create(observation)
-     end
+      x = Observation.create(observation) rescue nil
+      if x.blank?
+        observation[:value_text] = observation[:value_coded_or_text] if !observation[:value_coded_or_text].blank?
+        observation.delete(:value_coded_or_text)
+        Observation.create(observation)
+      end
     end 
     referred_out = (params["observations"].collect{|o| o if !o["value_coded_or_text"].nil? and o["value_coded_or_text"].upcase == "REFERRED OUT"}.compact.length > 0) rescue false;
     if referred_out
@@ -272,15 +272,29 @@ class EncountersController < ApplicationController
     @diagnosis_type = params[:diagnosis_type]
     @facility = (GlobalProperty.find_by_property("facility.name").property_value rescue "") # || (Location.find(session[:facility]).name rescue "")    
 
-    @encounters = @patient.current_visit.encounters.active.find(:all, :conditions => 
-        ["encounter_type = ? OR encounter_type = ? OR encounter_type = ? OR encounter_type = ? " + 
+    if params[:encounter_type] && params[:encounter_type].downcase == "observations_patient_history"
+      #check if we have known LMP from ANC
+      anc_link = CoreService.get_global_property_value("anc_link")
+      anc_link = "http://#{anc_link}/encounters/probe_lmp"
+      
+      if anc_link.present?
+        lmp_params = {"national_id" => @patient.national_id}
+        
+        @lmp = JSON.parse(RestClient.post(anc_link, lmp_params))["lmp"] rescue nil
+        params[:lmp] = @lmp
+      end
+    
+    end      
+   
+    @encounters = @patient.current_visit.encounters.active.find(:all, :conditions =>
+        ["encounter_type = ? OR encounter_type = ? OR encounter_type = ? OR encounter_type = ? " +
           "OR encounter_type = ? OR encounter_type = ?",
         EncounterType.find_by_name("OBSERVATIONS").encounter_type_id,
         EncounterType.find_by_name("DIAGNOSIS").encounter_type_id,
         EncounterType.find_by_name("SOCIAL HISTORY").encounter_type_id,
         EncounterType.find_by_name("CURRENT BBA DELIVERY").encounter_type_id,
         EncounterType.find_by_name("ABDOMINAL EXAMINATION").encounter_type_id,
-        EncounterType.find_by_name("PHYSICAL EXAMINATION BABY").encounter_type_id]).collect{|e|        
+        EncounterType.find_by_name("PHYSICAL EXAMINATION BABY").encounter_type_id]).collect{|e|
       e.observations.collect{|o| o.concept.name.name.upcase}
     }.join(", ") rescue ""
 
@@ -302,7 +316,7 @@ class EncountersController < ApplicationController
 
     @encounters = @encounters + (@encounters == "" ? @anc_encounters : ", " + @anc_encounters)
 
-    @lmp = Observation.find(:all, :conditions => ["concept_id IN (?) AND person_id = 34 AND encounter_id IN (?)", 
+    @lmp = Observation.find(:all, :conditions => ["concept_id IN (?) AND person_id = 34 AND encounter_id IN (?)",
         ConceptName.find_by_name("LAST MENSTRUAL PERIOD").concept_id, @patient.encounters.collect{|e| e.id}],
       :order => :obs_datetime).last.value_datetime rescue nil
 
@@ -342,14 +356,14 @@ class EncountersController < ApplicationController
       diagnosis_concepts = c_answer.collect{|d| ConceptName.find_by_concept_id(d.answer_concept).name}
     end
 
-     if params[:procedure].humanize.match(/Malsupilisation/i)
+    if params[:procedure].humanize.match(/Malsupilisation/i)
       range = ConceptName.find(:all, :conditions => ["name = 'Malsupilisation'"]).collect{|c| c.concept_id} rescue []
       c_answer = ConceptAnswer.find(:all, :conditions => ["concept_id IN (?)", range])
       diagnosis_concepts = c_answer.collect{|d| ConceptName.find_by_concept_id(d.answer_concept).name}
     end
     
     @results = diagnosis_concepts.collect{|e| e if e.downcase.include?(search_string.downcase)}
-   @results = @results.insert(@results.length - 1, @results.delete_at(@results.index("Other"))) rescue @results
+    @results = @results.insert(@results.length - 1, @results.delete_at(@results.index("Other"))) rescue @results
     
     render :text => "<li>" + @results.join("</li><li>") + "</li>"
     
@@ -365,13 +379,13 @@ class EncountersController < ApplicationController
     end
     treatment = ConceptName.find_by_name("TREATMENT").concept
     previous_answers = Observation.find_most_common(treatment, search_string)
-    suggested_answers = (previous_answers + valid_answers).reject{|answer| filter_list.include?(answer) }.uniq[0..10] 
+    suggested_answers = (previous_answers + valid_answers).reject{|answer| filter_list.include?(answer) }.uniq[0..10]
     render :text => "<li>" + suggested_answers.join("</li><li>") + "</li>"
   end
   
   def locations
     search_string = (params[:search_string] || 'neno').upcase
-    filter_list = params[:filter_list].split(/, */) rescue []    
+    filter_list = params[:filter_list].split(/, */) rescue []
     locations =  Location.find(:all, :select =>'name', :conditions => ["retired = 0 AND name LIKE ?", '%' + search_string + '%'])
     render :text => "<li>" + locations.map{|location| location.name }.join("</li><li>") + "</li>"
   end
@@ -392,7 +406,7 @@ class EncountersController < ApplicationController
   end
 
   def confirmatory_evidence
-    @patient = Patient.find(params[:patient_id] || params[:id] || session[:patient_id]) rescue nil 
+    @patient = Patient.find(params[:patient_id] || params[:id] || session[:patient_id]) rescue nil
     @primary_diagnosis = @patient.current_diagnoses([ConceptName.find_by_name('PRIMARY DIAGNOSIS').concept_id]).last rescue nil
     @requested_test_obs = @patient.current_diagnoses([ConceptName.find_by_name('TEST REQUESTED').concept_id]) rescue []
     @result_available_obs = @patient.current_diagnoses([ConceptName.find_by_name('RESULT AVAILABLE').concept_id]) rescue []
@@ -403,7 +417,7 @@ class EncountersController < ApplicationController
     best_tests_hash.each{|test,diagnoses| @best_tests << test if diagnoses.include?("#{@diagnosis_name}")}
 
     #dont show confirmatory evidence page if the diagnosis does not have a test
-    redirect_to "/prescriptions/?patient_id=#{@patient.id}" and return if @best_tests.empty? 
+    redirect_to "/prescriptions/?patient_id=#{@patient.id}" and return if @best_tests.empty?
 
     render :template => 'encounters/confirmatory_evidence', :layout => 'menu'
   end
@@ -612,7 +626,7 @@ class EncountersController < ApplicationController
     
   end
 
-  def label    
+  def label
     send_label(Encounter.find(params[:encounter_id]).label)
   end
 
@@ -740,8 +754,8 @@ class EncountersController < ApplicationController
     @user_name = User.find(@user).name rescue nil if @user.present?
     @user_name = User.find(session[:user_id]).name rescue nil if @user_name.blank?
 
-    @facility = (GlobalProperty.find_by_property("facility.name").property_value rescue "") || 
-      (Location.find(session[:facility]).name rescue "")    
+    @facility = (GlobalProperty.find_by_property("facility.name").property_value rescue "") ||
+      (Location.find(session[:facility]).name rescue "")
     
     @patient.create_barcode
 
@@ -813,8 +827,8 @@ class EncountersController < ApplicationController
     } rescue {}
 
     @patient.current_visit.encounters.active.find(:all, :conditions => ["encounter_type = ? OR encounter_type = ?",
-        EncounterType.find_by_name("DIAGNOSIS").encounter_type_id, 
-        EncounterType.find_by_name("OBSERVATIONS").encounter_type_id]).each{|e|        
+        EncounterType.find_by_name("DIAGNOSIS").encounter_type_id,
+        EncounterType.find_by_name("OBSERVATIONS").encounter_type_id]).each{|e|
       e.observations.each{|o|
         if o.concept.name.name.upcase == "DIAGNOSIS" || o.concept.name.name.upcase == "ADMISSION DIAGNOSIS"
           if !@outpatient_diagnosis[o.concept.name.name.upcase]
@@ -826,7 +840,7 @@ class EncountersController < ApplicationController
       }
     } rescue {}
 
-    @patient.current_visit.encounters.active.find(:all, :conditions => ["encounter_type = ? " + 
+    @patient.current_visit.encounters.active.find(:all, :conditions => ["encounter_type = ? " +
           "OR encounter_type = ?",
         EncounterType.find_by_name("OBSERVATIONS").encounter_type_id,
         EncounterType.find_by_name("ABDOMINAL EXAMINATION").encounter_type_id]).each{|e|
@@ -866,14 +880,14 @@ class EncountersController < ApplicationController
     @patient.current_visit.encounters.active.find(:all, :conditions => ["encounter_type = ?",
         EncounterType.find_by_name("PHYSICAL EXAMINATION BABY").encounter_type_id]).each{|e|
       e.observations.each{|o|
-        if o.concept.name.name.upcase == "CONDITION OF BABY AT ADMISSION" || 
-            o.concept.name.name.upcase == "WEIGHT (KG)" || 
-            o.concept.name.name.upcase == "TEMPERATURE (C)" || 
-            o.concept.name.name.upcase == "RESPIRATORY RATE" || 
-            o.concept.name.name.upcase == "PULSE" || 
-            o.concept.name.name.upcase == "CORD CLEAN" || 
-            o.concept.name.name.upcase == "CORD TIED" || 
-            o.concept.name.name.upcase == "SPECIFY" || 
+        if o.concept.name.name.upcase == "CONDITION OF BABY AT ADMISSION" ||
+            o.concept.name.name.upcase == "WEIGHT (KG)" ||
+            o.concept.name.name.upcase == "TEMPERATURE (C)" ||
+            o.concept.name.name.upcase == "RESPIRATORY RATE" ||
+            o.concept.name.name.upcase == "PULSE" ||
+            o.concept.name.name.upcase == "CORD CLEAN" ||
+            o.concept.name.name.upcase == "CORD TIED" ||
+            o.concept.name.name.upcase == "SPECIFY" ||
             o.concept.name.name.upcase == "ABDOMEN"
           if !@babyencounters[o.concept.name.name.upcase]
             @babyencounters[o.concept.name.name.upcase] = []
@@ -890,18 +904,18 @@ class EncountersController < ApplicationController
 
     # raise @referral.to_yaml
     
-    @nok = (@patient.next_of_kin["GUARDIAN FIRST NAME"] + " " + @patient.next_of_kin["GUARDIAN LAST NAME"] + 
+    @nok = (@patient.next_of_kin["GUARDIAN FIRST NAME"] + " " + @patient.next_of_kin["GUARDIAN LAST NAME"] +
         " - " + @patient.next_of_kin["GUARDIAN RELATIONSHIP TO CHILD"] + " " +
         (@patient.next_of_kin["NEXT OF KIN TELEPHONE"] ? " (" + @patient.next_of_kin["NEXT OF KIN TELEPHONE"] +
           ")" : "")) rescue ""
     
-    @religion = (@patient.next_of_kin["RELIGION"] ? (@patient.next_of_kin["RELIGION"].upcase == "OTHER" ? 
+    @religion = (@patient.next_of_kin["RELIGION"] ? (@patient.next_of_kin["RELIGION"].upcase == "OTHER" ?
           @patient.next_of_kin["OTHER"] : @patient.next_of_kin["RELIGION"]) : "") rescue ""
     
     @education = @patient.next_of_kin["EDUCATION LEVEL"] rescue ""
     
-    @position = (@encounters["CEPHALIC"] ? @encounters["CEPHALIC"] : "") + 
-      (@encounters["BREECH"] ? @encounters["BREECH"] : "") + (@encounters["FACE"] ? @encounters["FACE"] : "") + 
+    @position = (@encounters["CEPHALIC"] ? @encounters["CEPHALIC"] : "") +
+      (@encounters["BREECH"] ? @encounters["BREECH"] : "") + (@encounters["FACE"] ? @encounters["FACE"] : "") +
       (@encounters["SHOULDER"] ? @encounters["SHOULDER"] : "") rescue ""
   
     if @encounters["PRESENTATION"] && @encounters["PRESENTATION"].upcase == "BREECH"
@@ -956,14 +970,14 @@ class EncountersController < ApplicationController
 
       t3 = Thread.new{
         sleep(10)
-       # Kernel.system "rm /tmp/output-" + session[:user_id].to_s + ".pdf\n"
+         Kernel.system "rm /tmp/output-" + session[:user_id].to_s + ".pdf\n"
       }
 
     
     end
 
 
-    redirect_to "/encounters/new/observations_print?patient_id=#{@patient.id}"+ 
+    redirect_to "/encounters/new/observations_print?patient_id=#{@patient.id}"+
       (params[:ret] ? "&ret=" + params[:ret] : "") and return
   end
 
@@ -980,16 +994,16 @@ class EncountersController < ApplicationController
 
   end
 
-	def print_discharge_note
+  def print_discharge_note
     if params[:encounter_id]
-      print_and_redirect("/encounters/label/?encounter_id=#{params[:encounter_id]}", 
+      print_and_redirect("/encounters/label/?encounter_id=#{params[:encounter_id]}",
         "/patients/end_visit?patient_id=#{ params[:patient_id] }")
     else
       redirect_to "/people/index"
     end
   end
  
-	def baby_outcome
-		@patient = Patient.find(params[:patient_id])
-	end
+  def baby_outcome
+    @patient = Patient.find(params[:patient_id])
+  end
 end
