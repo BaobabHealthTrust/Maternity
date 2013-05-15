@@ -27,6 +27,44 @@
     return "false";
   }
 
+  function checkANCLMP(){
+    var lmp = "<%= params[:lmp].gsub("/", "-") rescue '' %>"
+    var name_clause = "<%= ' For <br>' + @patient.name rescue '' %>"
+    if (lmp.length > 1){
+      var checked = dispatchMessage("Accept Date " + lmp + name_clause + "<br> From ANC LMP?", tstMessageBoxType.YesNo);
+      if (checked == true){
+        try{
+          buttons = $("messageBar").getElementsByClassName("button");
+          if (buttons[0].innerHTML.match(/Yes/i)){
+            buttons[0].onclick = function(){
+              $("touchscreenInput" + tstCurrentPage).value = lmp;
+              $("messageBar").style.display = "none";
+            }
+          }
+        }catch(ex){}
+      }
+    }
+  }
+
+  function setLMPDate(period){
+    var d = new Date();
+    d.setMonth(d.getMonth() - parseInt(period));
+    __$("last_menstrual_period_date").value = d.getFullYear() + "-" + padZeros((d.getMonth() + 1), 2) + "-" + padZeros(d.getDate(),2);
+  }
+
+  function padZeros(number, positions){
+    var zeros = parseInt(positions) - String(number).length;
+    var padded = "";
+
+    for(var i = 0; i < zeros; i++){
+      padded += "0";
+    }
+
+    padded += String(number);
+
+    return padded;
+  }
+
   // Every 500 milliseconds update the Next/Finish button
   function updateNextFinish(){
     if (tstInputTarget.value == '')
@@ -69,8 +107,8 @@
     }
 
     $("expected_date_of_delivery").innerHTML = "Expected Date Of Delivery: <i style='font-size: 1.2em; float: right;'>" + 
-      edod + "</i><br /><br />Gestation Weeks: " + (gestation < 32 &&
-      gestation.trim().length > 0 ? "<i style='color: red'>(Premature)</i>" : (gestation > 42 && gestation.trim().length > 0 ? "<i style='color: red'>(Abnormal)</i>" : "")) +
+      edod + "</i><br /><br />Gestation Weeks: " + (gestation < 37 &&
+      gestation.trim().length > 0 ? "<i style='color: red'>(Premature)</i>" : (gestation > 41 && gestation.trim().length > 0 ? "<i style='color: red'>(Abnormal)</i>" : "")) +
       "<i style='font-size: 1.2em; float: right; width: 100px;'>" + gestation + "</i>";
     
     timedEvent = setTimeout('calculateEDOD()', 500);
@@ -129,7 +167,7 @@
 
   <%= hidden_field_tag "encounter[encounter_type_name]", "OBSERVATIONS" %>
   <%= hidden_field_tag "encounter[patient_id]", @patient.id %>
-  <%= hidden_field_tag "encounter[encounter_datetime]", (session[:datetime] ? session[:datetime].to_time : 
+  <%= hidden_field_tag "encounter[encounter_datetime]", (session[:datetime] ? session[:datetime].to_time :
       DateTime.now()).strftime("%Y-%m-%d %H:%M") %>
   <%= hidden_field_tag "encounter[provider_id]", session[:user_id] %>
 
@@ -160,16 +198,16 @@
       :helptext => "Number Of Deliveries",
       :field_type => "number",
       :absoluteMin => "0",
-      :condition => "((__$('multiple_pregnancy').value == 'No' && (__$('gravida_value').value) > #{(params[:ret] ? 0 : 1)}) || " + 
+      :condition => "((__$('multiple_pregnancy').value == 'No' && (__$('gravida_value').value) > #{(params[:ret] ? 0 : 1)}) || " +
         "(__$('multiple_pregnancy').value == 'Yes' && __$('gravida_value').value > #{(params[:ret] == "postnatal" ? 0 : 1)}))",
       :max => "15",
-      :tt_onLoad => "if(__$('multiple_pregnancy').value.toLowerCase()=='no'){__$('touchscreenInput' + " + 
+      :tt_onLoad => "if(__$('multiple_pregnancy').value.toLowerCase()=='no'){__$('touchscreenInput' + " +
         "tstCurrentPage).setAttribute('absoluteMax', (__$('gravida_value').value - #{(params[:ret] == "postnatal" ? 0 : 1)}))}",
       :tt_pageStyleClass => "NumbersOnly",
       :tt_onUnLoad => "if(__$('multiple_pregnancy').value.toLowerCase()=='no'){
-    __$('no_of_abortions').setAttribute('validationRule', '[' + (parseInt(__$('gravida_value').value) - 
+    __$('no_of_abortions').setAttribute('validationRule', '[' + (parseInt(__$('gravida_value').value) -
     parseInt(__$('parity_value').value) - #{(params[:ret] == "postnatal" ? 0 : 1)}) + ']');
-    __$('no_of_abortions').setAttribute('validationMessage', 'Expected value is ' + (parseInt(__$('gravida_value').value) - 
+    __$('no_of_abortions').setAttribute('validationMessage', 'Expected value is ' + (parseInt(__$('gravida_value').value) -
     parseInt(__$('parity_value').value) - #{(params[:ret] == "postnatal" ? 0 : 1)}));
     }"
     }) %>
@@ -186,7 +224,7 @@
       :absoluteMin => "0",
       :max => "5",
       :tt_pageStyleClass => "NumbersOnly",
-      :condition => "((__$('multiple_pregnancy').value == 'No' && (__$('gravida_value').value) > #{(params[:ret] == "postnatal" ? 0 : 1)}) || " + 
+      :condition => "((__$('multiple_pregnancy').value == 'No' && (__$('gravida_value').value) > #{(params[:ret] == "postnatal" ? 0 : 1)}) || " +
         "(__$('multiple_pregnancy').value == 'Yes' && __$('gravida_value').value > #{(params[:ret] == "postnatal" ? 0 : 1)}))"
     }) %>
 
@@ -210,7 +248,7 @@
       indice = "<sup>th</sup>"
     end
 
-    @delivery_modes = ["", "Spontaneous vaginal delivery", "Caesarean Section", 
+    @delivery_modes = ["", "Spontaneous vaginal delivery", "Caesarean Section",
       "Vacuum extraction delivery", "Breech delivery"]
   %>
 
@@ -248,7 +286,7 @@
         :id => "last_menstrual_period_date",
         :helptext => "Last Menstrual Period Date",
         :field_type => "date",
-        :tt_onLoad => "timedEvent = setTimeout('calculateEDOD()', 100);",
+        :tt_onLoad => "checkANCLMP(); timedEvent = setTimeout('calculateEDOD()', 100);",
         :tt_onUnLoad => "clearTimeout(timedEvent);"
       }) %>
 
@@ -256,5 +294,17 @@
     <%= text_field_tag("observations[][value_datetime]",   nil, options) %>
     <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
     <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+    <%= text_field_tag "Estimate LMP", nil,
+      {:id => "estimate_lmp",
+      :condition => "__$('last_menstrual_period_date').value == 'Unknown'",
+      :helpText => "Gestation (months)",
+      :field_type => "number",
+      :tt_pageStyleClass => "NumbersOnly",
+      :tt_onUnload => "setLMPDate(__$('touchscreenInput' + tstCurrentPage).value);",
+      :max => 6,
+      :absoluteMax => 10
+    }%>
+
   <% end %>
 </form>
