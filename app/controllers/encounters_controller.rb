@@ -79,11 +79,12 @@ class EncountersController < ApplicationController
         baby_date_map.reject! { |b| b.empty? }
         count = 1
         params["observations"].each do |o|
-          if (o["concept_name"].upcase == "BABY OUTCOME" && (baby_date_map[count -1].split(",")[0] rescue -1) == count.to_s)
+          if (["BABY OUTCOME", "PRESENTATION", "DELIVERY MODE"].include?(o["concept_name"].upcase))
             o[:obs_datetime] = baby_date_map[count - 1].split(",")[1]
-            count += 1
+           
           end
         end
+         count += 1
       end
     end
 
