@@ -315,6 +315,8 @@ class EncountersController < ApplicationController
       }
     }.join(", ") rescue ""
 
+    @anc_patient = ANCService::ANC.new(@patient) if @patient.present?
+
     @encounters = @encounters + (@encounters == "" ? @anc_encounters : ", " + @anc_encounters)
 
     @lmp = Observation.find(:all, :conditions => ["concept_id IN (?) AND person_id = 34 AND encounter_id IN (?)",
