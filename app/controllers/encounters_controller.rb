@@ -84,7 +84,7 @@ class EncountersController < ApplicationController
            
           end
         end
-         count += 1
+        count += 1
       end
     end
 
@@ -940,6 +940,10 @@ class EncountersController < ApplicationController
     else
       @period_on_arvs_string = ""
     end
+    lmp_date = (@encounters["DATE OF LAST MENSTRUAL PERIOD"].to_date + 7.days) rescue nil
+    current_date = (session[:datetime]? session[:datetime] : Date.today).to_date rescue nil
+  
+    @edd_weeks = ((current_date - lmp_date).days).to_i/(60 * 60 * 24 * 7) rescue "Unknown"
     
     render :layout => false
   end
@@ -973,7 +977,7 @@ class EncountersController < ApplicationController
 
       t3 = Thread.new{
         sleep(10)
-         Kernel.system "rm /tmp/output-" + session[:user_id].to_s + ".pdf\n"
+        Kernel.system "rm /tmp/output-" + session[:user_id].to_s + ".pdf\n"
       }
 
     

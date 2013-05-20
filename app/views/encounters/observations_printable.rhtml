@@ -128,6 +128,7 @@
         </td>
         <td>
           <b>EDD:</b> <%= (@encounters["DATE OF LAST MENSTRUAL PERIOD"].to_date + 7.days + 9.months).strftime("%d/%b/%Y") rescue "" %>
+          </br><b>Gestation:</b> <%=  @edd_weeks %>  Weeks
         </td>
 
       <% end %>
@@ -280,28 +281,28 @@
           <% end %>
         </td>
       </tr>
+      <% if params[:ret] == "antenatal" %>
+        <tr rowspan="2"style ="border-style: solid; border-bottom: 1px;">
+          <td>
+            <i style="font-size: 1.3em; text-decoration: underline;">Clinical Examination</i>
+          </td>
 
-      <tr rowspan="2"style ="border-style: solid; border-bottom: 1px;">
-        <td>
-          <i style="font-size: 1.3em; text-decoration: underline;">Clinical Examination</i>
-        </td>
-        
-        <td>
-          <b>Head:</b> <%= @encounters["HEAD"] rescue "" %></br>
-       
-          <b>Chest: </b> <%= @encounters["CHEST"].titleize rescue "" %>
-        </td>        
-        <td>
-          <b>Heart:</b> <%= @encounters["BREAST"].titleize rescue "" %>
-        </td>
-        <td>
-          <b>Abdomen: </b> <%= @encounters["ABDOMEN"].titleize rescue "" %>
-        </td>
-        <td>
-          <b>Spleen Size: </b> <%= @encounters["SPLEEN SIZE"].titleize rescue "" %>
-        </td>
-      </tr>
+          <td>
+            <b>Head:</b> <%= @encounters["HEAD"] rescue "" %></br>
 
+            <b>Chest: </b> <%= @encounters["CHEST"].titleize rescue "" %>
+          </td>
+          <td>
+            <b>Heart:</b> <%= @encounters["BREAST"].titleize rescue "" %>
+          </td>
+          <td>
+            <b>Abdomen: </b> <%= @encounters["ABDOMEN"].titleize rescue "" %>
+          </td>
+          <td>
+            <b>Spleen Size: </b> <%= @encounters["SPLEEN SIZE"].titleize rescue "" %>
+          </td>
+        </tr>
+      <%  end %>
       <tr>
         <td colspan="2">
           <b>Membranes:</b> <%= @encounters["MEMBRANES"].titleize rescue "" %>
