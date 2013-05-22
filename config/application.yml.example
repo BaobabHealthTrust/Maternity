@@ -7,6 +7,7 @@ production:
  current_district: Lilongwe
  portal_url: 192.100.100.200:80
  dde_server_ip: localhost:3001
+ anc_link: localhost:11000
  dde_server_password: admin
  dde_server_username: admin
  remote_servers.parent: localhost:3000
@@ -30,6 +31,7 @@ development:
  current_district: Lilongwe
  portal_url: 192.100.100.200:80
  dde_server_ip: localhost:3001
+ anc_link: localhost:11000
  dde_server_password: admin
  dde_server_username: admin
  remote_servers.parent: localhost:3000
