@@ -47,8 +47,18 @@
   }
 
   function setLMPDate(period){
+    year = "<%=  (session[:datetime] ? session[:datetime].to_date : Date.today).year rescue Date.today.year%>"
+    month = "<%=  (session[:datetime] ? session[:datetime].to_date : Date.today).month rescue Date.today.month%>"
+    day = "<%=  (session[:datetime] ? session[:datetime].to_date : Date.today).day rescue Date.today.day%>"
+
     var d = new Date();
+
+    d.setDate(parseInt(day));
+    d.setYear(parseInt(year));
+    d.setMonth(parseInt(month) - 1);
+    
     d.setMonth(d.getMonth() - parseInt(period));
+    
     __$("last_menstrual_period_date").value = d.getFullYear() + "-" + padZeros((d.getMonth() + 1), 2) + "-" + padZeros(d.getDate(),2);
   }
 
@@ -303,7 +313,7 @@
       :tt_pageStyleClass => "NumbersOnly",
       :tt_onUnload => "setLMPDate(__$('touchscreenInput' + tstCurrentPage).value);",
       :max => 9,
-      :min => 5,
+      :min => 6,
       :absoluteMin => 1,
       :absoluteMax => 12
     }%>
