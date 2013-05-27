@@ -18,7 +18,7 @@
     <table width="100%" cellpadding="5" style="/*border: 1px solid #eee;*/ margin-top: 10px;" cellspacing="0">
       <tr>
         <th colspan="5" style="font-size: 24px; padding: 10px; border-bottom: 1px solid #000; border-top: 1px solid #000;">
-          <%= @facility %> - <%= (params[:ret] ? ( params[:ret] == "postnatal" ? "Born Before Arrival" : 
+          <%= @facility %> - <%= (params[:ret] ? ( params[:ret] == "postnatal" ? "Born Before Arrival" :
                 "Midwife") : "Midwife") %> Admission Note
         </th>
       </tr>
@@ -77,7 +77,7 @@
     <tr>
       <td>
         <b>Gravida:</b> <%= (@encounters["PATIENT PREGNANT"].to_i < @gravida ?
-              @gravida : @encounters["PATIENT PREGNANT"].to_i) rescue "" %>
+            @gravida : @encounters["PATIENT PREGNANT"].to_i) rescue "" %>
       </td>
       <td>
         <b>Parity:</b>  <%= (@encounters["PARITY"].to_i < @deliveries ? @deliveries :
@@ -117,7 +117,7 @@
       </td>
       <td colspan="4">
         <b>Abortions:</b> <%= (@encounters["NUMBER OF ABORTIONS"].to_i < @abortions ? @abortions :
-              @encounters["NUMBER OF ABORTIONS"].to_i) rescue "" %>
+            @encounters["NUMBER OF ABORTIONS"].to_i) rescue "" %>
       </td>
     </tr>
     <tr>
@@ -128,14 +128,15 @@
         </td>
         <td>
           <b>EDD:</b> <%= (@encounters["DATE OF LAST MENSTRUAL PERIOD"].to_date + 7.days + 9.months).strftime("%d/%b/%Y") rescue "" %>
+          </br><b>Gestation:</b> <%=  @edd_weeks %>  Weeks
         </td>
 
       <% end %>
 
       <td colspan="<%= (params[:ret] && params[:ret] != "postnatal" ? 3 : 5) %>">
         <b>PMTCT:</b> <%= (!@encounters["HIV STATUS"].nil? ? 
-            (@encounters["HIV STATUS"].upcase == "REACTIVE" ? "R" : (@encounters["HIV STATUS"].upcase == 
-                "UNKNOWN" ? "Unknown" : "NR")) : "") %>&nbsp;&nbsp;&nbsp;        
+            (@encounters["HIV STATUS"].upcase == "REACTIVE" ? "R" : (@encounters["HIV STATUS"].upcase ==
+                "UNKNOWN" ? "Unknown" : "NR")) : "") %>&nbsp;&nbsp;&nbsp;
       </td>
     </tr>
     <!--tr>
@@ -245,8 +246,8 @@
           <b>Position:</b> <%= @position.titleize rescue "" %>
         </td>
         <td>
-          <b>Contractions:</b> <%= (@encounters["CONTRACTIONS"].titleize == "Yes" ? 
-              @encounters["CONTRACTIONS INTENSITY"].titleize + "/" + @encounters["CONTRACTIONS LEVEL"].titleize : 
+          <b>Contractions:</b> <%= (@encounters["CONTRACTIONS"].titleize == "Yes" ?
+              @encounters["CONTRACTIONS INTENSITY"].titleize + "/" + @encounters["CONTRACTIONS LEVEL"].titleize :
               @encounters["CONTRACTIONS"].titleize) rescue "" %>
         </td>
         <td>
@@ -261,6 +262,7 @@
           <b>Genetalia Inspection:</b> <%= @encounters["GENETALIA INSPECTION"].titleize rescue "" %>
         </td>
       </tr>
+
       <tr>
         <td>
           <i style="font-size: 1.3em; text-decoration: underline;">Vaginal Examination</i>
@@ -273,24 +275,46 @@
         </td>
         <td colspan="2">
           <% if !@encounters["MOULDING"].blank? %>
-            <b>Caput/Moulding:</b> <%= @encounters["MOULDING"].titleize rescue "" %>
+            <b>Caput /Moulding:</b> <%= @encounters["MOULDING"].titleize rescue "" %>
           <% else %>
             <b>Caput/Moulding:</b> <%= @encounters["CAPUT"].titleize rescue "" %>
           <% end %>
         </td>
       </tr>
+      <% if params[:ret] == "antenatal" %>
+        <tr rowspan="2"style ="border-style: solid; border-bottom: 1px;">
+          <td>
+            <i style="font-size: 1.3em; text-decoration: underline;">Clinical Examination</i>
+          </td>
+
+          <td>
+            <b>Head:</b> <%= @encounters["HEAD"] rescue "" %></br>
+
+            <b>Chest: </b> <%= @encounters["CHEST"].titleize rescue "" %>
+          </td>
+          <td>
+            <b>Heart:</b> <%= @encounters["BREAST"].titleize rescue "" %>
+          </td>
+          <td>
+            <b>Abdomen: </b> <%= @encounters["ABDOMEN"].titleize rescue "" %>
+          </td>
+          <td>
+            <b>Spleen Size: </b> <%= @encounters["SPLEEN SIZE"].titleize rescue "" %>
+          </td>
+        </tr>
+      <%  end %>
       <tr>
         <td colspan="2">
           <b>Membranes:</b> <%= @encounters["MEMBRANES"].titleize rescue "" %>
         </td>
-	<% if @encounters["MEMBRANES"] && @encounters["MEMBRANES"].downcase == "ruptured" %>
-        <td>
-          <b>On:</b> <%= @encounters["RUPTURE DATE"].titleize rescue "" %>
-        </td>
-        <td colspan="2">
-          <b>At:</b> <%= @encounters["RUPTURE TIME"].titleize rescue "" %>
-        </td>
-	<% end %>
+        <% if @encounters["MEMBRANES"] && @encounters["MEMBRANES"].downcase == "ruptured" %>
+          <td>
+            <b>On:</b> <%= @encounters["RUPTURE DATE"].titleize rescue "" %>
+          </td>
+          <td colspan="2">
+            <b>At:</b> <%= @encounters["RUPTURE TIME"].titleize rescue "" %>
+          </td>
+        <% end %>
       </tr>
       <tr>
         <td colspan="2">
@@ -330,11 +354,11 @@
       </tr>
       <tr>
         <td colspan="5">
-          <i style="font-size: 1.3em; text-decoration: underline;">Physical Examination 
+          <i style="font-size: 1.3em; text-decoration: underline;">Physical Examination
             <%= (@bbaencounters["NUMBER OF BABIES"].to_i == 1 ? "Baby" : "Babies") %></i>
         </td>
       </tr>
-      <% 
+      <%
       prefixes = {
         1 => (@bbaencounters["NUMBER OF BABIES"].to_i > 1 ? "1<sup>st</sup>" : ""),
         2 => "2<sup>nd</sup> ",
@@ -344,7 +368,7 @@
       found = 0
     %>
       <% (1..(@bbaencounters["NUMBER OF BABIES"].to_i)).each do |baby| %>
-        <% if (@babyencounters["CONDITION OF BABY AT ADMISSION"][baby - 1].upcase rescue "") == "DEAD" 
+        <% if (@babyencounters["CONDITION OF BABY AT ADMISSION"][baby - 1].upcase rescue "") == "DEAD"
           found = found + 1
         end
       %>
@@ -353,20 +377,20 @@
             <b style="font-size: 1.2em;"><%= prefixes[baby] %> Baby:&emsp;</b>
           </td>
           <td>
-            <b>Respiratory rate:</b> <%= (@babyencounters["RESPIRATORY RATE"][baby - 1 - 
-              found].titleize rescue "") if (@babyencounters["CONDITION OF BABY AT ADMISSION"][baby - 1].upcase rescue "") != "DEAD" %>
+            <b>Respiratory rate:</b> <%= (@babyencounters["RESPIRATORY RATE"][baby - 1 -
+                  found].titleize rescue "") if (@babyencounters["CONDITION OF BABY AT ADMISSION"][baby - 1].upcase rescue "") != "DEAD" %>
           </td>
           <td>
-            <b>Weight:</b> <%= (@babyencounters["WEIGHT (KG)"][baby - 1 - 
-              found].titleize rescue "") if (@babyencounters["CONDITION OF BABY AT ADMISSION"][baby - 1].upcase rescue "") != "DEAD" %>
+            <b>Weight:</b> <%= (@babyencounters["WEIGHT (KG)"][baby - 1 -
+                  found].titleize rescue "") if (@babyencounters["CONDITION OF BABY AT ADMISSION"][baby - 1].upcase rescue "") != "DEAD" %>
           </td>
           <td>
-            <b>Temp.:</b> <%= (@babyencounters["TEMPERATURE (C)"][baby - 1 - 
-              found].titleize rescue "") if (@babyencounters["CONDITION OF BABY AT ADMISSION"][baby - 1].upcase rescue "") != "DEAD" %>
+            <b>Temp.:</b> <%= (@babyencounters["TEMPERATURE (C)"][baby - 1 -
+                  found].titleize rescue "") if (@babyencounters["CONDITION OF BABY AT ADMISSION"][baby - 1].upcase rescue "") != "DEAD" %>
           </td>
           <td>
-            <b>Heart rate:</b> <%= (@babyencounters["PULSE"][baby - 1 - 
-              found].titleize rescue "") if (@babyencounters["CONDITION OF BABY AT ADMISSION"][baby - 1].upcase rescue "") != "DEAD" %>
+            <b>Heart rate:</b> <%= (@babyencounters["PULSE"][baby - 1 -
+                  found].titleize rescue "") if (@babyencounters["CONDITION OF BABY AT ADMISSION"][baby - 1].upcase rescue "") != "DEAD" %>
           </td>
         </tr>
         <tr>
@@ -374,26 +398,26 @@
             <b>Condition at admission:</b> <%= @babyencounters["CONDITION OF BABY AT ADMISSION"][baby - 1].titleize rescue "" %>
           </td>
           <td>
-            <b>Cord:</b> 
+            <b>Cord:</b>
           </td>
           <td>
-            <b>Tied:</b> <%= (@babyencounters["CORD TIED"][baby - 1 - 
-              found].titleize rescue "") if (@babyencounters["CONDITION OF BABY AT ADMISSION"][baby - 1].upcase rescue "") != "DEAD" %>
+            <b>Tied:</b> <%= (@babyencounters["CORD TIED"][baby - 1 -
+                  found].titleize rescue "") if (@babyencounters["CONDITION OF BABY AT ADMISSION"][baby - 1].upcase rescue "") != "DEAD" %>
           </td>
           <td>
-            <b>Clean:</b> <%= (@babyencounters["CORD CLEAN"][baby - 1 - 
-              found].titleize rescue "") if (@babyencounters["CONDITION OF BABY AT ADMISSION"][baby - 1].upcase rescue "") != "DEAD" %>
+            <b>Clean:</b> <%= (@babyencounters["CORD CLEAN"][baby - 1 -
+                  found].titleize rescue "") if (@babyencounters["CONDITION OF BABY AT ADMISSION"][baby - 1].upcase rescue "") != "DEAD" %>
           </td>
         </tr>
         <tr>
           <td colspan="2">
-            <b>Abdomen:</b> <%= (@babyencounters["ABDOMEN"][baby - 1 - 
-              found].titleize rescue "") if (@babyencounters["CONDITION OF BABY AT ADMISSION"][baby - 1].upcase rescue "") != "DEAD" %>
+            <b>Abdomen:</b> <%= (@babyencounters["ABDOMEN"][baby - 1 -
+                  found].titleize rescue "") if (@babyencounters["CONDITION OF BABY AT ADMISSION"][baby - 1].upcase rescue "") != "DEAD" %>
           </td>
           <td colspan="3">
-            <b>Abnormalities:</b> <%= (@babyencounters["SPECIFY"][baby - 1 - 
-              found].titleize rescue "") if (@babyencounters["CONDITION OF BABY AT ADMISSION"][baby - 1].upcase rescue "") != "DEAD" %>
-          </td>          
+            <b>Abnormalities:</b> <%= (@babyencounters["SPECIFY"][baby - 1 -
+                  found].titleize rescue "") if (@babyencounters["CONDITION OF BABY AT ADMISSION"][baby - 1].upcase rescue "") != "DEAD" %>
+          </td>
         </tr>
 
       <% end %>
@@ -403,7 +427,7 @@
     <tr>
       <td colspan="5">
         <b>Impression:</b> <%= @encounters["CLINICAL IMPRESSION COMMENTS"].titleize.gsub(/\n/, '<br/>') rescue "" %>
-        <% (((@encounters["CLINICAL IMPRESSION COMMENTS"].titleize.gsub(/\n/, '<br/>') rescue "").length)..110).each{|p| %>
+        <% (((@encounters["CLINICAL IMPRESSION COMMENTS"].titleize.gsub(/\n/, '<br/>') rescue "").length)..90).each{|p| %>
           <%="....."%>
         <% } %>
       </td>
@@ -411,8 +435,8 @@
     <tr>
       <td colspan="5">
         <b>Plan:</b> <%= @encounters["PLAN"].titleize.gsub(/\n/, '<br/>') rescue "" %>
-        <% (((@encounters["PLAN"].titleize.gsub(/\n/, '<br/>') rescue "").length)..((params[:ret] ? 
-                (params[:ret] == "postnatal" ? 140 : 200) : 200))).each{|p| %>
+        <% (((@encounters["PLAN"].titleize.gsub(/\n/, '<br/>') rescue "").length)..((params[:ret] ?
+                (params[:ret] == "postnatal" ? 120 : 100) : 120))).each{|p| %>
           <%="....."%>
         <% } %>
       </td>

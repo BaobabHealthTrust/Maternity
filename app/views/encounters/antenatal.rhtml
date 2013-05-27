@@ -39,10 +39,10 @@
           &nbsp;
         </div>
         <div style="display: table-cell">
-          <button class="<%= (@encounters.include?("TT STATUS") || @encounters.include?("GRAVIDA") ? "gray" : "blue") %>"
-                  onclick="<%= (@encounters.include?("TT STATUS") || @encounters.include?("GRAVIDA") ? "" :
-                      "window.location = '/encounters/new/observations_patient_history?patient_id=#{@patient.id}&ret=antenatal'") %> ">
-            <span>Patient History</span>
+          <button class="<%= (@encounters.include?("FUNDUS") ? "gray" : "blue") %>"
+                  onclick="<%= (@encounters.include?("FUNDUS") ? "" :
+                      "window.location = '/encounters/new/observations_physical_exam?patient_id=#{@patient.id}&ret=antenatal'") %> ">
+            <span>Physical Examination</span>
           </button>
         </div>
       </div>
@@ -95,10 +95,10 @@
       </div>
       <div style="display: table-row">
         <div style="display: table-cell">
-          <button class="<%= (@encounters.include?("FUNDUS") ? "gray" : "blue") %>"
-                  onclick="<%= (@encounters.include?("FUNDUS") ? "" :
-                      "window.location = '/encounters/new/observations_physical_exam?patient_id=#{@patient.id}&ret=antenatal'") %> ">
-            <span>Physical Examination</span>
+          <button class="<%= (@encounters.include?("TT STATUS") || @encounters.include?("GRAVIDA") ? "gray" : "blue") %>"
+                  onclick="<%= (@encounters.include?("TT STATUS") || @encounters.include?("GRAVIDA") ? "" :
+                      "window.location = '/encounters/new/observations_patient_history?patient_id=#{@patient.id}&ret=antenatal'") %> ">
+            <span>Patient History</span>
           </button>
         </div>
         <div style="display: table-cell">
