@@ -240,6 +240,7 @@
   <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
   <%= hidden_field_tag("observations[][obs_datetime]",  DateTime.now()) %>
 
+  <% if false %>
   <% options = default.merge({
       :id => "position",
       :helptext => "Position",
@@ -255,6 +256,8 @@
   <%= select_tag("observations[][value_coded_or_text]", options_for_select(@position),options) %>
   <%= hidden_field_tag("observations[][patient_id]",    @patient.id) %>
   <%= hidden_field_tag("observations[][obs_datetime]",  DateTime.now()) %>
+
+  <% end %>
 
 <%#--------------------------------------------------------%>
 
