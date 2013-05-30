@@ -15,6 +15,45 @@
     return document.getElementById(e);
   }
 
+<%
+@assign_serial_numbers = CoreService.get_global_property_value("assign_serial_numbers").to_s == "true" rescue false
+@registration = (['registration', "labour ward", "gynaecology ward", "ante-natal ward"].include?(Location.find(session[:location_id]).name.downcase)) rescue false
+
+if !@registration && @assign_serial_numbers && @pending_birth_reports.length > 0
+  params[:lock] = "true"
+else
+  params[:lock] = "false"
+end
+
+%>
+  var total_not_sent = "<%= @pending_birth_reports.length%>"
+  var lockFinish = "<%= params[:lock].to_s rescue "false"%>";
+  
+ 
+  function lockFinishButton(){
+    clickE = "";
+    try{
+      clickE = __$("nextButton").onmousedown;
+    }catch(exx){
+
+    }
+    var selectedOption = __$("touchscreenInput" + tstCurrentPage).value.trim();
+    
+    if (lockFinish == "true" && clickE != "" && (selectedOption.match(/Discharged|Patient Died|Absconded/i))){
+      __$("nextButton").onclick = function(){
+
+      }
+
+      __$("nextButton").onmousedown = function(){
+        showMessage("Process Denied! </br>" + total_not_sent + " Unattempted Birth Report" + ((parseInt(total_not_sent) == 1)? "" : "s") + " Found", false, false);
+      };
+    }else{
+      __$("nextButton").onmousedown = function(){gotoNextPage();}
+    }
+    setTimeout(function(){lockFinishButton()}, 100);
+
+  }
+
   function growthIndicators(){
     $('inputFrame'+tstCurrentPage).innerHTML = "";
     //These values pulled from the tt_onLoad bit in the third form...
@@ -27,7 +66,7 @@
       alertsHeaderRow.setAttribute("class", "alertsHeaderRow");
       for (j = 0; j < headers.length; j++){
         var alertsHeader = document.createElement("div");
-        alertsHeader.setAttribute("class", "alertsHeader");        
+        alertsHeader.setAttribute("class", "alertsHeader");
         alertsHeader.innerHTML = headers[j];
         alertsHeaderRow.appendChild(alertsHeader);
       }
@@ -48,7 +87,7 @@
         alertsRow.setAttribute("class", "alertsRow");
         // add the left title of the table row
         var alertsTitle = document.createElement("div");
-        alertsTitle.setAttribute("class", "alertsTitle");       
+        alertsTitle.setAttribute("class", "alertsTitle");
         alertsTitle.innerHTML = "<span>BABY " + i + "<span>";
         alertsRow.appendChild(alertsTitle);
         // add cell figures
@@ -65,7 +104,7 @@
         
         //add row to table
         alertsTable.appendChild(alertsRow);
-      }     
+      }
       $('inputFrame'+tstCurrentPage).appendChild(alertsTable);
       displayText = "";
     }
@@ -79,7 +118,7 @@
       displayText = "<span class='red_alert'> " + apgarScore.toFixed(0) + "/10 - Low APGAR</span>";
     } else {
       displayText = "<span class='yellow_alert'> " + apgarScore.toFixed(0) + "/10 - Fairly Low </span>";
-    }  
+    }
     return displayText
   }
   function showApgarControl(baby){
@@ -97,7 +136,7 @@
       "RESPIRATION": "?"
     };
    
-    alert = document.createElement("div");    
+    alert = document.createElement("div");
 
     $("clearButton").onclick = function(){
       apgarScore = 0
@@ -218,7 +257,7 @@
     
   }
 
-  function updateApgarAlert(apgarScore){   
+  function updateApgarAlert(apgarScore){
     if (apgarScore >= 7){
       text = "" + apgarScore.toFixed(0) + "/10 - Normal APGAR</span>";
       alert.id = "normal_apgar_alert";
@@ -234,7 +273,7 @@
 
   function showWeightForAge(baby){
     displayText = "";
-    $('weight_for_age').value = currentWeight;   
+    $('weight_for_age').value = currentWeight;
     if ((currentWeight <= maxi) && (currentWeight >=mini)){
       displayText = "<span class='normal'>" + currentWeight + "g - Normal Weight </span>";
     } else if (currentWeight > maxi) {
@@ -337,7 +376,7 @@
     if(!$('weight_label')){
       var div = document.createElement("div");
       div.id = "weight_label";
-      div.className = "statusLabel";  
+      div.className = "statusLabel";
 
       gender = $("baby_gender" + baby_num).value;
       if (gender == "Male"){
@@ -354,9 +393,9 @@
     if (weight != ""){
       $('weight_label').innerHTML = ((weight > maxi )? "<i style='font-size: 1.2em;color: red;float: right;'> Over Weight</i>" : ((weight < mini)? "<i  style='font-size: 1.2em;float: right;color: red;'>Under Weight</i>"  : ""));
       if (weight < maxi && weight > mini){$('weight_label').innerHTML = "<i style='float:right;font-size:1.2em;'>  Normal Weight</i>";}
-    }else {       
+    }else {
       $('weight_label').innerHTML = "<i style='float:left;font-size:1.2em;'>  Enter Weight</i>";
-    }   
+    }
   }
   function checkBabyObs(baby){
     id1 = "baby_outcome" + baby + "_name";
@@ -593,6 +632,7 @@ $('next_url').disabled = false;} else {$('next_url').disabled = true; }"
   <% options = {
     :id =>"discharge_outcome",
     :helpText => 'Outcome',
+    :tt_onLoad => 'lockFinishButton()',
     :tt_onUnLoad => condition
   } %>
   <%= hidden_field_tag("observations[][concept_name]", "OUTCOME") %>
