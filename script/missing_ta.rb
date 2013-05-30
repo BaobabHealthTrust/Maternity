@@ -42,25 +42,25 @@ class MissingTa
 
   def self.district_id(ds)
 		
-    District.find_by_name(ds).id rescue nil
+    District.find_by_name(ds).district_id rescue nil
 			
   end
 
   def self.ta_id(ta, district)
 		
-    TraditionalAuthority.find_by_name_and_district_id(ta, district).id rescue nil
+    TraditionalAuthority.find_by_name_and_district_id(ta, district).traditional_authority_id rescue nil
 			
   end
 
   def self.village_id(vg, ta)
 		 
-    Village.find_by_name_and_traditional_authority_id(vg, ta).id rescue nil
+    Village.find_by_name_and_traditional_authority_id(vg, ta).village_id rescue nil
 			
   end
 
   def self.write_district(ds, region)
 	
-    usr = User.find_by_username("admin").id
+    usr = User.find_by_username("admin").user_id
 		
     district_id = district_id(ds)
     district_full = District.find(district_id) rescue nil
@@ -79,7 +79,7 @@ class MissingTa
   end
 
   def self.write_ta(ta, district)
-    usr = User.find_by_username("admin").id
+    usr = User.find_by_username("admin").user_id
 		
     ta_id = ta_id(ta, district)
     ta_full = TraditionalAuthority.find(ta_id) rescue nil
@@ -97,7 +97,7 @@ class MissingTa
   end
 
   def self.write_village(vg, ta)
-    usr = User.find_by_username("admin").id
+    usr = User.find_by_username("admin").user_id
 		
     vg_id = village_id(vg, ta)
     vg_full = Village.find(vg_id) rescue nil
