@@ -673,6 +673,19 @@ class PeopleController < ApplicationController
     end
     print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", next_task(person.patient))
   end
+
+  def malawi_regions
+
+    @reports = []
+
+    @reports << ['/location/new?act=create_district','Add District']
+    @reports << ['/location/new?act=create_ta','Add TA']
+    @reports << ['/location/new?act=create_village','Add Village']
+    @reports << ['/location/new?act=view_villages','View Villages']
+    @reports << ["/location/new?act=view_tas","View TA's"]
+    @reports << ['/location/new?act=view_districts','View Districts']
+    render :layout => false
+  end
   
   protected
   
@@ -702,5 +715,6 @@ class PeopleController < ApplicationController
       birthdate.strftime("%d/%b/%Y")                                            
     end                                                                         
   end
+  
   
 end
