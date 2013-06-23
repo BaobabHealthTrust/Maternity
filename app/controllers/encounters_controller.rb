@@ -89,16 +89,21 @@ class EncountersController < ApplicationController
     end
 
 		if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME" && params[:owner]		
-			baby = MaternityService.extract_baby(params)
+			babies = MaternityService.extract_baby(params)
 
 			@patient = Patient.find(params["encounter"]["patient_id"]) # rescue nil
 
 			@maternity_patient = MaternityService::Maternity.new(@patient)
 
-			baby.each do |baby|
+			babies.each do |baby|
 				# raise baby.to_yaml
 				relationship = @maternity_patient.create_baby(baby)
 				created_baby = Patient.find(relationship.person_b)
+
+        mother_address = PersonAddress.find_by_person_id(relationship.person_a) rescue nil
+
+        export_mother_addresss(relationship.person_a, created_baby.patient_id) rescue nil if !mother_address.blank? && !created_baby.blank?
+      
 				unless created_baby.blank?
 					#Save encounter and observations with baby's patient id
 					params[:encounter][:encounter_datetime] = (params[:encounter][:encounter_datetime].to_date.strftime("%Y-%m-%d ") +
@@ -252,6 +257,22 @@ class EncountersController < ApplicationController
     end  
   end
 
+  def export_mother_addresss(mother_id, baby_id)
+
+    mother_address = PersonAddress.find_by_person_id(mother_id)
+
+    keys = mother_address.attributes.keys.delete_if{|key| key.blank? || key.match(/person_id|person_address_id|date_created/)}
+    baby_address = PersonAddress.new
+    baby_address.person_id = baby_id
+
+    keys.each do |ky|
+      baby_address["#{ky}"] = mother_address["#{ky}"]
+    end
+
+    baby_address.save
+
+  end
+  
   def new
 	
 		@patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil    
