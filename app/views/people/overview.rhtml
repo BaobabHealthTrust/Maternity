@@ -7,11 +7,15 @@
     width:98%;
     border:1px solid #eee;
     margin:10px;
+    margin-top: 1px;
     background:white;
   }
   #stats td, #stats th {
     text-align:center;
+    margin: 5px;
+    padding: 10px;
   }
+
   .odd {
     background-color: #eeeef7;
   }
@@ -22,31 +26,81 @@
     background-color: white;
     border: solid 1px #eee;
     border-width: 1px;
-    overflow: hidden;
+    overflow: hide;
+
   }
 
 </style>
+
 <div id="tab" style="">
-  <h2 style="text-align: center; color: #6281a7;">Current Patient Statistics</h2>
-    <div id="table_div">
+
+  <h2 style="text-align: center; margin: 3px; color: #6281a7;">Current Patient Statistics</h2>
+
+  <div id="table_div">
 
     <table id="stats" cellpadding="14">
+
       <tr style="color: #fff; background-color: #6281a7;">
-        <th style="text-align:left;">Task Type</th>
+
+        <th style="text-align:left;">Type</th>
+
         <th>Me</th>
+
         <th>Today</th>
+
         <th>This Year</th>
+
         <th>Total to Date</th>
       </tr>
+
+      <%count = 0%>
+
       <% @types.each do |type| %>
+
+        <%if @ever["BIRTH REPORTS"] && @ever["BIRTH REPORTS"]["#{type.upcase}"] && count == 0%>
+
+          <tr class="<%= cycle('even', 'odd') %> style='width=100%;'">
+
+            <td style="text-align:left;padding-bottom: 0px; margin-bottom: 0px"><i>Birth Reports</i></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <%
+
+          count += 1
+
+        %>
+
+        <%end%>
+
         <tr class="<%= cycle('even', 'odd') %>">
-          <td style="text-align:left;"><%= (type.titleize == "Refer Patient In?" ? "Referrals - In" : type.titleize) %></td>
-          <td><%= @me[type].to_i %></td>
-          <td><%= @today[type].to_i %></td>
-          <td><%= @year[type].to_i %></td>
-          <td><%= @ever[type].to_i %></td>
+
+          <%if @ever["BIRTH REPORTS"] && @ever["BIRTH REPORTS"]["#{type.upcase}"] && count > 0%>
+
+            <td style="text-align:left;">&nbsp&nbsp&nbsp&nbsp<%= (type.titleize == "Refer Patient In?" ? "Referrals - In" : type.titleize) %></td>
+
+          <%else%>
+
+            <td style="text-align:left;"><%= (type.titleize == "Refer Patient In?" ? "Referrals - In" : type.titleize) %></td>
+
+          <%end%>
+
+          <td><%= @me["BIRTH REPORTS"]["#{type.upcase}"].present?? @me["BIRTH REPORTS"]["#{type.upcase}"].to_i : @me[type].to_i %></td>
+
+          <td><%= @today["BIRTH REPORTS"]["#{type.upcase}"].present?? @today["BIRTH REPORTS"]["#{type.upcase}"].to_i : @today[type].to_i %></td>
+
+          <td><%= @year["BIRTH REPORTS"]["#{type.upcase}"].present?? @year["BIRTH REPORTS"]["#{type.upcase}"].to_i : @year[type].to_i %></td>
+
+          <td><%= @ever["BIRTH REPORTS"]["#{type.upcase}"].present?? @ever["BIRTH REPORTS"]["#{type.upcase}"].to_i : @ever[type].to_i %></td>
+
         </tr>
+
       <% end %>
+
     </table>
+
   </div>
+
 </div>
