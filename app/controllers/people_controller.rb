@@ -530,20 +530,46 @@ class PeopleController < ApplicationController
   end
 
   def overview
-    @types = GlobalProperty.find_by_property("statistics.show_encounter_types").property_value rescue EncounterType.all.map(&:name).join(",")
+    @types = GlobalProperty.find_by_property("statistics.show_encounter_types").property_value #rescue EncounterType.all.map(&:name).join(",")
     @types = @types.split(/,/)
+    @types.delete_if{|del| del.match(/Refer|Diagnosis/i)} #removing some encounters than are wholistically not very important
 
-    @me = Encounter.statistics(@types, :conditions => 
+    @me = Encounter.statistics(@types, :conditions =>
         ['DATE(encounter_datetime) = DATE(NOW()) AND encounter.creator = ? AND encounter.location_id = ?',
         User.current_user.user_id, session[:location_id]])
-    
+
     @today = Encounter.statistics(@types, :conditions => ['DATE(encounter_datetime) = DATE(NOW()) AND encounter.location_id = ?',
         session[:location_id]])
-    
+
     @year = Encounter.statistics(@types, :conditions => ['YEAR(encounter_datetime) = YEAR(NOW()) AND encounter.location_id = ?',
         session[:location_id]])
 
     @ever = Encounter.statistics(@types, :conditions => ['encounter.location_id = ?', session[:location_id]])
+
+    if (CoreService.get_global_property_value("assign_serial_numbers").to_s == "true" rescue false)
+
+      @me["BIRTH REPORTS"] = {}
+      @me["BIRTH REPORTS"]["SENT"] = BirthReport.unsent_between("sent", Date.today, Date.today, User.current_user.user_id)
+      @me["BIRTH REPORTS"]["PENDING"] = BirthReport.unsent_between("pending", Date.today, Date.today, User.current_user.user_id)
+      @me["BIRTH REPORTS"]["UNATTEMPTED"] = BirthReport.unsent_between("unattempted", Date.today, Date.today, User.current_user.user_id)
+
+      @today["BIRTH REPORTS"] = {}
+      @today["BIRTH REPORTS"]["SENT"] = BirthReport.unsent_between("sent", Date.today, Date.today)
+      @today["BIRTH REPORTS"]["PENDING"] = BirthReport.unsent_between("pending", Date.today, Date.today)
+      @today["BIRTH REPORTS"]["UNATTEMPTED"] = BirthReport.unsent_between("unattempted", Date.today, Date.today)
+
+      @year["BIRTH REPORTS"] = {}
+      @year["BIRTH REPORTS"]["SENT"] = BirthReport.unsent_between("sent", "#{Date.today.strftime('%Y')}-01-01".to_date, "#{Date.today.strftime('%Y')}-12-31".to_date)
+      @year["BIRTH REPORTS"]["PENDING"] = BirthReport.unsent_between("pending", "#{Date.today.strftime('%Y')}-01-01".to_date, "#{Date.today.strftime('%Y')}-12-31".to_date)
+      @year["BIRTH REPORTS"]["UNATTEMPTED"] = BirthReport.unsent_between("unattempted", "#{Date.today.strftime('%Y')}-01-01".to_date, "#{Date.today.strftime('%Y')}-12-31".to_date)
+
+      @ever["BIRTH REPORTS"] = {}
+      @ever["BIRTH REPORTS"]["SENT"] = BirthReport.unsent_between("sent")
+      @ever["BIRTH REPORTS"]["PENDING"] = BirthReport.unsent_between("pending")
+      @ever["BIRTH REPORTS"]["UNATTEMPTED"] = BirthReport.unsent_between("unattempted")
+
+      @types = @types + @ever["BIRTH REPORTS"].keys.reverse
+    end
 
     render :layout => false
   end
