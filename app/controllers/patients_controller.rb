@@ -1205,5 +1205,23 @@ class PatientsController < ApplicationController
       @output["#{cd}"] = @display_text
     end
   end
+
+  def delivery_print
+
+    patient = Patient.find(params[:patient_id])
+
+    if patient.person.dead == false
+      print_string = (patient.national_id_label rescue "") + (patient.baby_details("summary") rescue "") + (patient.baby_details("apgar") rescue "")
+    else
+      print_string = (patient.national_id_label rescue "") + (patient.baby_details("summary") rescue "")
+    end
+    
+    send_data(print_string,
+      :type=>"application/label; charset=utf-8",
+      :stream=> false,
+      :filename=>"#{params[:patient_id]}#{rand(10000)}.lbl",
+      :disposition => "inline")
+  end
+  
 end
 

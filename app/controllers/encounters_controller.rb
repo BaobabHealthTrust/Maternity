@@ -94,7 +94,9 @@ class EncountersController < ApplicationController
 			@patient = Patient.find(params["encounter"]["patient_id"]) # rescue nil
 
 			@maternity_patient = MaternityService::Maternity.new(@patient)
-
+      created_baby = nil
+      print_string = ""
+      
 			babies.each do |baby|
 				# raise baby.to_yaml
 				relationship = @maternity_patient.create_baby(baby)
@@ -139,9 +141,9 @@ class EncountersController < ApplicationController
 						Observation.create(observation) 
 					end
 				end
-
+              
 			end
-
+ 
 			number_of_babies = params[:num_of_babies] rescue ""
 			number_of_babies = params[:number_of_babies].to_i rescue -1  if number_of_babies.blank?
 			number_of_babies = number_of_babies.to_i
@@ -149,11 +151,12 @@ class EncountersController < ApplicationController
 			baby = params[:baby] rescue ""
 			baby = -1 if baby.blank?
 			baby = baby.to_i 
-					
-			redirect_to "/encounters/baby_outcome?patient_id=#{params[:patient_id]}&baby=#{baby}&number_of_babies=#{number_of_babies}"  and return if (params[:baby] && params[:number_of_babies] && number_of_babies >= baby) || (params["observations"].collect{|o| o if !o["value_coded_or_text"].nil? and o["value_coded_or_text"].upcase == "DELIVERED"}.compact.length > 0)
+      
+			print_and_redirect("/patients/delivery_print?patient_id=#{created_baby.patient_id}", "/encounters/baby_outcome?patient_id=#{params[:patient_id]}&baby=#{baby}&number_of_babies=#{number_of_babies}")  and return if (params[:baby] && params[:number_of_babies] && number_of_babies >= baby) || (params["observations"].collect{|o| o if !o["value_coded_or_text"].nil? and o["value_coded_or_text"].upcase == "DELIVERED"}.compact.length > 0)
 		
-  		redirect_to "/patients/show/#{@patient.id}?skip_check=true" and return
-		end
+  		print_and_redirect("/patients/delivery_print?patient_id=#{created_baby.patient_id}", "/patients/show/#{@patient.id}?skip_check=true") and return
+
+    end
 
     params[:encounter][:encounter_datetime] = (params[:encounter][:encounter_datetime].to_date.strftime("%Y-%m-%d ") +
         Time.now.strftime("%H:%M")) rescue Time.now()
