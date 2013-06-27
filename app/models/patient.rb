@@ -61,7 +61,7 @@ class Patient < ActiveRecord::Base
   end
 
   def national_id(force = true)
-	#raise PatientIdentifierType.find_by_name("National Id").id.to_yaml
+    #raise PatientIdentifierType.find_by_name("National Id").id.to_yaml
     id = self.patient_identifiers.find_by_identifier_type(PatientIdentifierType.find_by_name("National id").id).identifier rescue nil
     return id unless force
     id ||= PatientIdentifierType.find_by_name("National id").next_identifier(:patient => self).identifier
@@ -73,7 +73,7 @@ class Patient < ActiveRecord::Base
     id[0..4] + "-" + id[5..8] + "-" + id[9..-1] rescue id
   end
 
-  def national_id_label(qty=2)
+  def national_id_label()
     return unless self.national_id
     sex =  self.person.gender.match(/F/i) ? "(F)" : "(M)"
     address = self.person.address.strip[0..24].humanize.delete("'") rescue ""
@@ -488,5 +488,133 @@ class Patient < ActiveRecord::Base
 
   end
 
+  def baby_details(type)
+    
+    values = {}
+    self.encounters.collect{|enc| enc if enc.name.upcase == "UPDATE OUTCOME"}.each do |enc|
+      
+      user = User.find(enc.creator).name rescue nil
+      values["TIME"]  = enc.encounter_datetime.strftime("%d/%b/%Y")
+      values["USER"] = (user.split(" ")[0].strip[0 .. 0] + ". " + user.split(" ")[1]) rescue "?"
+      date = ""
+      time = ""
+      
+      enc.observations.each do |obs|
+        name = obs.concept.name.name.upcase rescue ""
+        if name.match(/Gender/i)
+          values["GENDER"] = obs.answer_string
+        elsif name.match(/Date of/i)
+          date = obs.answer_string
+        elsif name.match(/Time of/i)
+          time = obs.answer_string
+        elsif name.match(/length/i)
+          values["#{name.upcase.strip}"] = ((obs.answer_string.blank? || obs.answer_string.to_i == 0) rescue true) ? "Unknown" : obs.answer_string
+        else
+          values["#{name.upcase.strip}"] = name.match(/Minute/i) ? ((obs.answer_string.to_i.blank? rescue true) ? "?" : obs.answer_string.to_i) : obs.answer_string
+        end
+
+      end
+      
+      values["TIME"] = date + "   " + time
+      
+    end
+
+    label = ZebraPrinter::StandardLabel.new
+    
+    case type
+
+    when "apgar"
+      label.draw_text("FIRST MINUTE APGAR",28,29,0,1,1,2,false)
+      label.draw_text("FIFTH MINUTE APGAR",400,29,0,1,1,2,false)
+      label.draw_line(28,60,162,1,0)
+      label.draw_line(400,60,162,1,0)
+    
+      label.draw_text("Entered By:",40,283,0,1,1,1,false)
+      label.draw_text(values["USER"],190,283,0,1,1,1,false)
+
+      label.draw_text("Date Entered:",470,283,0,1,1,1,false)
+      label.draw_text(values["TIME"],620,283,0,1,1,1,false)
+
+      label.draw_text("Appearance",28,80,0,2,1,1,false)
+      label.draw_text("Pulse",28,110,0,2,1,1,false)
+      label.draw_text("Grimace",28,140,0,2,1,1,false)
+      label.draw_text("Activity",28,170,0,2,1,1,false)
+      label.draw_text("Respiration",28,200,0,2,1,1,false)
+      label.draw_text("APGAR SCORE", 28,230,0,1,1,2,false)
+
+      label.draw_text("Appearance",400,80,0,2,1,1,false)
+      label.draw_text("Pulse",400,110,0,2,1,1,false)
+      label.draw_text("Grimace",400,140,0,2,1,1,false)
+      label.draw_text("Activity",400,170,0,2,1,1,false)
+      label.draw_text("Respiration",400,200,0,2,1,1,false)
+      label.draw_text("APGAR SCORE", 400,230,0,1,1,2,false)
+
+      label.draw_line(250,70,130,1,0)
+      label.draw_line(250,70,1,183,0)
+      label.draw_line(380,70,1,183,0)
+      label.draw_line(250,100,130,1,0)
+      label.draw_line(250,130,130,1,0)
+      label.draw_line(250,160,130,1,0)
+      label.draw_line(250,190,130,1,0)
+      label.draw_line(250,220,130,1,0)
+      label.draw_line(250,250,130,1,0)
+      label.draw_line(659,70,130,1,0)
+      label.draw_line(659,70,1,183,0)
+      label.draw_line(790,70,1,183,0)
+      label.draw_line(659,100,130,1,0)
+      label.draw_line(659,130,130,1,0)
+      label.draw_line(659,160,130,1,0)
+      label.draw_line(659,190,130,1,0)
+      label.draw_line(659,220,130,1,0)
+      label.draw_line(659,250,130,1,0)
+   
+      label.draw_text("#{values['APPEARANCE MINUTE ONE']}/2",280,80,0,2,1,1,false)
+      label.draw_text("#{values['PULSE MINUTE ONE']}/2",280,110,0,2,1,1,false)
+      label.draw_text("#{values['GRIMANCE MINUTE ONE']}/2",280,140,0,2,1,1,false)
+      label.draw_text("#{values['ACTIVITY MINUTE ONE']}/2",280,170,0,2,1,1,false)
+      label.draw_text("#{values['RESPIRATION MINUTE ONE']}/2",280,200,0,2,1,1,false)
+      label.draw_text("#{values['APGAR MINUTE ONE']}/10",280,230,0,2,1,1,false)
+
+      label.draw_text("#{values['APPEARANCE MINUTE FIVE']}/2",690,80,0,2,1,1,false)
+      label.draw_text("#{values['PULSE MINUTE FIVE']}/2",690,110,0,2,1,1,false)
+      label.draw_text("#{values['GRIMANCE MINUTE FIVE']}/2",690,140,0,2,1,1,false)
+      label.draw_text("#{values['ACTIVITY MINUTE FIVE']}/2",690,170,0,2,1,1,false)
+      label.draw_text("#{values['RESPIRATION MINUTE FIVE']}/2",690,200,0,2,1,1,false)
+      label.draw_text("#{values['APGAR MINUTE FIVE']}/10",690,230,0,2,1,1,false)
+
+    when "summary"
+
+      label.draw_text("DELIVERY SUMMARY",300,29,0,1,1,2,false)
+      label.draw_line(300,60,153,1,0)
+
+      label.draw_text("Entered By:",40,290,0,1,1,1,false)
+      label.draw_text(values["USER"],190,290,0,1,1,1,false)
+
+      label.draw_text("Date Entered:",470,290,0,1,1,1,false)
+      label.draw_text(values["TIME"],620,290,0,1,1,1,false)
+
+      label.draw_text(" Birth Weight    : ",28,80,0,2,1,1,false)
+      label.draw_text(" Birth Length    : ",28,110,0,2,1,1,false)
+      label.draw_text(" Baby outcome    : ",28,140,0,2,1,1,false)
+      label.draw_text(" Sex             : ",28,170,0,2,1,1,false)
+      label.draw_text(" Presentation    : ",28,200,0,2,1,1,false)
+      label.draw_text(" Delivery Time   : ", 28,230,0,2,1,1,false)
+
+      label.draw_text("#{values['BIRTH WEIGHT']}",248,80,0,2,1,1,false)
+      label.draw_text("#{values['BIRTH LENGTH']}",248,110,0,2,1,1,false)
+      label.draw_text("#{values['BABY OUTCOME']}",248,140,0,2,1,1,false)
+      label.draw_text("#{values['GENDER']}",248,170,0,2,1,1,false)
+      label.draw_text("#{values['PRESENTATION']}",248,200,0,2,1,1,false)
+      label.draw_text("#{values['TIME']}", 248,230,0,2,1,1,false)
+      
+    when "discharge"
+
+      
+
+    end
+
+    label.print(1)
+    
+  end
 
 end
