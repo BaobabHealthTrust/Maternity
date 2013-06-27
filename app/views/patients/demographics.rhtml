@@ -131,8 +131,7 @@ params[:reg] = "true" if @registration || !@assign_serial_numbers
           <td><a href="edit_demographics?patient_id=<%=@patient.id%>&field=gender&person_id=<%=
                  @person.id %>&cat=<%= (params["cat"] rescue "") %>&gender=<%= (@gender == "Male" ? "M" : "F") %>">Edit</a></td>
         </tr>
-
-        <% if @baby == false %>
+       
           <tr>
             <td class='title'>Nationality</td>
             <td class ='data'> <%= @update_patient.nationality %></td>
@@ -191,7 +190,7 @@ params[:reg] = "true" if @registration || !@assign_serial_numbers
                           <td><a href="edit_demographics?patient_id=<%=@patient.id%>&person_id=<%=
           @person.id %>&cat=<%= (params["cat"] rescue "") %>&field=occupation">Edit</a></td>
           </tr-->
-        <% end %>
+    
       </table>
 
     </div>
