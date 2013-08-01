@@ -985,7 +985,7 @@ class EncountersController < ApplicationController
 
     location = request.remote_ip rescue ""
     @patient    = Patient.find(params[:patient_id]) rescue (Patient.find(params[:id]) rescue (Patient.find(session[:patient_id]) rescue nil))
-
+    zoom = CoreService.get_global_property_value("report.zoom.percentage")/100.0 rescue 1
     if @patient
       current_printer = ""
 
@@ -996,7 +996,7 @@ class EncountersController < ApplicationController
       } rescue []
      
       t1 = Thread.new{
-        Kernel.system "wkhtmltopdf -s A4 http://" +
+        Kernel.system "wkhtmltopdf --zoom #{zoom} -s A4 http://" +
           request.env["HTTP_HOST"] + "\"/encounters/observations_printable/" +
           @patient.patient_id.to_s + "?patient_id=#{@patient.patient_id}&user_id=#{params[:user_id]}&ret=#{params[:ret]}"+ "\" /tmp/output-" + params[:user_id].to_s + ".pdf \n"
       }
