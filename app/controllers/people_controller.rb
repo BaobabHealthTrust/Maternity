@@ -214,7 +214,13 @@ class PeopleController < ApplicationController
       next if national_id.blank?
       results = PersonSearch.new(national_id)
       results.national_id = national_id
-      results.current_residence =data["person"]["data"]["addresses"]["city_village"]
+
+      unless data["person"]["data"]["addresses"]["city_village"].match(/hashwithindifferentaccess/i)
+        results.current_residence =data["person"]["data"]["addresses"]["city_village"]
+      else
+        results.current_residence = nil
+      end
+      
       results.person_id = 0
       results.home_district = data["person"]["data"]["addresses"]["address2"]
       results.traditional_authority =  data["person"]["data"]["addresses"]["county_district"]
@@ -275,6 +281,9 @@ class PeopleController < ApplicationController
       params[:person][:id] = related_person.patient_id if related_person
     
       if !related_person.blank?
+        
+        DDEService.create_footprint(related_person.national_id, Location.find(session[:location_id]).name) rescue nil
+
         if params[:identifier].length != 6 and create_from_dde_server
           dde_patient = DDEService::Patient.new(related_person)
 		
@@ -405,15 +414,29 @@ class PeopleController < ApplicationController
         encounter.encounter_datetime = session[:datetime] unless session[:datetime].blank?
         encounter.save
       end
+
+
 			print_and_redirect("/patients/national_id_label/?patient_id=#{person.patient.id}&cat=#{params[:cat]}", "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{person.id}&cat=#{params[:cat]}") and return if !(params[:patient_id] rescue "").blank? and
         (params[:cat].downcase rescue "") != "mother"
 
+      if create_from_dde_server
+        
+        DDEService.create_footprint(person.patient.national_id, Location.find(session[:location_id]).name) rescue nil
+
+      end
+      
       print_and_redirect("/patients/national_id_label/?patient_id=#{person.patient.id}&cat=#{params[:cat]}", "/patients/show?patient_id=#{person.id}?cat=#{params[:cat]}") and return if !person.nil?
 
       redirect_to "/patients/show?patient_id=#{person.id}}" and return if !person.nil?
     end
-    person = ANCService.create_patient_from_dde(params) if create_from_dde_server
 
+    if create_from_dde_server
+
+      person = ANCService.create_patient_from_dde(params)
+      DDEService.create_footprint(person.patient.national_id, Location.find(session[:location_id]).name) rescue nil
+
+    end
+   
     if !person.blank?
 
       found_person = person
@@ -436,10 +459,10 @@ class PeopleController < ApplicationController
       else
         redirect_to :action => "index"
       end
-    else    
+    else
       
-      remote_person = ANCService.create_remote(params) if create_from_remote   
-      person = Person.create_from_form(remote_person) if create_from_remote      
+      remote_person = ANCService.create_remote(params) if create_from_remote
+      person = Person.create_from_form(remote_person) if create_from_remote
       person = Person.create_from_form(params[:person]) if !create_from_remote
 
       if params[:next_url]
@@ -588,7 +611,7 @@ class PeopleController < ApplicationController
     @print_string = (@remaining_serial_numbers ==1)?  "" + @remaining_serial_numbers.to_s + " Serial Number Remaining" : "" + @remaining_serial_numbers.to_s + " Serial Numbers Remaining"
     @limited_serial_numbers = (SerialNumber.all.size  <= 100) rescue false
     render :layout => false
-  end  
+  end
   def create_batch
     @initial_numbers = SerialNumber.all.size
 
@@ -622,6 +645,7 @@ class PeopleController < ApplicationController
         @remote_duplicates << Person.get_dde_person(person)
       end
     end
+    
     @selected_identifier = params[:search_params][:identifier]
     render :layout => 'menu'
   end
@@ -630,8 +654,8 @@ class PeopleController < ApplicationController
     person = DDEService.reassign_dde_identification(params[:dde_person_id],params[:local_person_id])
 
     if params[:cat] && params[:session_patient_id]
-			url = "/relationships/new?patient_id=#{params[:session_patient_id]}&relation=#{person.id}&cat=#{params[:cat]}"
-			print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", url) and return
+      url = "/relationships/new?patient_id=#{params[:session_patient_id]}&relation=#{person.id}&cat=#{params[:cat]}"
+      print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", url) and return
     end
 	
     print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", next_task(person.patient))
@@ -658,7 +682,7 @@ class PeopleController < ApplicationController
   end
 
 
-  def reassign_national_identifier	
+  def reassign_national_identifier
 
     patient = Patient.find(params[:person_id])
     if create_from_dde_server
@@ -675,27 +699,27 @@ class PeopleController < ApplicationController
     npid = PatientIdentifier.find(:first,
       :conditions => ["patient_id = ? AND identifier = ?
            AND voided = 0", patient.id,params[:identifier]])
-		if npid
-			npid.voided = 1
-			npid.void_reason = "Given another national ID"
-			npid.date_voided = Time.now()
-			npid.voided_by = current_user.id
-			npid.save
+    if npid
+      npid.voided = 1
+      npid.void_reason = "Given another national ID"
+      npid.date_voided = Time.now()
+      npid.voided_by = current_user.id
+      npid.save
     end
 
-		if params[:cat] && params[:session_patient_id]
-			url = "/relationships/new?patient_id=#{params[:session_patient_id]}&relation=#{patient.id}&cat=#{params[:cat]}"
-			print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", url) and return
-		end     
-		print_and_redirect("/patients/national_id_label?patient_id=#{patient.id}", next_task(patient))
+    if params[:cat] && params[:session_patient_id]
+      url = "/relationships/new?patient_id=#{params[:session_patient_id]}&relation=#{patient.id}&cat=#{params[:cat]}"
+      print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", url) and return
+    end
+    print_and_redirect("/patients/national_id_label?patient_id=#{patient.id}", next_task(patient))
   end
 
-  def create_person_from_dde                                                    
-    person = DDEService.get_remote_person(params[:remote_person_id])                                                             
-		#raise person.to_yaml
+  def create_person_from_dde
+    person = DDEService.get_remote_person(params[:remote_person_id])
+    #raise person.to_yaml
     if params[:cat] && params[:session_patient_id]
-			url = "/relationships/new?patient_id=#{params[:session_patient_id]}&relation=#{person.id}&cat=#{params[:cat]}"
-			print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", url) and return
+      url = "/relationships/new?patient_id=#{params[:session_patient_id]}&relation=#{person.id}&cat=#{params[:cat]}"
+      print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", url) and return
     end
     print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", next_task(person.patient))
   end
@@ -717,29 +741,29 @@ class PeopleController < ApplicationController
   
   def cul_age(birthdate , birthdate_estimated , date_created = Date.today, today = Date.today)
                                                                                 
-    # This code which better accounts for leap years                            
+    # This code which better accounts for leap years
     patient_age = (today.year - birthdate.year) + ((today.month - birthdate.month) + ((today.day - birthdate.day) < 0 ? -1 : 0) < 0 ? -1 : 0)
                                                                                 
     # If the birthdate was estimated this year, we round up the age, that way if
     # it is March and the patient says they are 25, they stay 25 (not become 24)
-    birth_date = birthdate                                                      
-    estimate = birthdate_estimated == 1                                         
+    birth_date = birthdate
+    estimate = birthdate_estimated == 1
     patient_age += (estimate && birth_date.month == 7 && birth_date.day == 1  &&
         today.month < birth_date.month && date_created.year == today.year) ? 1 : 0
-  end                                                                           
+  end
                                                                                 
-  def birthdate_formatted(birthdate,birthdate_estimated)                        
-    if birthdate_estimated == 1                                                 
-      if birthdate.day == 1 and birthdate.month == 7                            
-        birthdate.strftime("??/???/%Y")                                         
-      elsif birthdate.day == 15                                                 
-        birthdate.strftime("??/%b/%Y")                                          
-      elsif birthdate.day == 1 and birthdate.month == 1                         
-        birthdate.strftime("??/???/%Y")                                         
-      end                                                                       
-    else                                                                        
-      birthdate.strftime("%d/%b/%Y")                                            
-    end                                                                         
+  def birthdate_formatted(birthdate,birthdate_estimated)
+    if birthdate_estimated == 1
+      if birthdate.day == 1 and birthdate.month == 7
+        birthdate.strftime("??/???/%Y")
+      elsif birthdate.day == 15
+        birthdate.strftime("??/%b/%Y")
+      elsif birthdate.day == 1 and birthdate.month == 1
+        birthdate.strftime("??/???/%Y")
+      end
+    else
+      birthdate.strftime("%d/%b/%Y")
+    end
   end
   
   
