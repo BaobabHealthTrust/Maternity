@@ -760,9 +760,9 @@ class PeopleController < ApplicationController
           header_added = true
         end
 
-        baby = Patient.find(data.person_id)
-        next if (!baby.mother.blank?) rescue true
+        baby = Patient.find(data.person_id)        
         mother = Patient.find(baby.mother.person_a) rescue nil
+        next if mother.blank?
         mother_name = mother.person.name rescue ""        
         weight = (data.weight.to_i < 10 ? (data.weight.to_i * 1000).to_s : data.weight) rescue data.weight
         dob = baby.person.birthdate.strftime("%d/%b/%Y") rescue ""
