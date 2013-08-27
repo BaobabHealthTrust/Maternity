@@ -736,6 +736,50 @@ class PeopleController < ApplicationController
     @reports << ['/location/new?act=view_districts','View Districts']
     render :layout => false
   end
+
+   def export_birth_reports
+    #@type = file_type
+    require 'rubygems'
+    require 'fastercsv'
+    header  = ["BABY ID", "BABY NAME", "BABY DATE OF BIRTH", "BABY BIRTH WEIGHT", "MOTHER NAME", "MOTHER NATIONAL ID"]
+    csv_string = []
+
+    @encs = Encounter.find_by_sql(["SELECT ob.person_id, ob.value_numeric AS weight FROM encounter enc INNER JOIN obs ob
+      ON (DATE(enc.encounter_datetime) BETWEEN '2013-05-01' AND '2013-08-31') AND ob.encounter_id = enc.encounter_id AND enc.voided = 0 AND enc.encounter_type = ? AND ob.concept_id = ?
+      AND (ob.value_numeric BETWEEN 10 AND 2500 OR ob.value_numeric < 2.5)",
+        EncounterType.find_by_name("UPDATE OUTCOME"), ConceptName.find_by_name("BIRTH WEIGHT").concept_id])
+
+    header_added = false
+
+    @encs.each do |data|
+
+      csv_string << FasterCSV.generate do |csv|
+
+        unless header_added
+          csv << header
+          header_added = true
+        end
+
+        baby = Patient.find(data.person_id)
+        next if (!baby.mother.blank?) rescue true
+        mother = Patient.find(baby.mother.person_a) rescue nil
+        mother_name = mother.person.name rescue ""        
+        weight = (data.weight.to_i < 10 ? (data.weight.to_i * 1000).to_s : data.weight) rescue data.weight
+        dob = baby.person.birthdate.strftime("%d/%b/%Y") rescue ""
+        mother_id = mother.national_id rescue ""
+
+        csv << [baby.national_id, baby.person.name, dob, weight, mother_name, mother_id]
+      end
+
+    end
+
+    send_data(csv_string.to_s,
+      :type => 'text/csv; unicode;',
+      :stream=> false,
+      :disposition => 'inline',
+      :filename => "babies_data.csv") and return
+  end
+  
   
   protected
   

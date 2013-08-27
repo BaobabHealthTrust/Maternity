@@ -19,9 +19,3 @@ test:
   password: 
   host: localhost
 
-anc:
-  adapter: mysql
-  database: openmrs
-  username: root
-  password: 
-  host: localhost

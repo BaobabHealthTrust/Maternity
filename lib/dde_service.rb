@@ -693,7 +693,7 @@ module DDEService
     dde_server_password = GlobalProperty.find_by_property("dde_server_password").property_value rescue ""
     uri = "http://#{dde_server_username}:#{dde_server_password}@#{dde_server}/people/create_footprint/"
 
-    return RestClient.post(uri,paramz)
+    return RestClient.post(uri,paramz) rescue nil
   end
 
 end
