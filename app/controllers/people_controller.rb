@@ -746,7 +746,7 @@ class PeopleController < ApplicationController
 
     @encs = Encounter.find_by_sql(["SELECT ob.person_id, ob.value_numeric AS weight FROM encounter enc INNER JOIN obs ob
       ON (DATE(enc.encounter_datetime) BETWEEN '2013-05-01' AND '2013-08-31') AND ob.encounter_id = enc.encounter_id AND enc.voided = 0 AND enc.encounter_type = ? AND ob.concept_id = ?
-      AND (ob.value_numeric BETWEEN 10 AND 2500 OR ob.value_numeric < 2.5)",
+      AND (ob.value_numeric BETWEEN 10 AND 2499.99999 OR ob.value_numeric < 2.4999)",
         EncounterType.find_by_name("UPDATE OUTCOME"), ConceptName.find_by_name("BIRTH WEIGHT").concept_id])
 
     header_added = false
