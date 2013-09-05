@@ -607,4 +607,27 @@ class Patient < ActiveRecord::Base
     patients
   end
 
+  def apgar
+    apgar1 = Observation.find(:first, :conditions => ["person_id = ? AND concept_id = ?",
+        self.id, ConceptName.find_by_name("APGAR MINUTE ONE").concept_id]).answer_string.to_i rescue "?"
+    apgar2 =Observation.find(:first, :conditions => ["person_id = ? AND concept_id = ?",
+        self.id, ConceptName.find_by_name("APGAR MINUTE FIVE").concept_id]).answer_string.to_i rescue "?"
+
+    return "(#{apgar1}, #{apgar2})"
+  end
+
+  def delivery_outcome
+    outcome = Observation.find(:first, :conditions => ["person_id = ? AND concept_id = ?",
+        self.id, ConceptName.find_by_name("BABY OUTCOME").concept_id]).answer_string rescue "?"
+
+    outcome
+  end
+
+  def discharge_outcome
+    outcome = Observation.find(:first, :conditions => ["person_id = ? AND concept_id = ?",
+        self.id, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string rescue ""
+    outcome = "Dead" if outcome.blank? && ((!self.delivery_outcome.match(/alive/i)) || self.delivery_outcome.match(/still|neo/i) || outcome.match(/still|neo/))
+    outcome
+  end
+
 end

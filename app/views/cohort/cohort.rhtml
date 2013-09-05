@@ -4,7 +4,7 @@
 
     <%= javascript_include_tag 'jquery' %>
     <%=javascript_include_tag "jquery.table2CSV.min" %>
-  
+
 
     <script type="text/javascript">
       
@@ -123,13 +123,22 @@
       <button onclick="window.location = '/cohort_report?reportType=<%= @reportType %>';" class="button navButton blue"
               id="backButton" style="margin-top: 10px;" ><span>Back</span>
       </button>
-      <button class="button navButton blue" style="margin-top: 10px;"
-              onclick="window.location = '/cohort_report/print_cohort?start_date=<%= @start_date %>+<%= @start_time
-            %>&end_date=<%= @end_date %>+<%= @end_time %>&reportType=<%= @reportType %>'" style="float: right; ">
-        <span>
-          Print
-        </span>
-      </button>
+      <%if @reportType.to_i == 4 %>
+        <button class="button navButton blue" style="margin-top: 10px;"
+                onclick="window.location = '/cohort_report/print_birth_cohort?start_date=<%= @start_date %>&start_time=<%=  @start_time %>&end_date=<%= @end_date %>&end_time=<%= @end_time %>&reportType=<%= @reportType %>'" style="float: right; ">
+          <span>
+            Print Cohort
+          </span>
+        </button>
+      <%else%>
+        <button class="button navButton blue" style="margin-top: 10px;"
+                onclick="window.location = '/cohort_report/print_cohort?start_date=<%= @start_date %>+<%= @start_time
+              %>&end_date=<%= @end_date %>+<%= @end_time %>&reportType=<%= @reportType %>'" style="float: right; ">
+          <span>
+            Print
+          </span>
+        </button>
+      <%end%>
       <%if @reportType.to_i == 3%>
         <button class="button navButton blue" style="margin-top: 10px;"
                 onclick="exportToCsv();">

@@ -116,47 +116,68 @@
                 <div class="table" style="width: 100%; ">
                   <div class="row">
                     <div class="headerCell">
-                      Patient ID
+                      Baby ID
                     </div>
+
                     <div class="headerCell">
-                      Name
+                      Baby Name
                     </div>
+
+                    <div class="headerCell">
+                      APGAR
+                    </div>
+
+                    <div class="headerCell">
+                      Delivery Outcome
+                    </div>
+
+                    <div class="headerCell">
+                      Discharge Outcome
+                    </div>
+
+                    <div class="headerCell">
+                      Mother ID
+                    </div>
+
                     <div class="headerCell">
                       Mother Name
                     </div>
+
                     <div class="headerCell">
                       Date Of Birth
-                    </div>
-                    <div class="headerCell">
-                      Encounters
-                    </div>
+                    </div>                   
 
                   </div>
 
                   <% (@patients || []).each do |patient| %>
+                    <% @mother = Patient.find(patient.person.mother.person_a) rescue nil%>
                     <div class="row" style="vertical-align: middle;">
                       <div class="cell" style="vertical-align: middle;">
                         <%= patient.national_id rescue "&nbsp;" %>
                       </div>
                       <div class="cell" style="vertical-align: middle;">
-                        <%= patient.person.name rescue "" %>
+                        <%=  patient.person.name rescue nil%>&nbsp
                       </div>
                       <div class="cell" style="vertical-align: middle;">
-                        <%= Person.find(patient.person.mother.person_a).name rescue nil %>&nbsp
+                        <%=  patient.apgar rescue nil%>&nbsp
+                      </div>
+                      <div class="cell" style="vertical-align: middle;">
+                        <%=  patient.delivery_outcome rescue nil%>&nbsp
+                      </div>
+                      <div class="cell" style="vertical-align: middle;">
+                        <%= patient.discharge_outcome %>&nbsp
+                      </div>
+                     
+                      <div class="cell" style="vertical-align: middle;">
+                        <%= @mother.national_id rescue nil %>&nbsp
+                      </div>
+                      <div class="cell" style="vertical-align: middle;">
+                        <%= @mother.person.name rescue nil %>&nbsp
                       </div>
                       <div class="cell"  style="vertical-align: middle;">
                         <%= patient.person.birthdate_formatted rescue "" %>
                       </div>
-                      <div class="cell" style="vertical-align: middle; padding-left: 55px;">
-                        <div class="table">
-                          <div class="row">
-                            <div id="<%= "__" + patient.national_id rescue "" %>"
-                                 style="display: block; display: table-cell; vertical-align: middle; text-align: center;">
-                                   <%= patient.encounters.length %>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+
                     </div>
                   <% end %>
                 </div>
