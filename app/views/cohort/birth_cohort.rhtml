@@ -1,0 +1,541 @@
+<html>
+  <head>
+    <title>report</title>
+    <script>
+      function redirect(group, key){
+        window.parent.location = "/cohort/matrix_decompose?group=" + group + "&key=" + key;
+      }
+    </script>
+    <style>
+      table {
+        font-family: verdana;
+      }
+      #container td{
+        border: 1px solid #ccc;
+      }
+      #tb th{
+        border: 1px solid #ccc;
+        background-color: #6281A7;
+        color: #eee;
+      }
+      td{
+        text-align: center;
+        font-size: 1.1em;
+        padding: 6px;
+      }
+      .title {
+        padding: 11px;
+        text-align: left;
+      }
+      .group{
+        background: rgb(240, 240, 240);
+        text-align: left;
+        padding-left: 30px;
+      }
+      .value{
+        background: rgb(240, 240, 240);
+        text-align: center;
+        color: darkolivegreen;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+
+    <table cellpadding="5" width="100%" style="font-family: verdana;">
+      <tr>
+        <td style="text-align: center;">
+          <img src="/images/emblem.gif" alt="emblem" style="float: left; margin-left: 20px;" />
+          <div style="padding-top: 10px; color: #6281A7; font-size: 1.8em;
+               float: right; margin-top: 20px;">
+            Birth Cohort
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="text-align: left;">
+          Republic of Malawi
+
+          <%@facility_name = CoreService.get_global_property_value("facility.name")%>
+          <div style="float: right; font-weight: bold; font-size: 20px;"><%= @facility_name rescue nil %></br >
+            <span style="font-weight: normal; font-size: 13px; float: right"><%= params[:start_date].to_date.strftime("%d/%b/%Y") + "  To " + params[:end_date].to_date.strftime("%d/%b/%Y")%></span></div>
+        </td>
+      </tr>
+
+      <tr style="height: 400px; overflow: auto;">
+        <td >
+          <table width="100%" style="font-size: 0.9em;" cellpadding="3">
+            <tbody id="tb" style ="">
+              <tr>
+
+                <th class="group">
+                  Category
+                </th>
+                <th>
+                  Total
+                </th>
+
+
+
+            </tbody>
+            <tbody id="container">
+
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Total Admissions <sub style="font-size: 12px;">(Women)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('admissions', '')">
+                  <%= @total_admissions.length%>
+                </td>
+              </tr>
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Total Births
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('total_babies_born', '')">
+                  <%= @total_babies_born.length%>
+                </td>
+              </tr>
+
+              <tr class ="sub-header">
+                <td style="border: none; float: left;">
+                  Total births by gender
+                </td>
+              </tr>
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Males
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('gender', 'males')">
+                  <%= @gender["MALES"].length rescue 0%>
+                </td>
+              </tr>
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Females
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('gender', 'females')">
+                  <%= @gender["FEMALES"].length rescue 0%>
+                </td>
+              </tr>
+
+
+              <tr class ="sub-header">
+                <td style="border: none; float: left;">
+                  Births by delivery mode
+                </td>
+                <td style="border: none;">
+                  Males
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Alive
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('deliveries', 'male_alive')">
+                  <%= @delivery_mode["MALE_ALIVE"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Neonatal death
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('deliveries', 'male_neo')">
+                  <%= @delivery_mode["MALE_NEO"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Fresh still birth
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('deliveries', 'male_fresh')">
+                  <%= @delivery_mode["MALE_FRESH"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Macerated still birth
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('deliveries', 'male_mac')">
+                  <%= @delivery_mode["MALE_MAC"].length %>
+                </td>
+              </tr>
+
+              <tr class ="sub-header">
+                <td style="border: none; float: left;">
+                  Births by delivery mode
+                </td>
+                <td style="border: none;">
+                  Females
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Alive
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('deliveries', 'f_alive')">
+                  <%= @delivery_mode["F_ALIVE"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Neonatal death
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('deliveries', 'f_neo')">
+                  <%= @delivery_mode["F_NEO"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Fresh still birth
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('deliveries', 'f_fresh')">
+                  <%= @delivery_mode["F_FRESH"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Macerated still birth
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('deliveries', 'f_mac')">
+                  <%= @delivery_mode["F_MAC"].length %>
+                </td>
+              </tr>
+
+              <tr class ="sub-header">
+                <td style="border: none; float: left;">
+                  Births by discharge outcome
+                </td>
+                <td style="border: none;">
+                  Males
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Alive
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('discharges', 'male_alive')">
+                  <%= @discharge_outcome["MALE_ALIVE"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Dead
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('discharges', 'male_dead')">
+                  <%= @discharge_outcome["MALE_DEAD"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Unknown
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('discharges', 'male_not_discharged')">
+                  <%= @discharge_outcome["MALE_NOT_DISCHARGED"].length %>
+                </td>
+              </tr>
+
+
+              <tr class ="sub-header">
+                <td style="border: none; float: left;">
+                  Births by discharge outcome
+                </td>
+                <td style="border: none;">
+                  Females
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Alive
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('discharges', 'f_alive')">
+                  <%= @discharge_outcome["F_ALIVE"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Dead
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('discharges', 'f_dead')">
+                  <%= @discharge_outcome["F_DEAD"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Unknown
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('discharges', 'f_not_discharged')">
+                  <%= @discharge_outcome["F_NOT_DISCHARGED"].length %>
+                </td>
+              </tr>
+
+              <tr class ="sub-header">
+                <td style="border: none; float: left;">
+                  Births by First Minute APGAR
+                </td>
+                <td style="border: none;">
+                  Males
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Low <sub style="font-size: 12px;">(0 - 3)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar1', 'male_low')">
+                  <%= @apgar1["MALE_LOW"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Fairly Low <sub style="font-size: 12px;">(4 - 6)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar1', 'male_fairly_low')">
+                  <%= @apgar1["MALE_FAIRLY_LOW"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Normal <sub style="font-size: 12px;">(7 - 10)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar1', 'male_normal')">
+                  <%= @apgar1["MALE_NORMAL"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Unknown <sub style="font-size: 12px;">( + born dead)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar1', 'male_unknown')">
+                  <%= @apgar1["MALE_UNKNOWN"].length %>
+                </td>
+              </tr>
+
+              <tr class ="sub-header">
+                <td style="border: none; float: left;">
+                  Births by First Minute APGAR
+                </td>
+                <td style="border: none;">
+                  Females
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Low <sub style="font-size: 12px;">(0 - 3)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar1', 'fe_low')">
+                  <%= @apgar1["FE_LOW"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Fairly Low <sub style="font-size: 12px;">(4 - 6)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar1', 'fe_fairly_low')">
+                  <%= @apgar1["FE_FAIRLY_LOW"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Normal <sub style="font-size: 12px;">(7 - 10)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar1', 'fe_normal')">
+                  <%= @apgar1["FE_NORMAL"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Unknown <sub style="font-size: 12px;">( + born dead)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar1', 'fe_unknown')">
+                  <%= @apgar1["FE_UNKNOWN"].length %>
+                </td>
+              </tr>
+
+              <tr class ="sub-header">
+                <td style="border: none; float: left;">
+                  Births by Second Minute APGAR
+                </td>
+                <td style="border: none;">
+                  Males
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Low <sub style="font-size: 12px;">(0 - 3)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar2', 'male_low')">
+                  <%= @apgar2["MALE_LOW"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Fairly Low <sub style="font-size: 12px;">(4 - 6)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar2', 'male_fairly_low')">
+                  <%= @apgar2["MALE_FAIRLY_LOW"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Normal <sub style="font-size: 12px;">(7 - 10)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar2', 'male_normal')">
+                  <%= @apgar2["MALE_NORMAL"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Unknown <sub style="font-size: 12px;">( + born dead)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar2', 'male_unknown')">
+                  <%= @apgar2["MALE_UNKNOWN"].length %>
+                </td>
+              </tr>
+
+              <tr class ="sub-header">
+                <td style="border: none; float: left;">
+                  Births by Second Minute APGAR
+                </td>
+                <td style="border: none;">
+                  Females
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Low <sub style="font-size: 12px;">(0 - 3)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar2', 'fe_low')">
+                  <%= @apgar2["FE_LOW"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Fairly Low <sub style="font-size: 12px;">(4 - 6)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar2', 'fe_fairly_low')">
+                  <%= @apgar2["FE_FAIRLY_LOW"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Normal <sub style="font-size: 12px;">(7 - 10)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar2', 'fe_normal')">
+                  <%= @apgar2["FE_NORMAL"].length %>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Unknown <sub style="font-size: 12px;">( + born dead)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar2', 'fe_unknown')">
+                  <%= @apgar2["FE_UNKNOWN"].length %>
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

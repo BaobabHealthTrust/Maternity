@@ -1,11 +1,11 @@
 <html>
   <head>
     <title>Maternity Cohort Report Selection</title>
-    <%#= stylesheet_link_tag "mateme" %>
-    <%#= stylesheet_link_tag fancy_or_high_contrast_touch %>
+<%#= stylesheet_link_tag "mateme" %>
+<%#= stylesheet_link_tag fancy_or_high_contrast_touch %>
     <link href="/stylesheets/cohort.css" media="screen" rel="stylesheet" type="text/css" />
     <!--script type="text/javascript" language="javascript" src="/touchscreentoolkit/lib/javascripts/touchScreenToolkit.js" defer></script-->
-    
+
     <style>
       #Unknown {display: none;}
       #num {display: none;}
@@ -14,29 +14,30 @@
   <body >    
 
     <form id="frmReport" action="/cohort/cohort" method="post">
-     
+
       <input type="text" field_type="date" id="start_date" name="start_date" value="" helpText="Select Start Date:" />
-			<% unless !@reportType.nil? && @reportType.to_i == 3%>
-      	<input type="text" field_type="advancedTime" id="start_date" name="start_time" value="" helpText="Select Start Time:" />
-			<%end%>
+      <% unless !@reportType.blank? && @reportType.to_i == 3%>
+        <input type="text" field_type="advancedTime" id="start_date" name="start_time" value="" helpText="Select Start Time:" />
+      <%end%>
       <input type="text" field_type="date" id="end_date" name="end_date" value="" helpText="Select End Date:" />
-			<% unless !@reportType.nil? && @reportType.to_i == 3 %>
-      	<input type="text" field_type="advancedTime" id="start_date" name="end_time" value="" helpText="Select End Time:" />
-			<%end%>
-      <% if @reportType.nil? %>
+      <% unless !@reportType.blank? && @reportType.to_i == 3 %>
+        <input type="text" field_type="advancedTime" id="start_date" name="end_time" value="" helpText="Select End Time:" />
+      <%end%>
+      <% if @reportType.blank? %>
 
         <select id="reportType" name="reportType" helpText="Select Report Type:" >
           <option></option>
           <option value="1">End of Shift</option>
           <option value="2">Diagnoses Report</option>
-					<option value="3">Baby Matrix</option>          
+          <option value="3">Baby Matrix</option>
+          <option value="4">Birth Cohort</option>
         </select>
 
       <% else %>
 
         <input type="hidden" id="reportType" name="reportType" value="<%= @reportType %>" />
 
-      <% end %>	
+      <% end %>
 
     </form>
   </body>

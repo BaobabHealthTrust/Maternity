@@ -47,108 +47,45 @@
   <div id="table_div">
 
     <table id="stats" cellpadding="0">
-      
-        <tr>
-          <th>
-            <button onclick="window.parent.location='/cohort_report/?reportType=1'">
-              <span>
-                End of Shift Report
-              </span>
-            </button>
-          </th>
-        </tr>
-        <tr>
-          <th>
-            <button onclick="window.parent.location='/cohort_report/?reportType=2'">
-              <span>
-                Diagnoses Report
-              </span>
-            </button>
-          </th>
-        </tr>
 
-				<tr>
-          <th>
-            <button onclick="window.parent.location='/cohort_report/?reportType=3'">
-              <span>
-                Baby Matrix
-              </span>
-            </button>
-          </th>
-        </tr>
-        
-      <!--tr>
+      <tr>
         <th>
-          <button onclick="window.parent.location='/cohort/?reportType=3'">
+          <button onclick="window.parent.location='/cohort_report/?reportType=1'">
             <span>
-              AnteNatal Ward
-            </span>
-          </button>
-        </th>
-        <th>
-          <button onclick="window.parent.location='/cohort/?reportType=2'">
-            <span>
-              Labour Ward
+              End of Shift Report
             </span>
           </button>
         </th>
       </tr>
-      <% if @location.upcase.eql?("KAMUZU CENTRAL HOSPITAL") %>
-
-        <tr>
-          <th>
-            <button onclick="window.parent.location='/cohort/?reportType=4'">
-              <span>
-                Post Natal Ward
-              </span>
-            </button>
-          </th>
-          <th>
-            <button onclick="window.parent.location='/cohort/?reportType=5'">
-              <span>
-                Gynaecology
-              </span>
-            </button>
-          </th>
-        </tr>
-
-      <% else %>
-
-        <tr>
-          <th>
-            <button onclick="window.parent.location='/cohort/?reportType=7'">
-              <span>
-                Post Natal Ward (Low Risk)
-              </span>
-            </button>
-          </th>
-          <th>
-            <button onclick="window.parent.location='/cohort/?reportType=6'">
-              <span>
-                Post Natal Ward (High Risk)
-              </span>
-            </button>
-          </th>
-        </tr>
-
-      <% end %>      
-      
       <tr>
         <th>
-          <button onclick="window.parent.location='/cohort/?reportType=8'">
+          <button onclick="window.parent.location='/cohort_report/?reportType=2'">
             <span>
-              Theater
+              Diagnoses Report
             </span>
           </button>
         </th>
+      </tr>
+
+      <tr>
         <th>
-          <button onclick="window.parent.location='/cohort/?reportType=1'">
+          <button onclick="window.parent.location='/cohort_report/?reportType=3'">
             <span>
-              Aggregate Maternity Statistics
+              Baby Matrix
             </span>
           </button>
         </th>
-      </tr-->      
+      </tr>
+      <tr>
+        <th>
+          <button onclick="window.parent.location='/cohort_report/?reportType=4'">
+            <span>
+              Birth Cohort
+            </span>
+          </button>
+        </th>
+      </tr>
+
     </table>
   </div>
 </div>

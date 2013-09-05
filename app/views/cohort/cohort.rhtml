@@ -4,7 +4,7 @@
 
     <%= javascript_include_tag 'jquery' %>
     <%=javascript_include_tag "jquery.table2CSV.min" %>
-    <script src ="/javascripts/jquery-1.3.2.mini.js"></script>
+  
 
     <script type="text/javascript">
       
@@ -26,64 +26,64 @@
           for(var k=0;k<colLength;k++){
             
             if (k == colLength - 1){
-               body = body+table.rows[j].cells[k].getAttribute("csvread")+",,";
+              body = body+table.rows[j].cells[k].getAttribute("csvread")+",,";
             }else{
 
-            body = body+table.rows[j].cells[k].getAttribute("csvread")+",";
+              body = body+table.rows[j].cells[k].getAttribute("csvread")+",";
+
+            }
 
           }
 
+          body = format(body)+'\r\n';
+
         }
 
-        body = format(body)+'\r\n';
+        body = header+ '\r\n'+body;
+
+        sendFile(body);
 
       }
 
-      body = header+ '\r\n'+body;
-
-      sendFile(body);
-
-    }
-
-    function sendFile(str){
+      function sendFile(str){
      
-      window.location = "/cohort/print_csv?print_string=" + str
+        window.location = "/cohort/print_csv?print_string=" + str
       
-    }
-
-    function format(str){
-      if(str.substring(length-2,length-1).match(",")){
-        var tail = str.substring(0,str.length-1);
-      }else{
-        var tail = str
       }
-      return tail;
-    }
-            
-    function exportToCsv(){
-      var table = document.getElementById("main").contentDocument.getElementById("tble");
-      var header = "Birthweight Group,Macerated During Pregnancy,Fresh During Pregnancy,Pre-Discharge,Alive At Discharge,Missing Outcomes,Total,"
-      exportTable(table, header);
-      // jQuery("#main").contents().find("#tble").table2CSV({header:["BirthWeight Group", "Macerated During Pregnancy","Fresh During Pregnancy", "Pre-Discharge", "Alive at Discharge", "Missing Outcomes", "Total"]});
-       
-    }
 
-    function ajaxReq(string, aUrl){
-
-      var httpRequest = new XMLHttpRequest();
-
-      httpRequest.onreadystatechange = function() {
-
-        if (httpRequest.readyState == 4 && httpRequest.status == 200) {
-          var result = httpRequest.responseText;
+      function format(str){
+        if(str.substring(length-2,length-1).match(",")){
+          var tail = str.substring(0,str.length-1);
+        }else{
+          var tail = str
         }
-          
+        return tail;
       }
-      try {
-        httpRequest.open('POST', aUrl, true);
-        httpRequest.send(null);
-      } catch(e){}
-    }
+            
+      function exportToCsv(){
+        var table = document.getElementById("main").contentDocument.getElementById("tble");
+        var header = "Birthweight Group,Macerated During Pregnancy,Fresh During Pregnancy,Pre-Discharge,Alive At Discharge,Missing Outcomes,Total,"
+        exportTable(table, header);
+        // jQuery("#main").contents().find("#tble").table2CSV({header:["BirthWeight Group", "Macerated During Pregnancy","Fresh During Pregnancy", "Pre-Discharge", "Alive at Discharge", "Missing Outcomes", "Total"]});
+       
+      }
+
+      function ajaxReq(string, aUrl){
+
+        var httpRequest = new XMLHttpRequest();
+
+        httpRequest.onreadystatechange = function() {
+
+          if (httpRequest.readyState == 4 && httpRequest.status == 200) {
+            var result = httpRequest.responseText;
+          }
+          
+        }
+        try {
+          httpRequest.open('POST', aUrl, true);
+          httpRequest.send(null);
+        } catch(e){}
+      }
         
           
     </script>
@@ -102,11 +102,11 @@
   </head>
   <body>
     <% if CoreService.get_global_property_value("extended_diagnoses_report").to_s == "true" %>
-      <iframe id="main" src="/cohort/<%= (@reportType.to_i == 2 ? "diagnoses_report_extended" :  (@reportType.to_i == 3 ? "baby_matrix_printable": "report")) %>?start_date=<%= @start_date %>+<%= @start_time %>&end_date=<%= @end_date
+      <iframe id="main" src="/cohort/<%= (@reportType.to_i == 2 ? "diagnoses_report_extended" :  (@reportType.to_i == 3 ? "baby_matrix_printable": (@reportType.to_i == 4 ? "birth_cohort" : "report"))) %>?start_date=<%= @start_date %>+<%= @start_time %>&end_date=<%= @end_date
             %>+<%= @end_time %>&reportType=<%= @reportType %>"></iframe>
             <% else %>
 
-      <iframe id="main" src="/cohort/<%= (@reportType.to_i == 2 ? "diagnoses_report" : (@reportType.to_i == 3 ? "baby_matrix_printable": "report")) %>?start_date=<%= @start_date %>+<%= @start_time %>&end_date=<%= @end_date
+      <iframe id="main" src="/cohort/<%= (@reportType.to_i == 2 ? "diagnoses_report" : (@reportType.to_i == 3 ? "baby_matrix_printable": (@reportType.to_i == 4 ? "birth_cohort" : "report"))) %>?start_date=<%= @start_date %>+<%= @start_time %>&end_date=<%= @end_date
             %>+<%= @end_time %>&reportType=<%= @reportType %>"></iframe>
 
     <% end %>

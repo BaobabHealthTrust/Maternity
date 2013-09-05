@@ -214,36 +214,35 @@ class CohortReportController < ApplicationController
       link = ""
       
       if CoreService.get_global_property_value("extended_diagnoses_report").to_s == "true"
-      link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report_extended" : "report") }" + 
-        "?start_date=#{@start_date}+#{@start_time}&end_date=#{@end_date}+#{@end_time}&reportType=#{@reportType}"
+        link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report_extended" : (@reportType.to_i == 4 ? "birth_cohort" : "report")) }" +
+          "?start_date=#{@start_date}+#{@start_time}&end_date=#{@end_date}+#{@end_time}&reportType=#{@reportType}"
       else
-	link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report" : "report") }" + 
-        "?start_date=#{@start_date}+#{@start_time}&end_date=#{@end_date}+#{@end_time}&reportType=#{@reportType}"
+        link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report" : (@reportType.to_i == 4 ? "birth_cohort" : "report")) }" +
+          "?start_date=#{@start_date}+#{@start_time}&end_date=#{@end_date}+#{@end_time}&reportType=#{@reportType}"
       end
-      
+      link = link.gsub(/\s+|\+/, "")
+  
       t1 = Thread.new{
-        # Kernel.system "htmldoc --webpage -f /tmp/output-" + session[:user_id].to_s + ".pdf \"http://" +
-        #  request.env["HTTP_HOST"] + link + "\"\n"
-
+      
         Kernel.system "wkhtmltopdf -s A4 \"http://" +
-          request.env["HTTP_HOST"] + "#{link}\" \"/tmp/output-" + session[:user_id].to_s + ".pdf\" \n"
+          request.env["HTTP_HOST"] + "#{Regexp.escape(link)}" + "\" /tmp/output" + ".pdf \n"
       }
 
       t2 = Thread.new{
-        sleep(5)
-        Kernel.system "lp /tmp/output-" + session[:user_id].to_s + ".pdf\n"
+       #sleep(10)
+        # Kernel.system "lp /tmp/output.pdf\n"
       }
 
       t3 = Thread.new{
-        sleep(10)
-        Kernel.system "rm /tmp/output-" + session[:user_id].to_s + ".pdf\n"
+        #sleep(20)
+        #Kernel.system "rm /tmp/output.pdf\n"
       }
 
     end
 
-    redirect_to "/cohort/cohort?selSelect=#{ @selSelect }&day=#{ @day }" +
-      "&selYear=#{ @selYear }&selWeek=#{ @selWeek }&selMonth=#{ @selMonth }&selQtr=#{ @selQtr }" +
-      "&start_date=#{ @start_date }&end_date=#{ @end_date }&reportType=#{@reportType}" and return
+   # redirect_to "/cohort/cohort?selSelect=#{ @selSelect }&day=#{ @day }" +
+    #  "&selYear=#{ @selYear }&selWeek=#{ @selWeek }&selMonth=#{ @selMonth }&selQtr=#{ @selQtr }" +
+    #  "&start_date=#{ @start_date }&end_date=#{ @end_date }&reportType=#{@reportType}" and return
   end
 
   def report

@@ -4,6 +4,9 @@ class PeopleController < ApplicationController
     user =  User.find(session[:user_id])
     @password_expired = false
 
+    #in case routing has come from a report drill down, we need to delete irrelevent session variables
+    session.delete(:drill_down_data) rescue nil if session[:drill_down_data].present?
+    
     password_expiry_date = UserProperty.find_by_property_and_user_id('password_expiry_date', user.user_id).property_value.to_date rescue nil
 
     if password_expiry_date
@@ -737,7 +740,7 @@ class PeopleController < ApplicationController
     render :layout => false
   end
 
-   def export_birth_reports
+  def export_birth_reports
     #@type = file_type
     require 'rubygems'
     require 'fastercsv'

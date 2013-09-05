@@ -88,24 +88,6 @@ class Patient < ActiveRecord::Base
     label.draw_multi_text("#{address}")
     label.print(1)
   end
-=begin
-  def visit_label
-    label = ZebraPrinter::StandardLabel.new
-    label.font_size = 3
-    label.font_horizontal_multiplier = 1
-    label.font_vertical_multiplier = 1
-    label.left_margin = 50
-    encs = encounters.current.active.find(:all)
-    return nil if encs.blank?
-    
-    label.draw_multi_text("Visit: #{encs.first.encounter_datetime.strftime("%d/%b/%Y %H:%M")}", :font_reverse => true)
-    encs.each {|encounter|
-      next if encounter.name.humanize == "Registration"
-      label.draw_multi_text("#{encounter.name.humanize}: #{encounter.to_print}", :font_reverse => false)
-    }
-    label.print(1)
-  end
-=end
 
   def visit_label
     label = ZebraPrinter::StandardLabel.new
@@ -615,6 +597,14 @@ class Patient < ActiveRecord::Base
 
     label.print(1)
     
+  end
+
+  def self.total_admissions(start_date = DateTime.now, end_date = DateTime.now)
+    patients = Patient.find_by_sql(["SELECT client.patient_id AS client_id, ob.value_datetime AS admission_date FROM patient client
+        INNER JOIN obs ob ON ob.person_id = client.patient_id AND ob.voided = 0 
+            AND ob.concept_id = (SELECT concept_id FROM concept_name WHERE name = 'ADMISSION DATE' LIMIT 1)
+        WHERE DATE(ob.value_datetime) BETWEEN  ? AND ?", start_date, end_date]).collect{|pat| pat.client_id.to_i rescue nil}.uniq
+    patients
   end
 
 end
