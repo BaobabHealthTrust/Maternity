@@ -626,8 +626,14 @@ class Patient < ActiveRecord::Base
   def discharge_outcome
     outcome = Observation.find(:first, :conditions => ["person_id = ? AND concept_id = ?",
         self.id, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string rescue ""
-    outcome = "Dead" if outcome.blank? && ((!self.delivery_outcome.match(/alive/i)) || self.delivery_outcome.match(/still|neo/i) || outcome.match(/still|neo/))
+    outcome = "Dead" if outcome.blank? && ((!self.delivery_outcome.match(/alive/i))) || outcome.match(/still|neo|intrauterine/i)
     outcome
+  end
+
+  def birth_weight
+    weight = Observation.find(:first, :conditions => ["person_id = ? AND concept_id = ?",
+        self.id, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i rescue "?"
+    weight = ((weight < 10 && weight > 0) ? (weight * 1000) : weight) rescue weight
   end
 
 end

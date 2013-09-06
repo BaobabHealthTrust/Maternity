@@ -847,7 +847,9 @@ class CohortController < ActionController::Base # < ApplicationController
       if session[:drill_down_data]["#{params[:group]}"].class.to_s.match(/Array/i)
         ids = session[:drill_down_data]["#{params[:group]}"]      
       elsif params[:key].present?
-        ids = session[:drill_down_data]["#{params[:group]}"]["#{params[:key].upcase.strip}"]
+        ids = (session[:drill_down_data]["#{params[:group]}"]["#{params[:key].upcase.strip}"] +
+          ((session[:drill_down_data]["#{params[:group]}"]["FE_#{params[:key].gsub(/male\_/i, '').upcase.strip}"] || []) rescue []) +
+          ((session[:drill_down_data]["#{params[:group]}"]["F_#{params[:key].gsub(/male\_/i, '').upcase.strip}"] || []) rescue [])).uniq rescue []
       end
       @patients = Patient.find(:all, :conditions => ["patient_id IN (?)", ids]).uniq if ids.present?
 

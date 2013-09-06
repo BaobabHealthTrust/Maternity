@@ -77,18 +77,16 @@
                 <th class="group">
                   Category
                 </th>
-                <th>
+                <th style="width: 18%">
                   Total
                 </th>
 
-                <th>
-                  Cumulative
+                <th style="width: 18%">
+                  Cumulative Total
                 </th>
-
 
             </tbody>
             <tbody id="container">
-
 
               <tr>
 
@@ -100,7 +98,7 @@
                   <%= @total_admissions.length%>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('admissions', '')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('cadmissions', '')">
                   <%= @ctotal_admissions.length%>
                 </td>
               </tr>
@@ -114,7 +112,7 @@
                   <%= @total_babies_born.length%>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('total_babies_born', '')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('ctotal_babies_born', '')">
                   <%= @ctotal_babies_born.length%>
                 </td>
               </tr>
@@ -134,7 +132,7 @@
                   <%= @gender["MALES"].length rescue 0%>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('gender', 'males')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('cgender', 'males')">
                   <%= @cgender["MALES"].length rescue 0%>
                 </td>
 
@@ -149,7 +147,7 @@
                   <%= @gender["FEMALES"].length rescue 0%>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('gender', 'females')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('cgender', 'females')">
                   <%= @cgender["FEMALES"].length rescue 0%>
                 </td>
 
@@ -175,7 +173,7 @@
                   <%= (@delivery_mode["MALE_ALIVE"] + @delivery_mode["F_ALIVE"]).uniq.length %>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('deliveries', 'male_alive')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('cdeliveries', 'male_alive')">
                   <%= (@cdelivery_mode["MALE_ALIVE"] + @cdelivery_mode["F_ALIVE"]).uniq.length %>
                 </td>
 
@@ -191,7 +189,7 @@
                   <%= (@delivery_mode["MALE_NEO"] + @delivery_mode["F_NEO"]).uniq.length %>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('deliveries', 'male_neo')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('cdeliveries', 'male_neo')">
                   <%= (@cdelivery_mode["MALE_NEO"] + @cdelivery_mode["F_NEO"]).uniq.length %>
                 </td>
 
@@ -207,7 +205,7 @@
                   <%= (@delivery_mode["MALE_FRESH"] + @delivery_mode["F_FRESH"]).uniq.length %>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('deliveries', 'male_fresh')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('cdeliveries', 'male_fresh')">
                   <%= (@cdelivery_mode["MALE_FRESH"] + @cdelivery_mode["F_FRESH"]).uniq.length %>
                 </td>
 
@@ -223,7 +221,7 @@
                   <%= (@delivery_mode["MALE_MAC"] + @delivery_mode["F_MAC"]).uniq.length %>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('deliveries', 'male_mac')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('cdeliveries', 'male_mac')">
                   <%= (@cdelivery_mode["MALE_MAC"] + @cdelivery_mode["F_MAC"]).uniq.length %>
                 </td>
               </tr>
@@ -247,7 +245,7 @@
                   <%= (@discharge_outcome["MALE_ALIVE"] + @discharge_outcome["F_ALIVE"]).uniq.length %>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('discharges', 'male_alive')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('cdischarges', 'male_alive')">
                   <%= (@cdischarge_outcome["MALE_ALIVE"] + @cdischarge_outcome["F_ALIVE"]).uniq.length %>
                 </td>
 
@@ -263,7 +261,7 @@
                   <%= (@discharge_outcome["MALE_DEAD"] + @discharge_outcome["F_DEAD"]).uniq.length %>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('discharges', 'male_dead')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('cdischarges', 'male_dead')">
                   <%= (@cdischarge_outcome["MALE_DEAD"] + @cdischarge_outcome["F_DEAD"]).uniq.length %>
                 </td>
 
@@ -279,7 +277,7 @@
                   <%= (@discharge_outcome["MALE_NOT_DISCHARGED"] + @discharge_outcome["F_NOT_DISCHARGED"]).uniq.length %>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('discharges', 'male_not_discharged')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('cdischarges', 'male_not_discharged')">
                   <%= (@cdischarge_outcome["MALE_NOT_DISCHARGED"] + @cdischarge_outcome["F_NOT_DISCHARGED"]).uniq.length %>
                 </td>
 
@@ -375,7 +373,7 @@
                   <%= (@apgar1["MALE_LOW"] + @apgar1["FE_LOW"]).length %>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar1', 'male_low')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('capgar1', 'male_low')">
                   <%= (@capgar1["MALE_LOW"] + @capgar1["FE_LOW"]).length %>
                 </td>
               </tr>
@@ -390,7 +388,7 @@
                   <%= (@apgar1["MALE_FAIRLY_LOW"] + @apgar1["FE_FAIRLY_LOW"]).uniq.length %>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar1', 'male_fairly_low')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('capgar1', 'male_fairly_low')">
                   <%= (@capgar1["MALE_FAIRLY_LOW"] + @capgar1["FE_FAIRLY_LOW"]).uniq.length %>
                 </td>
               </tr>
@@ -404,7 +402,7 @@
                 <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar1', 'male_normal')">
                   <%= (@apgar1["MALE_NORMAL"] + @apgar1["FE_NORMAL"]).uniq.length %>
                 </td>
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar1', 'male_normal')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('capgar1', 'male_normal')">
                   <%= (@capgar1["MALE_NORMAL"] + @capgar1["FE_NORMAL"]).uniq.length %>
                 </td>
 
@@ -420,7 +418,7 @@
                   <%= (@apgar1["MALE_UNKNOWN"] + @apgar1["FE_UNKNOWN"]).uniq.length %>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar1', 'male_unknown')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('capgar1', 'male_unknown')">
                   <%= (@capgar1["MALE_UNKNOWN"] + @capgar1["FE_UNKNOWN"]).uniq.length %>
                 </td>
               </tr>
@@ -445,7 +443,7 @@
                   <%= (@apgar2["MALE_LOW"] + @apgar2["FE_LOW"]).length %>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar2', 'male_low')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('capgar2', 'male_low')">
                   <%= (@capgar2["MALE_LOW"] + @capgar2["FE_LOW"]).length %>
                 </td>
               </tr>
@@ -460,7 +458,7 @@
                   <%= (@apgar2["MALE_FAIRLY_LOW"] + @apgar2["FE_FAIRLY_LOW"]).uniq.length %>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar2', 'male_fairly_low')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('capgar2', 'male_fairly_low')">
                   <%= (@capgar2["MALE_FAIRLY_LOW"] + @capgar2["FE_FAIRLY_LOW"]).uniq.length %>
                 </td>
               </tr>
@@ -474,7 +472,7 @@
                 <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar2', 'male_normal')">
                   <%= (@apgar2["MALE_NORMAL"] + @apgar2["FE_NORMAL"]).uniq.length %>
                 </td>
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar2', 'male_normal')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('capgar2', 'male_normal')">
                   <%= (@capgar2["MALE_NORMAL"] + @capgar2["FE_NORMAL"]).uniq.length %>
                 </td>
 
@@ -490,7 +488,7 @@
                   <%= (@apgar2["MALE_UNKNOWN"] + @apgar2["FE_UNKNOWN"]).uniq.length %>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('apgar2', 'male_unknown')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('capgar2', 'male_unknown')">
                   <%= (@capgar2["MALE_UNKNOWN"] + @capgar2["FE_UNKNOWN"]).uniq.length %>
                 </td>
               </tr>
@@ -514,7 +512,7 @@
                   <%= (@birth_report_status["SENT"]).length %>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('birth_report_status', 'sent')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('cbirth_report_status', 'sent')">
                   <%= (@cbirth_report_status["SENT"]).length %>
                 </td>
               </tr>
@@ -529,7 +527,7 @@
                   <%= (@birth_report_status["UNATTEMPTED"]).length %>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('birth_report_status', 'unattempted')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('cbirth_report_status', 'unattempted')">
                   <%= (@cbirth_report_status["UNATTEMPTED"]).length %>
                 </td>
               </tr>
@@ -544,7 +542,7 @@
                   <%= (@birth_report_status["PENDING"]).length %>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('birth_report_status', 'pending')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('cbirth_report_status', 'pending')">
                   <%= (@cbirth_report_status["PENDING"]).length %>
                 </td>
               </tr>
@@ -559,7 +557,7 @@
                   <%= (@birth_report_status["UNKNOWN"]).length %>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('birth_report_status', 'unknown')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('cbirth_report_status', 'unknown')">
                   <%= (@cbirth_report_status["UNKNOWN"]).length %>
                 </td>
               </tr>

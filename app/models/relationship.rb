@@ -34,7 +34,7 @@ class Relationship < ActiveRecord::Base
     babies = Relationship.find_by_sql(["SELECT COALESCE((#{birth_report_sent}), (#{birth_report_pending}), (#{birth_report_unattempted}), 'UNKNOWN') AS br_status, client.person_id AS person_id, (#{apgar_query1}) AS apgar, (#{apgar_query2}) AS apgar2, rel.person_a AS mother, (#{discharge_outcome_query}) AS discharge_outcome,
       (#{delivery_outcome_query}) AS delivery_outcome, COALESCE(ob.value_numeric, ob.value_text) AS birth_weight, client.gender AS gender
            FROM relationship rel
-      INNER JOIN person client ON rel.person_b = client.person_id AND rel.relationship = 
+      INNER JOIN person client ON rel.voided = 0 AND rel.person_b = client.person_id AND rel.relationship =
         (SELECT relationship_type_id FROM relationship_type WHERE a_is_to_b = 'Mother' AND b_is_to_a = 'Child' LIMIT 1)
       INNER JOIN obs ob ON ob.person_id = client.person_id AND ob.voided = 0
       AND ob.concept_id = (SELECT concept_id FROM concept_name WHERE name = 'BIRTH WEIGHT' LIMIT 1)

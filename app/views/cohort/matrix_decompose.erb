@@ -59,11 +59,13 @@
         border-left: 1px solid #6281A7;
         border-bottom: 1px solid #6281A7;
         padding: 5px;
+        font-size: 14px;
       }
 
       .headerCell {
         display: table-cell;
         padding: 5px;
+        font-size: 15px;
         background-color: #6281A7;
         font-weight: normal;
         color: #fff;
@@ -116,11 +118,23 @@
                 <div class="table" style="width: 100%; ">
                   <div class="row">
                     <div class="headerCell">
-                      Baby ID
+                      ID
+                    </div>
+
+                    <div class="headerCell" style="width: 13%">
+                      Name
                     </div>
 
                     <div class="headerCell">
-                      Baby Name
+                      Sex
+                    </div>
+
+                    <div class="headerCell">
+                      Date Of Birth
+                    </div>
+
+                    <div class="headerCell" style="width: 10%">
+                      Birth Weight
                     </div>
 
                     <div class="headerCell">
@@ -128,24 +142,20 @@
                     </div>
 
                     <div class="headerCell">
-                      Delivery Outcome
+                      Del. Outcome
                     </div>
 
                     <div class="headerCell">
-                      Discharge Outcome
+                      Dis. Outcome
                     </div>
 
                     <div class="headerCell">
                       Mother ID
                     </div>
 
-                    <div class="headerCell">
+                    <div class="headerCell" style="width: 13%">
                       Mother Name
-                    </div>
-
-                    <div class="headerCell">
-                      Date Of Birth
-                    </div>                   
+                    </div>                                   
 
                   </div>
 
@@ -158,24 +168,37 @@
                       <div class="cell" style="vertical-align: middle;">
                         <%=  patient.person.name rescue nil%>&nbsp
                       </div>
+
+                      <div class="cell" style="vertical-align: middle;">
+                        <%=  patient.person.gender rescue nil%>&nbsp
+                      </div>
+
+                      <div class="cell"  style="vertical-align: middle;">
+                        <%= patient.person.birthdate_formatted rescue "" %>
+                      </div>
+
+                      <div class="cell" style="vertical-align: middle;">
+                        <%=  (patient.birth_weight.to_s + "g") rescue nil%>&nbsp
+                      </div>
+
                       <div class="cell" style="vertical-align: middle;">
                         <%=  patient.apgar rescue nil%>&nbsp
                       </div>
+
                       <div class="cell" style="vertical-align: middle;">
                         <%=  patient.delivery_outcome rescue nil%>&nbsp
                       </div>
+
                       <div class="cell" style="vertical-align: middle;">
                         <%= patient.discharge_outcome %>&nbsp
                       </div>
-                     
+
                       <div class="cell" style="vertical-align: middle;">
                         <%= @mother.national_id rescue nil %>&nbsp
                       </div>
+
                       <div class="cell" style="vertical-align: middle;">
                         <%= @mother.person.name rescue nil %>&nbsp
-                      </div>
-                      <div class="cell"  style="vertical-align: middle;">
-                        <%= patient.person.birthdate_formatted rescue "" %>
                       </div>
 
                     </div>
