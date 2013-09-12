@@ -272,20 +272,20 @@ class CohortReportController < ApplicationController
       }
 
       t2 = Thread.new{
-        #sleep(10)
-        # Kernel.system "lp /tmp/output.pdf\n"
+        sleep(10)
+        Kernel.system "lp /tmp/output.pdf\n"
       }
 
       t3 = Thread.new{
-        #sleep(20)
-        #Kernel.system "rm /tmp/output.pdf\n"
+        sleep(20)
+        Kernel.system "rm /tmp/output.pdf\n"
       }
 
     end
 
-    # redirect_to "/cohort/cohort?selSelect=#{ @selSelect }&day=#{ @day }" +
-    #  "&selYear=#{ @selYear }&selWeek=#{ @selWeek }&selMonth=#{ @selMonth }&selQtr=#{ @selQtr }" +
-    #  "&start_date=#{ @start_date }&end_date=#{ @end_date }&reportType=#{@reportType}" and return
+    redirect_to "/cohort/cohort?selSelect=#{ @selSelect }&day=#{ @day }" +
+      "&selYear=#{ @selYear }&selWeek=#{ @selWeek }&selMonth=#{ @selMonth }&selQtr=#{ @selQtr }" +
+      "&start_date=#{ @start_date }&end_date=#{ @end_date }&reportType=#{@reportType}" and return
   end
 
   def report
