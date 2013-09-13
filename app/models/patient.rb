@@ -636,4 +636,22 @@ class Patient < ActiveRecord::Base
     weight = ((weight < 10 && weight > 0) ? (weight * 1000) : weight) rescue weight
   end
 
+  def is_dead?
+    
+    return true if ["1", "true", 1, true].include?(self.person.dead.to_s)
+    
+    died_observations = self.encounters.collect{|enc|
+      enc.observations.collect{|ob| ob.answer_string.upcase.strip rescue nil}.compact if enc.name.match(/update outcome/i)
+    }.flatten.compact.include?("PATIENT DIED") rescue false
+
+    died_observations
+  end
+
+  def died_encounter
+    Encounter.find(:last, :order => ["encounter_datetime ASC"], :joins => [:observations] ,
+      :conditions => ["encounter.voided = 0 AND encounter_type = ? AND obs.concept_id = ? AND obs.value_coded = ?",
+        EncounterType.find_by_name("UPDATE OUTCOME"), ConceptName.find_by_name("OUTCOME").concept_id,
+        ConceptName.find_by_name("PATIENT DIED").concept_id]) rescue nil
+  end
+
 end
