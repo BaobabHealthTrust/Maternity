@@ -540,10 +540,11 @@
   <% @delivery_period = ["", "DELIVERED IN THE WARD",
     "DELIVERED BEFORE ARRIVAL",
     "DELIVERED IN THEATRE",
-    "DELIVERED IN ANTENATAL WARD"] %>
-  <% @mode_of_delivery = ["", "Forceps delivery", "Breech delivery"] %>
+    "DELIVERED IN ANTENATAL WARD"]
 
-  <% @delivery_mode = [""] + Concept.find_by_name("DELIVERY MODE").concept_answers.collect{|c| c.name} %>
+  @mode_of_delivery = ["", "Forceps delivery", "Breech delivery"]
+  @place_of_delivery = ["This facility",  "In transit", "Other facility", "Home/TBA"]
+  @delivery_mode = [""] + Concept.find_by_name("DELIVERY MODE").concept_answers.collect{|c| c.name} %>
 
   <%= hidden_field_tag "encounter[encounter_type_name]", "UPDATE OUTCOME" %>
   <%= hidden_field_tag "encounter[encounter_datetime]",
@@ -597,6 +598,19 @@
   <%= text_field_tag("observations[][value_datetime]",   nil, options)%>
   <%= hidden_field_tag("observations[][obs_datetime]",  (session[:datetime] ?
         session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
+  <% htext3x = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Place of Delivery" :
+    "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Place of Delivery"%>
+
+  <% options = {
+    :id => "place_of_delivery#{baby}",
+    :field_type => 'text',
+    :helptext =>"#{htext3x}"
+  }%>
+  <%= hidden_field_tag("observations[][concept_name]", "Place of Delivery") %>
+  <%= select_tag("observations[][value_coded_or_text]", options_for_select(@place_of_delivery), options)%>
+  <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
+
 
   <% htext3 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby Presentation" :
     "#{baby}<sup>#{prefixes[baby]}</sup> Baby: Presentation"%>
@@ -696,7 +710,7 @@
   <%= hidden_field_tag("observations[][obs_datetime]", (session[:datetime] ?
         session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M")) %>
 
-   <% htext7 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby 1<sup>st</sup>Minute APGAR" :
+  <% htext7 = (params["number_of_babies"].to_i == 1 rescue false) ? "Baby 1<sup>st</sup>Minute APGAR" :
     "#{baby}<sup>#{prefixes[baby]}</sup> Baby: 1<sup>st</sup>Minute APGAR"%>
 
   <% options =  {
@@ -705,7 +719,7 @@
     :helptext =>"#{htext7}",
     :absoluteMin => 0,
     :absoluteMax => 10,
-    :condition => "__$('baby_outcome').value.toUpperCase().trim() == 'ALIVE'",
+    :condition => "__$('baby_outcome').value.toUpperCase().trim() == 'ALIVE' && !__$('place_of_delivery#{baby}').value.match(/TBA|In\stransit|Other\sFacility/i)",
     :tt_onLoad => "showApgarControl(#{baby}, 'one');  __$('touchscreenInput' + tstCurrentPage).setAttribute('absoluteMin', 1);",
     :tt_pageStyleClass => "NoKeyboard"
   } %>
@@ -765,7 +779,7 @@
     :helptext =>"#{htext8}",
     :absoluteMin => 0,
     :absoluteMax => 10,
-    :condition => "__$('baby_outcome').value.toUpperCase().trim() == 'ALIVE'",
+    :condition => "__$('baby_outcome').value.toUpperCase().trim() == 'ALIVE' && !__$('place_of_delivery#{baby}').value.match(/TBA|In\stransit|Other\sFacility/i)",
     :tt_onLoad => "showApgarControl(#{baby}, 'five');  __$('touchscreenInput' + tstCurrentPage).setAttribute('absoluteMin', 1);",
     :tt_pageStyleClass => "NoKeyboard"
   } %>
