@@ -558,7 +558,7 @@ class PeopleController < ApplicationController
   def overview
     @types = GlobalProperty.find_by_property("statistics.show_encounter_types").property_value #rescue EncounterType.all.map(&:name).join(",")
     @types = @types.split(/,/)
-    @types.delete_if{|del| del.match(/Refer|Diagnosis/i)} #removing some encounters than are wholistically not very important
+    @types.delete_if{|del| del.match(/Refer|Diagnosis|observations|update\soutcome/i)} #removing some encounters than are wholistically not very important
 
     @me = Encounter.statistics(@types, :conditions =>
         ['DATE(encounter_datetime) = DATE(NOW()) AND encounter.creator = ? AND encounter.location_id = ?',
