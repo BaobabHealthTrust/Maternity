@@ -12,27 +12,41 @@ class CohortController < ActionController::Base # < ApplicationController
   end
 
   def cohort
+
+    if params[:selQtr].present?
+      
+      day = params[:selQtr].to_s.match(/^min=(.+)&max=(.+)$/)
+			@start_date = (day ? day[1] : Date.today.strftime("%Y-%m-%d"))
+			@end_date = (day ? day[2] : Date.today.strftime("%Y-%m-%d"))
+      params[:start_date] = @start_date
+      params[:end_date] = @end_date   
+      params[:type] = "cohort"
+
+    else
     
-    @selSelect = params[:selSelect] rescue nil
-    @day =  params[:day] rescue nil
-    @selYear = params[:selYear] rescue nil
-    @selWeek = params[:selWeek] rescue nil
-    @selMonth = params[:selMonth] rescue nil
-    @selQtr = "#{params[:selQtr].gsub(/&/, "_")}" rescue nil
+      @selSelect = params[:selSelect] rescue nil
+      @day =  params[:day] rescue nil
+      @selYear = params[:selYear] rescue nil
+      @selWeek = params[:selWeek] rescue nil
+      @selMonth = params[:selMonth] rescue nil
+      @selQtr = "#{params[:selQtr].gsub(/&/, "_")}" rescue nil
 
-    @start_date = params[:start_date] rescue nil
-    @end_date = params[:end_date] rescue nil
+      @start_date = params[:start_date] rescue nil
+      @end_date = params[:end_date] rescue nil
 
-    @start_time = params[:start_time] rescue nil
-    @end_time = params[:end_time] rescue nil
-
-    @reportType = params[:reportType] rescue ""    
-
+      @start_time = params[:start_time] rescue nil
+      @end_time = params[:end_time] rescue nil
+      
+    end
+    
+    @reportType = params[:reportType] rescue ""
+   
+    
     render :layout => "menu"
   end
 
   def cohort_print
-    # raise params.to_yaml
+   
     @location_name = GlobalProperty.find_by_property('facility.name').property_value rescue ""
     
     @reportType = params[:reportType] rescue ""    
@@ -848,8 +862,8 @@ class CohortController < ActionController::Base # < ApplicationController
         ids = session[:drill_down_data]["#{params[:group]}"]      
       elsif params[:key].present?
         ids = (session[:drill_down_data]["#{params[:group]}"]["#{params[:key].upcase.strip}"] +
-          ((session[:drill_down_data]["#{params[:group]}"]["FE_#{params[:key].gsub(/male\_/i, '').upcase.strip}"] || []) rescue []) +
-          ((session[:drill_down_data]["#{params[:group]}"]["F_#{params[:key].gsub(/male\_/i, '').upcase.strip}"] || []) rescue [])).uniq rescue []
+            ((session[:drill_down_data]["#{params[:group]}"]["FE_#{params[:key].gsub(/male\_/i, '').upcase.strip}"] || []) rescue []) +
+            ((session[:drill_down_data]["#{params[:group]}"]["F_#{params[:key].gsub(/male\_/i, '').upcase.strip}"] || []) rescue [])).uniq rescue []
       end
       @patients = Patient.find(:all, :conditions => ["patient_id IN (?)", ids]).uniq if ids.present?
 
@@ -2034,15 +2048,51 @@ class CohortController < ActionController::Base # < ApplicationController
 
   def birth_cohort
     
-    @total_admissions = Patient.total_admissions(params[:start_date], params[:end_date]) rescue []
-    @ctotal_admissions = Patient.total_admissions("1900-01-01", params[:end_date]) rescue []
+    @system_upgrade_date = Relationship.find(:first, :order => ["date_created ASC"], :conditions => ["relationship = ?",
+        RelationshipType.find_by_a_is_to_b_and_b_is_to_a("Mother", "Child")]).date_created.to_date rescue "2013-04-20"
 
-    @total_babies = Relationship.total_babies_in_range(params[:start_date], params[:end_date]) #rescue []
+    params[:start_date] = @system_upgrade_date.blank?? params[:start_date] : (@system_upgrade_date > params[:start_date].to_date ? @system_upgrade_date : params[:start_date])
     
-    @ctotal_babies = Relationship.total_babies_in_range("1900-01-01", params[:end_date]) rescue []
+    @total_admissions = Patient.total_admissions(params[:start_date], params[:end_date]) rescue []
+   
+    @ctotal_admissions = Patient.total_admissions(@system_upgrade_date, params[:end_date]) rescue []
+
+    @total_mothers = Patient.total_mothers_in_range(params[:start_date], params[:end_date],  @total_admissions) rescue []
+
+    @maternal_outcomes = {}
+    @maternal_outcomes["DEAD"] = Patient.deaths(@total_admissions, params[:start_date], params[:end_date])
+    @maternal_outcomes["ALIVE"] = @total_admissions - @maternal_outcomes["DEAD"]
+
+    @cmaternal_outcomes = {}
+    @cmaternal_outcomes["DEAD"] = Patient.deaths(@total_admissions, @system_upgrade_date, params[:end_date])
+    @cmaternal_outcomes["ALIVE"] = @ctotal_admissions - @cmaternal_outcomes["DEAD"]
+
+    @twins = {}
+    @twins = Relationship.twins_pull(@total_admissions, params[:start_date], params[:end_date], 1, 1)
+raise @twins.to_yaml
+    @ctotal_mothers = Patient.total_mothers_in_range(@system_upgrade_date, params[:end_date],  @ctotal_admissions) rescue []
+
+    @total_babies = Relationship.total_babies_in_range(params[:start_date], params[:end_date]) rescue []
+    
+    @ctotal_babies = Relationship.total_babies_in_range(@system_upgrade_date, params[:end_date]) rescue []
     
     @total_babies_born = @total_babies.collect{|baby| baby.person_id rescue nil}.compact rescue []
     @ctotal_babies_born = @ctotal_babies.collect{|baby| baby.person_id rescue nil}.compact rescue []
+  
+    @delivery_weeks = {}
+    @delivery_weeks["PRE_TERM"] = @total_mothers.collect{|mother| mother.patient_id if ((mother.weeks.present? && mother.weeks.to_i < 34 && mother.weeks.to_i > 1)rescue false)}.compact.uniq
+    @delivery_weeks["NEAR_TERM"] = @total_mothers.collect{|mother| mother.patient_id if ((mother.weeks.present? && mother.weeks.to_i >= 34 && mother.weeks.to_i <= 37)rescue false)}.compact.uniq
+    @delivery_weeks["POST_TERM"] = @total_mothers.collect{|mother| mother.patient_id if ((mother.weeks.present? && mother.weeks.to_i > 42)rescue false)}.compact.uniq
+    @delivery_weeks["FULL_TERM"] = @total_mothers.collect{|mother| mother.patient_id if ((mother.weeks.present? && mother.weeks.to_i >= 38 && mother.weeks.to_i <= 42)rescue false)}.compact.uniq
+    @delivery_weeks["UNKNOWN"] = @total_mothers.collect{|mother| mother.patient_id if mother.weeks.blank? || mother.weeks.to_i <= 1}.compact.uniq
+
+    @cdelivery_weeks = {}
+    @cdelivery_weeks["PRE_TERM"] = @ctotal_mothers.collect{|mother| mother.patient_id if ((mother.weeks.present? && mother.weeks.to_i < 34)rescue false)}.compact.uniq
+    @cdelivery_weeks["NEAR_TERM"] = @ctotal_mothers.collect{|mother| mother.patient_id if ((mother.weeks.present? && mother.weeks.to_i >= 34 && mother.weeks.to_i <= 37)rescue false)}.compact.uniq
+    @cdelivery_weeks["POST_TERM"] = @ctotal_mothers.collect{|mother| mother.patient_id if ((mother.weeks.present? && mother.weeks.to_i > 42)rescue false)}.compact.uniq
+    @cdelivery_weeks["FULL_TERM"] = @ctotal_mothers.collect{|mother| mother.patient_id if ((mother.weeks.present? && mother.weeks.to_i >= 38 && mother.weeks.to_i <= 42)rescue false)}.compact.uniq
+    @cdelivery_weeks["UNKNOWN"] = @ctotal_mothers.collect{|mother| mother.patient_id if mother.weeks.blank?}.compact.uniq
+
 
     @birth_report_status = {}
     @birth_report_status["SENT"] = @total_babies.collect{|baby| baby.person_id if ((baby.br_status.present? && baby.br_status.match(/SENT/i))rescue false)}.compact.uniq
@@ -2108,7 +2158,6 @@ class CohortController < ActionController::Base # < ApplicationController
     @capgar2["MALE_FAIRLY_LOW"] = @ctotal_babies.collect{|baby| baby.person_id if baby.apgar2.present? && baby.apgar2.to_i > 3 && baby.apgar2.to_i < 7 && !baby.gender.match(/F/i)}.compact.uniq
     @capgar2["MALE_NORMAL"] = @ctotal_babies.collect{|baby| baby.person_id if baby.apgar2.present? && baby.apgar2.to_i >= 7 && !baby.gender.match(/F/i)}.compact.uniq
     @capgar2["MALE_UNKNOWN"] = (@cgender["MALES"]  - (@capgar2["MALE_LOW"] + @capgar2["MALE_FAIRLY_LOW"] + @capgar2["MALE_NORMAL"]))
-
     
     @delivery_mode = {}
     @delivery_mode["MALE_ALIVE"] = @total_babies.collect{|baby| baby.person_id if baby.delivery_outcome.match(/Alive/i) && !baby.gender.match(/F/i)}.compact.uniq
@@ -2186,6 +2235,7 @@ class CohortController < ActionController::Base # < ApplicationController
     result["apgar2"] = @apgar2
     result["total_babies_born"] = @total_babies_born
     result["birth_report_status"] = @birth_report_status
+    result["delivery_weeks"] = @delivery_weeks
 
     #cumulative figures
     result["cdischarges"] = @cdischarge_outcome
@@ -2196,6 +2246,7 @@ class CohortController < ActionController::Base # < ApplicationController
     result["capgar2"] = @capgar2
     result["ctotal_babies_born"] = @ctotal_babies_born
     result["cbirth_report_status"] = @cbirth_report_status
+    result["cdelivery_weeks"] = @cdelivery_weeks
 
     session[:drill_down_data] = result
     

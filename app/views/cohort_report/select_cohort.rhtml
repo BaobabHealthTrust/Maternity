@@ -1,0 +1,110 @@
+<html>
+  <head>
+    <title>Cohort Report Selection</title>
+<%#= stylesheet_link_tag "form" %>
+<%#= stylesheet_link_tag fancy_or_high_contrast_touch %>
+    <link href="/stylesheets/cohort.css" media="screen" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" language="javascript">
+      <!--
+      tt_cancel_destination = '/clinic';
+      var minYear = 2008;
+
+      function $(id){
+        return document.getElementById(id);
+      }
+
+      //-->
+    </script>
+    <style>
+      #Unknown {display: none;}
+      #num {display: none;}
+    </style>
+  </head>
+  <body>
+    <%
+
+    min = 2008
+    max = (session[:datetime] ||= Time.now).strftime("%Y").to_i
+
+    array = []
+
+    (min..max).each{|yr| array << yr}
+
+    quarters = []
+    qtr = []
+
+    i = 1
+
+    array.each do |a|
+      date = Date.parse("1.1.#{a}")
+
+      4.times do
+        if date > Date.today
+          break
+        end
+
+        qtr << {"name" => "Q" + i.to_s + " " + a.to_s,
+          "min" => date.strftime("%Y-%m-%d"),
+          "max" => (date+3.month-1.day).strftime("%Y-%m-%d")}
+
+        quarters << [date, date+3.month-1.day]
+        date += 3.month
+        i += 1
+      end
+
+      # Push year
+      qtr << a
+
+      i = 1
+    end
+    quarters
+
+    open = false
+
+  %>
+
+    <form id="frmReport" action="/cohort/cohort" method="post">
+
+      <input type="hidden" name ="reportType" value="4"/>
+      <input type="hidden" name ="type" value="cohort"/>
+
+      <select id="selQtr" name="selQtr" helpText="Select Quarter:" field_type="number"
+              tt_pageStyleClass="LongSelectList NoKeyboard">
+        <option></option>
+        <% qtr.reverse.each{|q|
+
+          if q.to_s.match(/^\d{4}$/)
+            if open == true
+            %>
+              </optgroup>
+            <%
+            end
+            open = true
+          %>
+
+            <optgroup label="<%= q %>" style="padding:10px; border-bottom:1px dotted black;">
+
+            <% else %>
+
+              <option value="min=<%= q["min"] %>&max=<%= q["max"] %>" style="text-align:center; padding:10px">
+                <%= q["name"] %>
+              </option>
+
+            <%
+            end
+
+          }
+
+          if open == true
+          %>
+
+          </optgroup>
+
+        <%
+        end
+      %>
+      </select>
+
+    </form>
+  </body>
+</html>

@@ -91,17 +91,147 @@
               <tr>
 
                 <td style="vertical-align: top;" class ="group">
-                  Total Admissions <sub style="font-size: 12px;">(Women)</sub>
+                  Total Deliveries <sub style="font-size: 12px;">(Women)</sub>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('admissions', '')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;">
                   <%= @total_admissions.length%>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('cadmissions', '')">
+                <td class ="value" style="vertical-align: top; cursor: pointer;">
                   <%= @ctotal_admissions.length%>
                 </td>
               </tr>
+
+              <tr>
+                <td class ="sub-header" style="border: none; float: left;">
+                  Pregnancy Delivery Terms
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Post Term <sub style="font-size: 12px;">( > 42 wks)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;">
+                  <%= @delivery_weeks["POST_TERM"].length%>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;">
+                  <%= @cdelivery_weeks["POST_TERM"].length%>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Full Term <sub style="font-size: 12px;">( 38 - 42 wks)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;">
+                  <%= @delivery_weeks["FULL_TERM"].length%>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;">
+                  <%= @cdelivery_weeks["FULL_TERM"].length%>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Near Term <sub style="font-size: 12px;">( 34 - 37 wks)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;">
+                  <%= @delivery_weeks["NEAR_TERM"].length%>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;">
+                  <%= @cdelivery_weeks["NEAR_TERM"].length%>
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Pre Term <sub style="font-size: 12px;">( < 34 wks)</sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;">
+                  <%= @delivery_weeks["PRE_TERM"].length%>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;">
+                  <%= @cdelivery_weeks["PRE_TERM"].length%>
+                </td>
+
+
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Unknown <sub style="font-size: 12px;"></sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;">
+                  <%= @delivery_weeks["UNKNOWN"].length%>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" >
+                  <%= @cdelivery_weeks["UNKNOWN"].length%>
+                </td>
+
+              </tr>
+
+              <tr>
+                <td class ="sub-header" style="border: none; float: left;">
+                  Maternal Outcomes
+                </td>
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Dead <sub style="font-size: 12px;"></sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;">
+                  <%= @maternal_outcomes["DEAD"].length%>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" >
+                  <%= @cmaternal_outcomes["DEAD"].length%>
+                </td>
+
+              </tr>
+
+              <tr>
+
+                <td style="vertical-align: top;" class ="group">
+                  Alive <sub style="font-size: 12px;"></sub>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;">
+                  <%= @maternal_outcomes["ALIVE"].length%>
+                </td>
+
+                <td class ="value" style="vertical-align: top; cursor: pointer;" >
+                  <%= @cmaternal_outcomes["ALIVE"].length%>
+                </td>
+
+              </tr>
+
+
+              <tr>
+                <td class ="sub-header" style="border: none; float: left;">
+                  &nbsp
+                </td>
+              </tr>
+
               <tr>
 
                 <td style="vertical-align: top;" class ="group">
@@ -119,7 +249,7 @@
 
               <tr>
                 <td class ="sub-header" style="border: none; float: left;">
-                  Total births by gender
+                  Births By Sex
                 </td>
               </tr>
               <tr>
@@ -156,7 +286,7 @@
 
               <tr >
                 <td class ="sub-header" style="border: none; float: left;">
-                  Births by delivery outcome
+                  Outcome at Delivery
                 </td>
                 <td style="border: none;">
 
@@ -228,7 +358,7 @@
 
               <tr >
                 <td class ="sub-header" style="border: none; float: left;">
-                  Births by discharge outcome
+                  Outcome at Discharge
                 </td>
                 <td style="border: none;">
 
@@ -286,7 +416,7 @@
 
               <tr >
                 <td  class ="sub-header" style="border: none; float: left;">
-                  Births by Birth Weight
+                  Birth Weight
                 </td>
                 <td style="border: none;">
 
@@ -356,7 +486,7 @@
 
               <tr >
                 <td  class ="sub-header" style="border: none; float: left;">
-                  Births by First Minute APGAR
+                  First Minute APGAR
                 </td>
                 <td style="border: none;">
 
@@ -426,7 +556,7 @@
 
               <tr >
                 <td  class ="sub-header" style="border: none; float: left;">
-                  Births by Second Minute APGAR
+                  Second Minute APGAR
                 </td>
                 <td style="border: none;">
 

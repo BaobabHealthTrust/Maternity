@@ -44,4 +44,28 @@ class Relationship < ActiveRecord::Base
     
     babies
   end
+
+  def self.twins_pull(patients, start_date, end_date, min = 1, max = 1)
+
+    @mother_type = RelationshipType.find_by_a_is_to_b_and_b_is_to_a("Mother", "Child").relationship_type_id
+
+    @twin_siblings = "SELECT COUNT(*) FROM obs observ WHERE observ.person_id IN (SELECT rl.person_b FROM relationship rl WHERE rl.person_a = p.patient_id AND rl.relationship = #{@mother_type}) AND
+    concept_id IN (SELECT cn.concept_id FROM concept_name cn WHERE cn.name = 'Date of delivery') AND observ.voided = 0 AND
+    observ.obs_datetime >= DATE_ADD(ob.obs_datetime, INTERVAL -30 DAY) AND
+    observ.obs_datetime <= DATE_ADD(ob.obs_datetime, INTERVAL 30 DAY)"
+
+    @delivery_encounters = "encounter e ON DATE(e.encounter_datetime) BETWEEN ? AND ? AND e.patient_id IN (?) AND e.voided = 0
+            AND e.encounter_type = (SELECT encounter_type_id FROM encounter_type WHERE name = 'UPDATE OUTCOME')
+            JOIN obs ob ON e.encounter_id = ob.encounter_id AND
+                concept_id IN (SELECT c.concept_id FROM concept_name c WHERE c.name = 'Date of delivery')"
+
+    p = Patient.find_by_sql(["SELECT r.person_a AS mother, (#{@twin_siblings}) AS twin_siblings FROM patient p
+        INNER JOIN relationship r ON p.patient_id = r.person_a AND r.relationship = #{@mother_type} AND r.voided = 0
+        INNER JOIN #{@delivery_encounters}
+        GROUP BY mother HAVING (twin_siblings >= ? AND twin_siblings <= ?)", start_date.to_date, end_date.to_date, patients, min, max])
+
+    p.collect{|t| t.attributes["mother"]}
+
+  end
+  
 end
