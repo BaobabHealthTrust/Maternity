@@ -9,6 +9,7 @@
     <style>
       table {
         font-family: verdana;
+        -moz-user-select: none;
       }
       #container td{
         border: 1px solid #ccc;
@@ -90,15 +91,15 @@
 
               <tr>
 
-                <td style="vertical-align: top;" class ="group">
+                <td style="vertical-align: top; background: #CDF7C5; font-weight: bold" class ="group">
                   Total Deliveries <sub style="font-size: 12px;">(Women)</sub>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;">
+                <td class ="value" style="vertical-align: top; cursor: pointer; background: #CDF7C5; font-weight: bold">
                   <%= @total_admissions.length%>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;">
+                <td class ="value" style="vertical-align: top; cursor: pointer; background: #CDF7C5; font-weight: bold">
                   <%= @ctotal_admissions.length%>
                 </td>
               </tr>
@@ -247,35 +248,35 @@
               <tr>
 
                 <td style="vertical-align: top;" class ="group">
-                  Quadruplets
+                  Greater than 3 babies
                 </td>
 
                 <td class ="value" style="vertical-align: top; cursor: pointer;">
-                  <%= @twins["4"].length%>
+                  <%= @twins[">3"].length%>
                 </td>
 
                 <td class ="value" style="vertical-align: top; cursor: pointer;" >
-                  <%= @ctwins["4"].length%>
+                  <%= @ctwins[">3"].length%>
                 </td>
 
               </tr>
 
-                <tr>
+              <tr>
 
                 <td style="vertical-align: top;" class ="group">
-                  > 4 Babies
+                  Unknown
                 </td>
 
                 <td class ="value" style="vertical-align: top; cursor: pointer;">
-                  <%= @twins[">4"].length%>
+                  <%= @twins["Unknown"].length%>
                 </td>
 
                 <td class ="value" style="vertical-align: top; cursor: pointer;" >
-                  <%= @ctwins[">4"].length%>
+                  <%= @ctwins["Unknown"].length%>
                 </td>
 
               </tr>
-              
+
               <tr>
                 <td class ="sub-header" style="border: none; float: left;">
                   Maternal Outcomes
@@ -323,15 +324,15 @@
 
               <tr>
 
-                <td style="vertical-align: top;" class ="group">
+                <td style="vertical-align: top; background: #CDF7C5;  font-weight: bold" class ="group">
                   Total Births
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('total_babies_born', '')">
+                <td class ="value" style="vertical-align: top; cursor: pointer; background: #CDF7C5; font-weight: bold" onclick ="redirect('total_babies_born', '')">
                   <%= @total_babies_born.length%>
                 </td>
 
-                <td class ="value" style="vertical-align: top; cursor: pointer;" onclick ="redirect('ctotal_babies_born', '')">
+                <td class ="value" style="vertical-align: top; cursor: pointer; background: #CDF7C5; font-weight: bold" onclick ="redirect('ctotal_babies_born', '')">
                   <%= @ctotal_babies_born.length%>
                 </td>
               </tr>

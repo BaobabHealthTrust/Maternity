@@ -49,12 +49,18 @@ class Relationship < ActiveRecord::Base
 
   
     @delivery_count = ConceptName.find_by_name("NUMBER OF BABIES").concept_id
+    @mother_type = RelationshipType.find_by_a_is_to_b_and_b_is_to_a("Mother", "Child").id
     
-    @twin_siblings = "SELECT MAX(COALESCE(observ.value_numeric, observ.value_text, (SELECT name FROM concept_name WHERE concept_id = observ.value_coded LIMIT 1))) FROM obs observ WHERE observ.person_id = p.patient_id
+    @twin_siblings = "SELECT MIN(COALESCE(observ.value_numeric, observ.value_text, (SELECT name FROM concept_name WHERE concept_id = observ.value_coded LIMIT 1))) FROM obs observ WHERE observ.person_id = p.patient_id
     AND observ.concept_id = (#{@delivery_count}) AND observ.voided = 0 AND DATE(observ.obs_datetime) BETWEEN ? AND ?"
     
     Patient.find_by_sql(["SELECT (#{@twin_siblings}) AS counter, p.patient_id AS patient_id FROM patient p
-        WHERE p.patient_id IN (?) GROUP BY patient_id", start_date, end_date,  patients])
+        WHERE p.patient_id IN (?) GROUP BY patient_id", start_date, end_date,  patients]).collect{|p|
+      p.counter = p.counter.to_i <= 2 ? p.counter : Relationship.find(:all, :conditions => ["person_a = ? AND voided = 0 AND relationship = ? AND date_created BETWEEN ? AND ?",
+          p.patient_id, @mother_type, (start_date.to_date).to_date, (end_date.to_date + 1.month).to_date ]).length #rescue p.counter
+    
+      p
+    }
   end
   
 end
