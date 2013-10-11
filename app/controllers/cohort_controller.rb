@@ -2076,14 +2076,14 @@ class CohortController < ActionController::Base # < ApplicationController
     @twins["2"] = @total_delivery_counts.collect{|mother| mother.patient_id if mother.counter.to_i == 2}.compact.uniq
     @twins["3"] = @total_delivery_counts.collect{|mother| mother.patient_id if mother.counter.to_i == 3}.compact.uniq
     @twins[">3"] = @total_delivery_counts.collect{|mother| mother.patient_id if mother.counter.to_i > 3}.compact.uniq
-    @twins["Unknown"] =  @total_delivery_counts.collect{|mother| mother.patient_id if mother.counter.blank?}.compact.uniq
+    @twins["Unknown"] =  @total_delivery_counts.collect{|mother| mother.patient_id if mother.counter.blank? || mother.counter.to_i < 1}.compact.uniq
 
     @ctwins = {}
     @ctwins["1"] = @ctotal_delivery_counts.collect{|mother| mother.patient_id if mother.counter.to_i == 1}.compact.uniq
     @ctwins["2"] = @ctotal_delivery_counts.collect{|mother| mother.patient_id if mother.counter.to_i == 2}.compact.uniq
     @ctwins["3"] = @ctotal_delivery_counts.collect{|mother| mother.patient_id if mother.counter.to_i == 3}.compact.uniq
     @ctwins[">3"] = @ctotal_delivery_counts.collect{|mother| mother.patient_id if mother.counter.to_i > 3}.compact.uniq
-    @ctwins["Unknown"] = @ctotal_delivery_counts.collect{|mother| mother.patient_id if mother.counter.blank?}.compact.uniq
+    @ctwins["Unknown"] = @ctotal_delivery_counts.collect{|mother| mother.patient_id if mother.counter.blank? || mother.counter.to_i < 1}.compact.uniq
 
     @ctotal_mothers = Patient.total_mothers_in_range(@system_upgrade_date, params[:end_date],  @ctotal_admissions) rescue []
 
