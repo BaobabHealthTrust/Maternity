@@ -2048,6 +2048,8 @@ class CohortController < ActionController::Base # < ApplicationController
 
   def birth_cohort
     
+    @quarter = params[:start_date].match(/\-07\-01/)? "3" : (params[:start_date].match(/\-01\-01/) ? "1" : (params[:end_date].match(/\-12\-31/) ? "4" : "2"))
+    
     @system_upgrade_date = Relationship.find(:first, :order => ["date_created ASC"], :conditions => ["relationship = ?",
         RelationshipType.find_by_a_is_to_b_and_b_is_to_a("Mother", "Child")]).date_created.to_date rescue "2013-04-20"
 
