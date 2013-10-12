@@ -2203,20 +2203,28 @@ class CohortController < ActionController::Base # < ApplicationController
     @discharge_outcome = {}
     @discharge_outcome["MALE_ALIVE"] = @total_babies.collect{|baby| baby.person_id if (baby.discharge_outcome.match(/Alive/i) rescue false) && !baby.gender.match(/F/i)}.compact.uniq
     @discharge_outcome["MALE_DEAD"] = @total_babies.collect{|baby| baby.person_id if (!baby.delivery_outcome.match(/Alive/i)) && !baby.gender.match(/F/i)}.compact.uniq
+    @discharge_outcome["MALE_STILL"] = @delivery_mode["MALE_FRESH"] + @delivery_mode["MALE_MAC"]
+    @discharge_outcome["MALE_NEO"] = @delivery_mode["MALE_NEO"]
     @discharge_outcome["MALE_NOT_DISCHARGED"] = (@gender["MALES"] - (@discharge_outcome["MALE_ALIVE"] + @discharge_outcome["MALE_DEAD"])).uniq
     
     @discharge_outcome["F_ALIVE"] = @total_babies.collect{|baby| baby.person_id if (baby.discharge_outcome.match(/Alive/i) rescue false) && baby.gender.match(/F/i)}.compact.uniq
     @discharge_outcome["F_DEAD"] = @total_babies.collect{|baby| baby.person_id if (!baby.delivery_outcome.match(/Alive/i)) && baby.gender.match(/F/i)}.compact.uniq
+    @discharge_outcome["F_STILL"] = @delivery_mode["F_FRESH"] + @delivery_mode["F_MAC"]
+    @discharge_outcome["F_NEO"] = @delivery_mode["F_NEO"]
     @discharge_outcome["F_NOT_DISCHARGED"] = (@gender["FEMALES"] - (@discharge_outcome["F_ALIVE"] + @discharge_outcome["F_DEAD"])).uniq
 
     #cumulative discharges
     @cdischarge_outcome = {}
     @cdischarge_outcome["MALE_ALIVE"] = @ctotal_babies.collect{|baby| baby.person_id if (baby.discharge_outcome.match(/Alive/i) rescue false) && !baby.gender.match(/F/i)}.compact.uniq
     @cdischarge_outcome["MALE_DEAD"] = @ctotal_babies.collect{|baby| baby.person_id if (!baby.delivery_outcome.match(/Alive/i)) && !baby.gender.match(/F/i)}.compact.uniq
+    @cdischarge_outcome["MALE_STILL"] = @cdelivery_mode["MALE_FRESH"] + @cdelivery_mode["MALE_MAC"]
+    @cdischarge_outcome["MALE_NEO"] = @cdelivery_mode["MALE_NEO"]
     @cdischarge_outcome["MALE_NOT_DISCHARGED"] = (@cgender["MALES"] - (@cdischarge_outcome["MALE_ALIVE"] + @cdischarge_outcome["MALE_DEAD"])).uniq
 
     @cdischarge_outcome["F_ALIVE"] = @ctotal_babies.collect{|baby| baby.person_id if (baby.discharge_outcome.match(/Alive/i) rescue false) && baby.gender.match(/F/i)}.compact.uniq
     @cdischarge_outcome["F_DEAD"] = @ctotal_babies.collect{|baby| baby.person_id if (!baby.delivery_outcome.match(/Alive/i)) && baby.gender.match(/F/i)}.compact.uniq
+    @cdischarge_outcome["F_STILL"] = @cdelivery_mode["F_FRESH"] + @cdelivery_mode["F_MAC"]
+    @cdischarge_outcome["F_NEO"] = @cdelivery_mode["F_NEO"]
     @cdischarge_outcome["F_NOT_DISCHARGED"] = (@cgender["FEMALES"] - (@cdischarge_outcome["F_ALIVE"] + @cdischarge_outcome["F_DEAD"])).uniq
     
     @weights = {}
