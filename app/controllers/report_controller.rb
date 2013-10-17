@@ -208,4 +208,23 @@ class ReportController < ApplicationController
     render :text => ids.to_json
   end
 
+  def delivered_patients
+    
+    @legal_identifiers = PatientIdentifierType.find(:all,
+      :conditions => ["name IN ('National id', 'Old Identification Number')"]).collect{|idt| idt.id}
+    @outcome_concept_id = ConceptName.find_by_name("OUTCOME").concept_id
+    @delivered_concept_id = ConceptName.find_by_name("DELIVERED").concept_id
+    @delivery_encounter = EncounterType.find_by_name("UPDATE OUTCOME").id
+
+    @ids = Encounter.find_by_sql(["SELECT pid.identifier AS ident FROM encounter enc
+          INNER JOIN patient_identifier pid ON pid.patient_id = enc.patient_id AND pid.identifier_type IN (?)
+          INNER JOIN obs ob ON ob.encounter_id = enc.encounter_id AND ob.concept_id = ? AND ob.value_coded = ?
+          WHERE enc.encounter_type = ? AND DATE(enc.encounter_datetime) BETWEEN ? AND ?
+        ", @legal_identifiers, @outcome_concept_id, @delivered_concept_id, @delivery_encounter,
+        params[:start_date].to_date, params[:end_date].to_date]).collect{|pd| pd.ident}
+    
+    render :text => {"ids" => @ids}.to_json
+    
+  end
+
 end
