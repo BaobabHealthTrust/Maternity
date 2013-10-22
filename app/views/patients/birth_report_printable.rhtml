@@ -425,8 +425,7 @@
                 </td>
                 <td colspan="2" style="text-align: left; padding-bottom: 0px; padding-top: 9px;  padding-left: 20px;"
                     class="cell">
-                      <% @facility_date = @anc_patient.get_full_attribute("Hospital Date") rescue nil %>
-                  <%= @facility_date.value.to_date.strftime("%d/%b/%Y") if !@facility_date.nil? %>&nbsp;
+                  <%= @facility_date.to_date.strftime("%d/%b/%Y") if !@facility_date.blank? %>&nbsp;
                 </td>
                 <td style="text-align: center; padding-bottom: 0px; padding-top: 9px;">
                   &nbsp;

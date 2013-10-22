@@ -259,7 +259,7 @@ class PeopleController < ApplicationController
       results.pre_art_number = patient.pre_art_number
       results.name = patient.name
       results.sex = patient.sex
-      results.age = patient.age
+      results.age = patient.age || person.age
       @search_results.delete_if{|x,y| x == results.national_id }
       @patients << results
 		end
@@ -285,7 +285,7 @@ class PeopleController < ApplicationController
     
       if !related_person.blank?
         
-        DDEService.create_footprint(related_person.national_id, Location.find(session[:location_id]).name) rescue nil
+        DDEService.create_footprint(related_person.national_id, "Maternity") rescue nil
 
         if params[:identifier].length != 6 and create_from_dde_server
           dde_patient = DDEService::Patient.new(related_person)
@@ -424,7 +424,7 @@ class PeopleController < ApplicationController
 
       if create_from_dde_server
         
-        DDEService.create_footprint(person.patient.national_id, Location.find(session[:location_id]).name) rescue nil
+        DDEService.create_footprint(person.patient.national_id, "Maternity") rescue nil
 
       end
       
@@ -436,7 +436,7 @@ class PeopleController < ApplicationController
     if create_from_dde_server
 
       person = ANCService.create_patient_from_dde(params)
-      DDEService.create_footprint(person.patient.national_id, Location.find(session[:location_id]).name) rescue nil
+      DDEService.create_footprint(person.patient.national_id, "Maternity") rescue nil
 
     end
    

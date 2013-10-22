@@ -43,7 +43,7 @@ class PatientsController < ApplicationController
 
     if !@at_registration_desk && ((session[:location_id] != @last_location)  || @last_visit_closed) && (params[:skip_check] ? (params[:skip_check] == "true" ? false : true ) : true)
       params[:skip_check] = false
-      redirect_to "/encounters/new/admit_patient?patient_id=#{@patient.id}" and return
+      redirect_to "/encounters/new/admit_patient?patient_id=#{@patient.id}" and return if @patient.person.age > 10
     end  
    
     @super_user = false
@@ -817,6 +817,7 @@ class PatientsController < ApplicationController
     @patient = Patient.find(params[:patient_id]) rescue nil
     @person = Patient.find(params[:id] || params[:person_id]) rescue nil
     @anc_patient = ANCService::ANC.new(@person) rescue nil
+    create_provider(@patient, @person)
   end
 
   def birth_report_printable
@@ -868,15 +869,9 @@ class PatientsController < ApplicationController
     maternity = MaternityService::Maternity.new(patient) rescue nil
 
     data = maternity.export_person((User.current_user.id rescue 1), facility, district)
-    # data = data.delete_blank
 
-    # Due to space limitation, no father demographics on barcode for now
-    # data.delete("father")
-
-    # data_w_father = data
-
-    # @qr = RQRCode::QRCode.new(data_w_father.to_json, :size => 40, :level => :h)
-
+    @facility_date = @anc_patient.get_attribute("Hospital Date")
+    
     render :layout => false
   end
 
@@ -1063,30 +1058,32 @@ class PatientsController < ApplicationController
    
   end
 
-  def create_provider
+  def create_provider(patient, person)
     
-    @patient = Patient.find(params[:person_id]) rescue nil
-    @anc_patient = ANCService::ANC.new(@patient) rescue nil
-
+    @patient = patient
+    @anc_patient = ANCService::ANC.new(@person) rescue nil
+    session_date = session[:datetime].to_date rescue Date.today
+    User.current_user = User.find(session[:user_id])
+    
     @facility = CoreService.get_global_property_value("current_facility") rescue ''
 
     @district = CoreService.get_global_property_value("current_district") rescue ''
     
+    @provider_name = User.find(session[:user_id]).name rescue " "
    
-    @anc_patient.set_attribute("Hospital Date", Date.today)
-     
-    @anc_patient.set_attribute("Health Center", @facility)
+    @roles = UserRole.find_all_by_user_id(session[:user_id]).collect{|ur| ur.role}.compact.to_s rescue nil
+    
+    @anc_patient.set_attribute("Hospital Date", session_date) if @anc_patient.get_attribute("Hospital Date").blank?
+    
+    @anc_patient.set_attribute("Health Center", @facility) if @anc_patient.get_attribute("Health Center").blank?
    
-    @anc_patient.set_attribute("Health District", @district)
+    @anc_patient.set_attribute("Health District", @district) if @anc_patient.get_attribute("Health District").blank?
 
-    if !params[:ProviderTitle].nil? && !params[:ProviderTitle].blank?
-      @anc_patient.set_attribute("Provider Title", params[:ProviderTitle])
-    end
+    @anc_patient.set_attribute("Provider Title", @roles) if @anc_patient.get_attribute("Provider Title").blank?
+    
+    @anc_patient.set_attribute("Provider Name", @provider_name) if @anc_patient.get_attribute("Provider Name").blank?
 
-    if !params[:ProviderName].nil? && !params[:ProviderName].blank?
-      @anc_patient.set_attribute("Provider Name", params[:ProviderName])
-    end
-    redirect_to "/patients/birth_report?person_id=#{params[:person_id]}&patient_id=#{params[:patient_id]}"
+    #  redirect_to "/patients/birth_report?person_id=#{params[:person_id]}&patient_id=#{params[:patient_id]}"
   end
 
   def children
