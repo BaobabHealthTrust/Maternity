@@ -252,33 +252,39 @@ class CohortReportController < ApplicationController
     @end_date = params[:end_date] rescue ""
 
     @reportType = params[:reportType] rescue ""
+    
+    location = request.remote_ip rescue ""
+    current_printer = ""
 
+    wards = GlobalProperty.find_by_property("facility.ward.printers").property_value.split(",") rescue []
+    
+    printers = wards.each{|ward|
+      current_printer = ward.split(":")[1] if ward.split(":")[0].upcase == location
+    } rescue []
+        
     if params
       link = ""
       
       if CoreService.get_global_property_value("extended_diagnoses_report").to_s == "true"
         link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report_extended" : (@reportType.to_i == 4 ? "birth_cohort" : "report")) }" +
-          "?start_date=#{@start_date}+#{@start_time}&end_date=#{@end_date}+#{@end_time}&reportType=#{@reportType}"
+          "?start_date=#{@start_date}&end_date=#{@end_date}&reportType=#{@reportType}"
       else
         link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report" : (@reportType.to_i == 4 ? "birth_cohort" : "report")) }" +
-          "?start_date=#{@start_date}+#{@start_time}&end_date=#{@end_date}+#{@end_time}&reportType=#{@reportType}"
+          "?start_date=#{@start_date}&end_date=#{@end_date}&reportType=#{@reportType}"
       end
-      link = link.gsub(/\s+|\+/, "")
-  
+      
+      link = link.gsub(/\s+|\+/, " ")
+     
       t1 = Thread.new{
       
         Kernel.system "wkhtmltopdf -s A4 \"http://" +
-          request.env["HTTP_HOST"] + "#{Regexp.escape(link)}" + "\" /tmp/output" + ".pdf \n"
+          request.env["HTTP_HOST"] + link.to_s + "\" /tmp/output" + ".pdf \n"
       }
-
+     
+      file = "/tmp/output.pdf"
+          
       t2 = Thread.new{
-        sleep(10)
-        Kernel.system "lp /tmp/output.pdf\n"
-      }
-
-      t3 = Thread.new{
-        sleep(20)
-        Kernel.system "rm /tmp/output.pdf\n"
+        print(file, current_printer, Time.now)
       }
 
     end
