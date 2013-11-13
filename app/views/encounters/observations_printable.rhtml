@@ -127,7 +127,7 @@
           <b>LMP:</b> <%= @encounters["DATE OF LAST MENSTRUAL PERIOD"] %>
         </td>
         <td>
-          <b>EDD:</b> <%= (@encounters["DATE OF LAST MENSTRUAL PERIOD"].to_date + 7.days + 9.months).strftime("%d/%b/%Y") rescue "" %>
+          <b>EDD:</b> <%= (@encounters["DATE OF LAST MENSTRUAL PERIOD"].to_date - 7.days + 9.months).strftime("%d/%b/%Y") rescue "" %>
           </br><b>Gestation:</b> <%=  @edd_weeks %>  Weeks
         </td>
 

@@ -261,8 +261,8 @@ class CohortReportController < ApplicationController
     printers = wards.each{|ward|
       current_printer = ward.split(":")[1] if ward.split(":")[0].upcase == location
     } rescue []
-        
-    if params
+       
+    if @reportType.present?
       link = ""
       
       if CoreService.get_global_property_value("extended_diagnoses_report").to_s == "true"
@@ -274,13 +274,13 @@ class CohortReportController < ApplicationController
       end
       
       link = link.gsub(/\s+|\+/, " ")
-     
+ 
       t1 = Thread.new{
       
         Kernel.system "wkhtmltopdf -s A4 \"http://" +
           request.env["HTTP_HOST"] + link.to_s + "\" /tmp/output" + ".pdf \n"
       }
-     
+      puts link
       file = "/tmp/output.pdf"
           
       t2 = Thread.new{
