@@ -502,7 +502,7 @@ module DDEService
 
     uri = "http://#{@dde_server_username}:#{@dde_server_password}@#{@dde_server}/people/update_demographics"
 
-    received_params = RestClient.post(uri,person_params)
+    received_params = RestClient.post(uri,person_params) rescue {}
 
   end
   
