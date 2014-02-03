@@ -1219,6 +1219,20 @@ class PatientsController < ApplicationController
       :filename=>"#{params[:patient_id]}#{rand(10000)}.lbl",
       :disposition => "inline")
   end
+
+  def issue_birth_report
+    result = {}
+    patient = PatientIdentifier.find_by_identifier_and_identifier_type(params[:identifier],
+      PatientIdentifierType.find_by_name("National id").id) rescue nil
+
+    if patient.present?
+      result["report"] = BirthReport.find_by_person_id(patient.patient_id)
+      result["facility"] = CoreService.get_global_property_value("current_facility")
+    end
+
+    render :text => result.to_json
+
+  end
   
 end
 
