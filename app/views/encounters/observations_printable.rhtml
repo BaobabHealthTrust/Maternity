@@ -138,7 +138,7 @@
            flag = ""
            if (!@encounters["HIV STATUS"].blank? && @encounters["HIV STATUS"].match(/Non/i) &&
             (@encounters['HIV TEST DATE'].to_date <= ((session[:datetime].to_date rescue Date.today) - 3.months)))
-            flag = "<sub><span style='color: red;font-size: 11px;'>*OUTDATED*NEED TO RE-TEST*</span></sub	>"
+            flag = "<sub><span style='color: red;font-size: 11px;'>&nbsp;&nbsp;NEEDS RE-TEST*</span></sub	>"
            end
         %>
         <b>PMTCT:</b> <%= (!@encounters["HIV STATUS"].nil? ? 
