@@ -137,7 +137,7 @@
         <%
            flag = ""
            if (!@encounters["HIV STATUS"].blank? && @encounters["HIV STATUS"].match(/Non/i) &&
-            (@encounters['HIV TEST DATE'].to_date <= ((session[:datetime].to_date rescue Date.today) - 3.months)))
+            ((@encounters['HIV TEST DATE'].to_date <= ((session[:datetime].to_date rescue Date.today) - 3.months))) rescue false)
             flag = "<sub><span style='color: red;font-size: 11px;'>&nbsp;&nbsp;NEEDS RE-TEST*</span></sub	>"
            end
         %>
