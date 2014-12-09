@@ -77,7 +77,8 @@
 
         <tr class="<%= cycle('even', 'odd') %>">
 
-          <%if @ever["BIRTH REPORTS"] && @ever["BIRTH REPORTS"]["#{type.upcase}"] && count > 0%>
+          <%if (CoreService.get_global_property_value("assign_serial_numbers").to_s == "true" rescue false) &&
+                  @ever["BIRTH REPORTS"] && @ever["BIRTH REPORTS"]["#{type.upcase}"] && count > 0%>
 
             <td style="text-align:left;">&nbsp&nbsp&nbsp&nbsp<%= (type.titleize == "Refer Patient In?" ? "Referrals - In" : type.titleize) %></td>
 
@@ -87,13 +88,13 @@
 
           <%end%>
 
-          <td><%= @me["BIRTH REPORTS"]["#{type.upcase}"].present?? @me["BIRTH REPORTS"]["#{type.upcase}"].to_i : @me[type].to_i %></td>
+          <td><%= (@me["BIRTH REPORTS"]["#{type.upcase}"].present? rescue false) ? @me["BIRTH REPORTS"]["#{type.upcase}"].to_i : @me[type].to_i %></td>
 
-          <td><%= @today["BIRTH REPORTS"]["#{type.upcase}"].present?? @today["BIRTH REPORTS"]["#{type.upcase}"].to_i : @today[type].to_i %></td>
+          <td><%= (@today["BIRTH REPORTS"]["#{type.upcase}"].present? rescue false) ? @today["BIRTH REPORTS"]["#{type.upcase}"].to_i : @today[type].to_i %></td>
 
-          <td><%= @year["BIRTH REPORTS"]["#{type.upcase}"].present?? @year["BIRTH REPORTS"]["#{type.upcase}"].to_i : @year[type].to_i %></td>
+          <td><%= (@year["BIRTH REPORTS"]["#{type.upcase}"].present? rescue false) ? @year["BIRTH REPORTS"]["#{type.upcase}"].to_i : @year[type].to_i %></td>
 
-          <td><%= @ever["BIRTH REPORTS"]["#{type.upcase}"].present?? @ever["BIRTH REPORTS"]["#{type.upcase}"].to_i : @ever[type].to_i %></td>
+          <td><%= (@ever["BIRTH REPORTS"]["#{type.upcase}"].present? rescue false) ? @ever["BIRTH REPORTS"]["#{type.upcase}"].to_i : @ever[type].to_i %></td>
 
         </tr>
 
