@@ -30,7 +30,10 @@
 
         <% if session[:user].admin? || session[:user][:username] == "eds" %>
           <option value='/people/admin'>Administration</option>
-          <option value='/people/serial_numbers' >Serial Numbers</option>
+
+          <% if (CoreService.get_global_property_value("assign_serial_numbers").to_s == "true" rescue false)%>
+            <option value='/people/serial_numbers' >Serial Numbers</option>
+          <% end %>
         <% end %>
           
       </select>
