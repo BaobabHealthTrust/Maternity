@@ -572,7 +572,7 @@ class PeopleController < ApplicationController
 
     @ever = Encounter.statistics(@types, :conditions => ['encounter.location_id = ?', session[:location_id]])
 
-    if (CoreService.get_global_property_value("assign_serial_numbers").to_s == "true" rescue false)
+    if false #(CoreService.get_global_property_value("assign_serial_numbers").to_s == "true" rescue false)
 
       @me["BIRTH REPORTS"] = {}
       @me["BIRTH REPORTS"]["SENT"] = BirthReport.unsent_between("sent", Date.today, Date.today, User.current_user.user_id)
@@ -619,13 +619,15 @@ class PeopleController < ApplicationController
     @initial_numbers = SerialNumber.all.size
 
     if ((!params[:start_serial_number].blank? rescue false) && (!params[:end_serial_number].blank? rescue false) &&
-          (params[:start_serial_number].to_i < params[:end_serial_number].to_i) rescue false)
-      (params[:start_serial_number]..params[:end_serial_number]).each do |number|
+          (params[:start_serial_number].to_i <= params[:end_serial_number].to_i) rescue false)
+         
+      (params[:start_serial_number].to_i..params[:end_serial_number].to_i).each do |number|
+      raise "in".to_yaml
         snum = SerialNumber.new()
         snum.serial_number = number
         snum.creator = params[:user_id]
         snum.save if (SerialNumber.find(number).nil? rescue true)
-      end
+      end      
       @final_numbers = initial_numbers = SerialNumber.all.size
     else
     end
