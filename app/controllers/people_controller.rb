@@ -622,7 +622,7 @@ class PeopleController < ApplicationController
           (params[:start_serial_number].to_i <= params[:end_serial_number].to_i) rescue false)
          
       (params[:start_serial_number].to_i..params[:end_serial_number].to_i).each do |number|
-      raise "in".to_yaml
+     
         snum = SerialNumber.new()
         snum.serial_number = number
         snum.creator = params[:user_id]
