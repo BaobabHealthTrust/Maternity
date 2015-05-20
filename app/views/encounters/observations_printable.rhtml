@@ -134,9 +134,16 @@
       <% end %>
 
       <td colspan="<%= (params[:ret] && params[:ret] != "postnatal" ? 3 : 5) %>">
+        <%
+           flag = ""
+           if (!@encounters["HIV STATUS"].blank? && @encounters["HIV STATUS"].match(/Non/i) &&
+            ((@encounters['HIV TEST DATE'].to_date <= ((session[:datetime].to_date rescue Date.today) - 3.months))) rescue true)
+            flag = "<sub><span style='color: red;font-size: 11px;'>&nbsp;&nbsp;NEEDS RE-TEST*</span></sub	>"
+           end
+        %>
         <b>PMTCT:</b> <%= (!@encounters["HIV STATUS"].nil? ? 
-            (@encounters["HIV STATUS"].upcase == "REACTIVE" ? "R" : (@encounters["HIV STATUS"].upcase ==
-                "UNKNOWN" ? "Unknown" : "NR")) : "") %>&nbsp;&nbsp;&nbsp;
+            (@encounters["HIV STATUS"].upcase == "REACTIVE" ? "R &nbsp<b>Test date: </b>  #{@encounters['HIV TEST DATE'].present? ? @encounters['HIV TEST DATE'] : "Unknown"}" : (@encounters["HIV STATUS"].upcase ==
+                "UNKNOWN" ? "Unknown" : "NR &nbsp&nbsp<b>Test date: </b>  #{@encounters['HIV TEST DATE'].present? ? @encounters['HIV TEST DATE'] : "Unknown"} #{flag}")) : "Unknown") %>&nbsp;&nbsp;&nbsp;
       </td>
     </tr>
     <!--tr>

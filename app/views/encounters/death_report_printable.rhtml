@@ -1,0 +1,292 @@
+<html>
+  <head>
+    <title></title>
+    <style media="print">
+      td {
+        font-size: 14px;
+      }
+      .cell {
+        border-bottom: dotted 1px #000;
+      }
+      table {
+        -moz-user-select: none;
+      }
+    </style>
+    <style media="screen">
+      table {
+        -moz-user-select: none;
+      }
+      td {       
+        vertical-align: top;
+        font-size: 14px;
+      }
+      .cell {
+        border-bottom: dotted 1px #000;
+      }
+    </style>
+  </head>
+  <body>
+    <table width="100%" height="97%" cellpadding="5" style=" margin-top: 10px;" cellspacing="0">
+      <tr>
+        <th colspan="5" style="font-size: 24px; width: 100%; padding: 10px; border-bottom: 1px dotted #000; border-top: 1px dotted #000; ">
+          <%= @facility %>
+          </br><span style="font-weight: normal">Death Report</span>
+        </th>
+      </tr>
+
+      <tr>
+        <td>
+          &nbsp;
+        </td>
+        <td colspan="4" align="right" >
+          <img src="/images/patient_id.png" alt="National Id" />
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          1.
+        </td>
+        <td>
+          Name of Deceased:
+        </td>
+        <td style="text-align: center; padding-bottom: 0px;" class="cell">
+          <%= @anc_patient.first_name %>&nbsp;
+        </td>
+        <td style="text-align: center; padding-bottom: 0px;" class="cell">
+          <%= @anc_patient.middle_name %>&nbsp;
+        </td>
+        <td style="text-align: center; padding-bottom: 0px;" class="cell">
+          <%= @anc_patient.last_name %>&nbsp;
+        </td>
+      </tr>
+      <tr>
+        <td>
+          &nbsp;
+        </td>
+        <td>
+          &nbsp;
+        </td>
+        <td style="text-align: center; padding-top: 0px;">
+          <sup style="font-style: italic; font-size: 0.8em;">First Name</sup>
+        </td>
+        <td style="text-align: center; padding-top: 0px;">
+          <sup style="font-style: italic; font-size: 0.8em;">Middle Name</sup>
+        </td>
+        <td style="text-align: center; padding-top: 0px;">
+          <sup style="font-style: italic; font-size: 0.8em;">Surname</sup>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          2.
+        </td>
+        <td>
+          Date of Birth of Deceased:
+        </td>
+        <td style="text-align: center; padding-bottom: 0px;" class="cell">
+          <%= @anc_patient.person.birthdate.to_date.strftime("%d") rescue "&nbsp;" %>
+        </td>
+        <td style="text-align: center; padding-bottom: 0px;" class="cell">
+          <%= @anc_patient.person.birthdate.to_date.strftime("%B").titleize rescue "&nbsp;" %>
+        </td>
+        <td style="text-align: center; padding-bottom: 0px;" class="cell">
+          <%= @anc_patient.person.birthdate.to_date.strftime("%Y") rescue "&nbsp;" %>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          &nbsp;
+        </td>
+        <td>
+          &nbsp;
+        </td>
+        <td style="text-align: center; padding-top: 0px;">
+          <sup style="font-style: italic; font-size: 0.8em;">Day</sup>
+        </td>
+        <td style="text-align: center; padding-top: 0px;">
+          <sup style="font-style: italic; font-size: 0.8em;">Month</sup>
+        </td>
+        <td style="text-align: center; padding-top: 0px;">
+          <sup style="font-style: italic; font-size: 0.8em;">Year</sup>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          3.
+        </td>
+        <td>
+          Sex (Male/Female):
+        </td>
+        <td style="text-align: center; padding-top: 4px;" class="cell">
+          <%= @anc_patient.sex rescue nil %>&nbsp;
+        </td>
+        <td style=" padding-left: 130px; font-size: 0.8em">
+          ID NO:
+        </td>
+
+        <td style="text-align: center;font-size: 0.8em; padding-top: 4px;" class="cell">
+          <%= @patient.national_id rescue nil %>&nbsp;
+        </td>
+
+        <td colspan="2">
+          &nbsp;
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          4.
+        </td>
+        <td>
+          Details of Death:
+        </td>
+        <td style="text-align: center; padding-bottom: 0px;" class="cell">
+          <%= @died_encounter["DATE OF DEATH"] %> &nbsp;
+        </td>
+        <td style="text-align: center; padding-bottom: 0px;" class="cell">
+          <%= @died_encounter["PLACE OF DEATH"] %> &nbsp;
+        </td>
+        <td style="text-align: center; padding-bottom: 0px;" class="cell">
+          <%= @died_encounter["TIME OF DEATH"] %> &nbsp;
+        </td>
+      </tr>
+      <tr>
+        <td>
+          &nbsp;
+        </td>
+        <td>
+          &nbsp;
+        </td>
+        <td style="text-align: center; padding-top: 0px;">
+          <sup style="font-style: italic; font-size: 0.8em;">Date</sup>
+        </td>
+        <td style="text-align: center; padding-top: 0px;">
+          <sup style="font-style: italic; font-size: 0.8em;">Place</sup>
+        </td>
+        <td style="text-align: center; padding-top: 0px;">
+          <sup style="font-style: italic; font-size: 0.8em;">Time</sup>
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          5.
+        </td>
+        <td>
+          Cause of Death:
+        </td>
+        <td colspan="3" style="text-align: center; padding-bottom: 0px;" class="cell">
+          <%=
+          @died_encounter["DIAGNOSIS"] %> &nbsp;
+        </td>
+      </tr>
+
+      <tr>
+        <td  style="text-align: left; padding-top: 25px;">
+          6.
+        </td>
+        <td colspan="4" style="text-align: left; padding-top: 25px;">
+          Name and Title of Attending Doctor/Medical official:
+        </td>
+      </tr>
+
+      <tr>
+        <td colspan="2">
+          &nbsp;
+        </td>
+
+        <td colspan="3" style="padding-left: 20px; padding-bottom: 0px; padding-top: 25px; "
+            class="cell">
+          <%= ((@died_encounter["USER_NAME"] + " (" + @died_encounter["USER_TITLE"] + ")") rescue nil)%>&nbsp;
+        </td>
+
+      </tr>
+
+
+      <tr>
+        <td style="text-align: left; padding-top: 25px;">
+          7.
+        </td>
+        <td colspan="4" style="text-align: left; padding-top: 25px;">
+          Details of Medical Officer/Hospital Official Registering the Death:
+        </td>
+      </tr>     
+
+      <tr>
+        <td>
+          &nbsp;
+        </td>
+        <td style="text-align: left; padding-top: 9px; padding-left: 80px;">
+          Name:
+        </td>
+        <td colspan="3" style="text-align: left; padding-bottom: 0px; padding-top: 9px;  padding-left: 20px;"
+            class="cell">
+          <%= @user_name %>&nbsp;
+        </td>
+
+      </tr>
+      <tr>
+        <td>
+          &nbsp;
+        </td>
+        <td style="text-align: left; padding-top: 9px; padding-left: 80px;">
+          Title:
+        </td>
+        <td colspan="3" style="text-align: left; padding-bottom: 0px; padding-top: 9px;  padding-left: 20px;"
+            class="cell">
+          <%= @user_roles if !@user_roles.blank? %>&nbsp;
+        </td>
+
+      </tr>
+      <tr>
+        <td>
+          &nbsp;
+        </td>
+        <td style="text-align: left; padding-top: 9px; padding-left: 80px;">
+          Signature:
+        </td>
+        <td colspan="3" style="text-align: left; padding-bottom: 0px; padding-top: 9px;" class="cell">
+          &nbsp;
+        </td>
+
+      </tr>
+      <tr>
+        <td>
+          &nbsp;
+        </td>
+        <td style="text-align: left; padding-top: 9px; padding-left: 80px;">
+          Hospital Date:
+        </td>
+        <td colspan="3" style="text-align: left; padding-bottom: 0px; padding-top: 9px;  padding-left: 20px;"
+            class="cell">
+          <%= @facility_date.strftime("%d/%b/%Y") if !@facility_date.blank? %>&nbsp;
+        </td>
+
+      </tr>
+
+      <tr>
+        <td  style="text-align: left; padding-top: 25px;">
+
+        </td>
+        <td colspan="4" style="text-align: left; font-style: italic; padding-top: 35px;">
+          Stamp.
+        </td>
+      </tr>
+
+      <tr>
+        <td colspan="2">
+          &nbsp;
+        </td>
+
+        <td colspan="3" style="padding-left: 20px; padding-bottom: 0px; padding-top: 25px; "
+           
+
+        </td>
+
+      </tr>
+
+    </table>
+
+  </body>
+</html>

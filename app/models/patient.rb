@@ -73,7 +73,7 @@ class Patient < ActiveRecord::Base
     id[0..4] + "-" + id[5..8] + "-" + id[9..-1] rescue id
   end
 
-  def national_id_label()
+  def national_id_label(num = 1)
     return unless self.national_id
     sex =  self.person.gender.match(/F/i) ? "(F)" : "(M)"
     address = self.person.address.strip[0..24].humanize.delete("'") rescue ""
@@ -88,24 +88,6 @@ class Patient < ActiveRecord::Base
     label.draw_multi_text("#{address}")
     label.print(1)
   end
-=begin
-  def visit_label
-    label = ZebraPrinter::StandardLabel.new
-    label.font_size = 3
-    label.font_horizontal_multiplier = 1
-    label.font_vertical_multiplier = 1
-    label.left_margin = 50
-    encs = encounters.current.active.find(:all)
-    return nil if encs.blank?
-    
-    label.draw_multi_text("Visit: #{encs.first.encounter_datetime.strftime("%d/%b/%Y %H:%M")}", :font_reverse => true)
-    encs.each {|encounter|
-      next if encounter.name.humanize == "Registration"
-      label.draw_multi_text("#{encounter.name.humanize}: #{encounter.to_print}", :font_reverse => false)
-    }
-    label.print(1)
-  end
-=end
 
   def visit_label
     label = ZebraPrinter::StandardLabel.new
@@ -617,4 +599,97 @@ class Patient < ActiveRecord::Base
     
   end
 
+  def self.total_admissions(start_date = DateTime.now, end_date = DateTime.now)
+
+    patients = Patient.find_by_sql(["SELECT client.patient_id AS client_id FROM patient client
+        INNER JOIN obs ob ON ob.person_id = client.patient_id AND ob.voided = 0 
+            AND ob.concept_id = (SELECT concept_id FROM concept_name WHERE name = 'Outcome' LIMIT 1)
+            AND value_coded = (SELECT concept_id FROM concept_name WHERE name = 'Delivered' LIMIT 1)
+        WHERE DATE(ob.obs_datetime) BETWEEN  ? AND ?", start_date, end_date]).collect{|pat| pat.client_id.to_i rescue nil}.uniq
+    patients
+    
+  end
+
+  def apgar
+    apgar1 = Observation.find(:first, :conditions => ["person_id = ? AND concept_id = ?",
+        self.id, ConceptName.find_by_name("APGAR MINUTE ONE").concept_id]).answer_string.to_i rescue "?"
+    apgar2 = Observation.find(:first, :conditions => ["person_id = ? AND concept_id = ?",
+        self.id, ConceptName.find_by_name("APGAR MINUTE FIVE").concept_id]).answer_string.to_i rescue "?"
+
+    return "(#{apgar1}, #{apgar2})"
+  end
+
+  def delivery_outcome
+    outcome = Observation.find(:first, :conditions => ["person_id = ? AND concept_id = ?",
+        self.id, ConceptName.find_by_name("BABY OUTCOME").concept_id]).answer_string rescue "?"
+
+    outcome
+  end
+
+  def discharge_outcome
+    outcome = Observation.find(:first, :conditions => ["person_id = ? AND concept_id = ?",
+        self.id, ConceptName.find_by_name("STATUS OF BABY").concept_id]).answer_string rescue ""
+    outcome = "Dead" if outcome.blank? && ((!self.delivery_outcome.match(/alive/i))) || outcome.match(/still|neo|intrauterine/i)
+    outcome
+  end
+
+  def birth_weight
+    weight = Observation.find(:first, :conditions => ["person_id = ? AND concept_id = ?",
+        self.id, ConceptName.find_by_name("BIRTH WEIGHT").concept_id]).answer_string.to_i rescue "?"
+    weight = ((weight < 10 && weight > 0) ? (weight * 1000) : weight) rescue weight
+  end
+
+  def is_dead?
+    
+    return true if ["1", "true", 1, true].include?(self.person.dead.to_s)
+    
+    died_observations = self.encounters.collect{|enc|
+      enc.observations.collect{|ob| ob.answer_string.upcase.strip rescue nil}.compact if enc.name.match(/update outcome/i)
+    }.flatten.compact.include?("PATIENT DIED") rescue false
+
+    died_observations
+  end
+
+  def died_encounter
+    Encounter.find(:last, :order => ["encounter_datetime ASC"], :joins => [:observations] ,
+      :conditions => ["encounter.voided = 0 AND encounter_type = ? AND obs.concept_id = ? AND obs.value_coded = ?",
+        EncounterType.find_by_name("UPDATE OUTCOME"), ConceptName.find_by_name("OUTCOME").concept_id,
+        ConceptName.find_by_name("PATIENT DIED").concept_id]) rescue nil
+  end
+
+  def self.total_mothers_in_range(start_date, end_date, patients)
+
+    @relationship_type_query = RelationshipType.find_by_a_is_to_b_and_b_is_to_a("Mother", "Child").id
+
+    @delivery_id = ConceptName.find_by_name("DELIVERED").concept_id
+    @lmp_id = ConceptName.find_by_name("DATE OF LAST MENSTRUAL PERIOD").concept_id
+    @fundus_id = ConceptName.find_by_name("FUNDUS").concept_id
+    @outcome_id = ConceptName.find_by_name("OUTCOME").concept_id
+    
+      
+    @lmp = "SELECT DATE_ADD(MAX(o.value_datetime), INTERVAL 1 WEEK) FROM obs o WHERE o.person_id = p.patient_id AND o.concept_id = #{@lmp_id}"
+
+    @delivery_date = "SELECT MAX(os.obs_datetime) FROM obs os WHERE os.person_id = p.patient_id
+                       AND os.concept_id = #{@outcome_id} AND os.value_coded = #{@delivery_id}"
+
+    @lmp_by_fundus = "SELECT DATE_SUB(o.obs_datetime, INTERVAL COALESCE(MAX(o.value_numeric), MAX(o.value_text)) WEEK) FROM obs o
+                        WHERE o.person_id = p.patient_id AND o.concept_id = #{@fundus_id}
+                        AND DATE(o.obs_datetime) BETWEEN '#{start_date.to_s}' AND '#{end_date.to_s}'
+    "
+
+    @delivery_week = "COALESCE(ROUND(DATEDIFF((#{@delivery_date}), COALESCE((#{@lmp}), (#{@lmp_by_fundus})))/7), '')"
+
+    Patient.find_by_sql(["SELECT p.patient_id, (#{@delivery_week}) AS weeks
+            FROM patient p WHERE patient_id IN (?)", patients])
+  end
+
+  def self.deaths(patients, start_date, end_date)
+    
+    data = Observation.find(:all, :select => ["person_id"], :conditions => ["person_id IN (?) AND value_coded = ? AND DATE(obs_datetime) BETWEEN ? AND ?",
+        patients, ConceptName.find_by_name("Patient Died").concept_id, start_date.to_date, end_date.to_date]).collect{|e| e.person_id}.uniq rescue []
+
+    data
+    
+  end  
+ 
 end

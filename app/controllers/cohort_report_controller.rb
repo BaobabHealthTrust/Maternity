@@ -31,6 +31,50 @@ class CohortReportController < ApplicationController
     render :layout => "menu"
   end
 
+  def print_birth_cohort
+    location = request.remote_ip rescue ""
+    @start_date = params[:start_date] + " " + params[:start_time]
+    @end_date = params[:end_date] + " " + params[:end_time]
+    @reportType = params[:reportType]
+    current_printer = ""
+    
+    wards = GlobalProperty.find_by_property("facility.ward.printers").property_value.split(",") rescue []
+    printers = wards.each{|ward|
+      current_printer = ward.split(":")[1] if ward.split(":")[0].upcase == location
+    } rescue []
+    
+  
+    t1 = Thread.new{
+      Kernel.system "wkhtmltopdf -T 1mm -s A4 http://" +
+        request.env["HTTP_HOST"] + "\"/cohort/birth_cohort/" +
+        "?reportType=#{@reportType}&start_date=#{@start_date}&end_date=#{@end_date}" + "\" /tmp/birth_cohort" + ".pdf \n"
+    }
+
+    file = "/tmp/birth_cohort" + ".pdf"
+    t2 = Thread.new{
+      print(file, current_printer, Time.now)
+    }
+
+    redirect_to "/cohort/cohort?reportType=#{@reportType}&start_date=#{params[:start_date]}&end_date=#{params[:end_date]}&start_time=#{params[:start_time]}&end_time=#{params[:end_time]}"
+
+  end
+
+  def print(file_name, current_printer, start_time = Time.now)
+    sleep(3)
+    if (File.exists?(file_name))
+      
+      Kernel.system "lp -o sides=two-sided-long-edge -o fitplot #{(!current_printer.blank? ? '-d ' + current_printer.to_s : "")} #{file_name}"
+
+      t3 = Thread.new{
+        sleep(10)
+        Kernel.system "rm #{file_name}"
+      }
+
+    else
+      print(file_name, current_printer, start_time) unless start_time < 5.minutes.ago
+    end
+  end
+
   def cohort_print
     # raise params.to_yaml
     @location_name = GlobalProperty.find_by_property('facility.name').property_value rescue ""
@@ -197,7 +241,6 @@ class CohortReportController < ApplicationController
   end
 
   def print_cohort
-    # raise request.env["HTTP_HOST"].to_yaml
     
     @selSelect = params[:selSelect] rescue ""
     @day =  params[:day] rescue ""
@@ -209,34 +252,39 @@ class CohortReportController < ApplicationController
     @end_date = params[:end_date] rescue ""
 
     @reportType = params[:reportType] rescue ""
+    
+    location = request.remote_ip rescue ""
+    current_printer = ""
 
-    if params
+    wards = GlobalProperty.find_by_property("facility.ward.printers").property_value.split(",") rescue []
+    
+    printers = wards.each{|ward|
+      current_printer = ward.split(":")[1] if ward.split(":")[0].upcase == location
+    } rescue []
+       
+    if @reportType.present?
       link = ""
       
       if CoreService.get_global_property_value("extended_diagnoses_report").to_s == "true"
-      link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report_extended" : "report") }" + 
-        "?start_date=#{@start_date}+#{@start_time}&end_date=#{@end_date}+#{@end_time}&reportType=#{@reportType}"
+        link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report_extended" : (@reportType.to_i == 4 ? "birth_cohort" : "report")) }" +
+          "?start_date=#{@start_date}&end_date=#{@end_date}&reportType=#{@reportType}"
       else
-	link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report" : "report") }" + 
-        "?start_date=#{@start_date}+#{@start_time}&end_date=#{@end_date}+#{@end_time}&reportType=#{@reportType}"
+        link = "/cohort/#{ (@reportType.to_i == 2 ? "diagnoses_report" : (@reportType.to_i == 4 ? "birth_cohort" : "report")) }" +
+          "?start_date=#{@start_date}&end_date=#{@end_date}&reportType=#{@reportType}"
       end
       
+      link = link.gsub(/\s+|\+/, " ")
+ 
       t1 = Thread.new{
-        # Kernel.system "htmldoc --webpage -f /tmp/output-" + session[:user_id].to_s + ".pdf \"http://" +
-        #  request.env["HTTP_HOST"] + link + "\"\n"
-
+      
         Kernel.system "wkhtmltopdf -s A4 \"http://" +
-          request.env["HTTP_HOST"] + "#{link}\" \"/tmp/output-" + session[:user_id].to_s + ".pdf\" \n"
+          request.env["HTTP_HOST"] + link.to_s + "\" /tmp/output" + ".pdf \n"
       }
-
+      puts link
+      file = "/tmp/output.pdf"
+          
       t2 = Thread.new{
-        sleep(5)
-        Kernel.system "lp /tmp/output-" + session[:user_id].to_s + ".pdf\n"
-      }
-
-      t3 = Thread.new{
-        sleep(10)
-        Kernel.system "rm /tmp/output-" + session[:user_id].to_s + ".pdf\n"
+        print(file, current_printer, Time.now)
       }
 
     end

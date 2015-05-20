@@ -782,6 +782,55 @@ class EncountersController < ApplicationController
     render :template => '/encounters/procedure_index', :layout => 'menu'
   end
 
+
+  def death_report_printable
+    @patient    = Patient.find(params[:patient_id] || session[:patient_id]) rescue nil
+    @anc_patient = ANCService::ANC.new(@patient) if @patient.present?    
+  
+    @user_name = User.find(params[:user_id] || session[:user_id]).name rescue nil 
+    @user_roles = User.find(params[:user_id] || session[:user_id]).user_roles.collect{|r| r.role}.flatten.to_s
+
+    @facility = (GlobalProperty.find_by_property("facility.name").property_value rescue "") ||
+      (Location.find(session[:facility]).name rescue "")
+    @facility_date = (session[:datetime].to_date rescue Date.today)
+
+    @patient.create_barcode
+
+    @encounters = {}
+    @died_encounter = {}
+
+    d_encounter = @patient.died_encounter
+    
+    d_encounter.observations.each{|obs|
+
+      value = nil
+
+      unless @died_encounter.has_key?("USER_NAME")
+        @died_encounter["USER_NAME"] = d_encounter.provider.name
+      end
+
+      unless @died_encounter.has_key?("USER_TITLE")
+        @died_encounter["USER_TITLE"] = d_encounter.provider.user_roles.collect{|r| r.role}.flatten.to_s
+      end
+      
+      if obs.answer_string.upcase.strip == "CURRENT FACILITY"
+        value = @facility
+      else
+        value = obs.answer_string rescue nil
+      end
+
+      if obs.concept.name.name.upcase.strip == "TIME OF DEATH" && obs.answer_string.present?
+        check_digit = (((value.split(":")[0].to_i)  > 11 ? "PM" : "AM") rescue "")
+        value += " #{check_digit}"
+      end
+
+      @died_encounter[obs.concept.name.name.upcase.strip] = value rescue nil
+      
+    } rescue nil
+    
+    render :layout => false
+  end
+
   def observations_printable
     @patient    = Patient.find(params[:patient_id] || session[:patient_id]) rescue nil
     
@@ -979,7 +1028,6 @@ class EncountersController < ApplicationController
     
     render :layout => false
   end
-
   def print_note
     # raise request.remote_ip.to_yaml
 
@@ -994,7 +1042,7 @@ class EncountersController < ApplicationController
       printers = wards.each{|ward|
         current_printer = ward.split(":")[1] if ward.split(":")[0].upcase == location
       } rescue []
-     
+
       t1 = Thread.new{
         Kernel.system "wkhtmltopdf --zoom #{zoom} -s A4 http://" +
           request.env["HTTP_HOST"] + "\"/encounters/observations_printable/" +
@@ -1012,11 +1060,51 @@ class EncountersController < ApplicationController
         Kernel.system "rm /tmp/output-" + session[:user_id].to_s + ".pdf\n"
       }
 
-    
+
     end
 
 
     redirect_to "/encounters/new/observations_print?patient_id=#{@patient.id}"+
+      (params[:ret] ? "&ret=" + params[:ret] : "") and return
+  end
+  
+  def print_death_note
+    # raise request.remote_ip.to_yaml
+
+    location = request.remote_ip rescue ""
+    @patient    = Patient.find(params[:patient_id]) rescue (Patient.find(params[:id] || params[:patient_id]) rescue (Patient.find(session[:patient_id]) rescue nil))
+    zoom = CoreService.get_global_property_value("report.zoom.percentage")/100.0 rescue 1
+    if @patient
+      current_printer = ""
+
+      wards = GlobalProperty.find_by_property("facility.ward.printers").property_value.split(",") rescue []
+
+      printers = wards.each{|ward|
+        current_printer = ward.split(":")[1] if ward.split(":")[0].upcase == location
+      } rescue []
+     
+      t1 = Thread.new{
+        Kernel.system "wkhtmltopdf --zoom 1.5 -s A4 http://" +
+          request.env["HTTP_HOST"] + "\"/encounters/death_report_printable/" +
+          @patient.patient_id.to_s + "?patient_id=#{@patient.patient_id}&user_id=#{params[:user_id]}"+ "\" /tmp/outputd-" + params[:user_id].to_s + ".pdf \n"
+      }
+
+      t2 = Thread.new{
+        sleep(5)
+        Kernel.system "lp #{(!current_printer.blank? ? '-d ' + current_printer.to_s : "")} /tmp/outputd-" +
+          params[:user_id].to_s + ".pdf\n"
+      }
+
+      t3 = Thread.new{
+        sleep(10)
+        Kernel.system "rm /tmp/outputd-" + params[:user_id].to_s + ".pdf\n"
+      }
+
+    
+    end
+
+
+    redirect_to "/encounters/new/death_report_print?patient_id=#{@patient.id}"+
       (params[:ret] ? "&ret=" + params[:ret] : "") and return
   end
 

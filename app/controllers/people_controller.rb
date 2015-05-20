@@ -4,6 +4,9 @@ class PeopleController < ApplicationController
     user =  User.find(session[:user_id])
     @password_expired = false
 
+    #in case routing has come from a report drill down, we need to delete irrelevent session variables
+    session.delete(:drill_down_data) rescue nil if session[:drill_down_data].present?
+    
     password_expiry_date = UserProperty.find_by_property_and_user_id('password_expiry_date', user.user_id).property_value.to_date rescue nil
 
     if password_expiry_date
@@ -256,7 +259,7 @@ class PeopleController < ApplicationController
       results.pre_art_number = patient.pre_art_number
       results.name = patient.name
       results.sex = patient.sex
-      results.age = patient.age
+      results.age = patient.age || person.age
       @search_results.delete_if{|x,y| x == results.national_id }
       @patients << results
 		end
@@ -282,7 +285,7 @@ class PeopleController < ApplicationController
     
       if !related_person.blank?
         
-        DDEService.create_footprint(related_person.national_id, Location.find(session[:location_id]).name) rescue nil
+        DDEService.create_footprint(related_person.national_id, "Maternity") rescue nil
 
         if params[:identifier].length != 6 and create_from_dde_server
           dde_patient = DDEService::Patient.new(related_person)
@@ -421,7 +424,7 @@ class PeopleController < ApplicationController
 
       if create_from_dde_server
         
-        DDEService.create_footprint(person.patient.national_id, Location.find(session[:location_id]).name) rescue nil
+        DDEService.create_footprint(person.patient.national_id, "Maternity") rescue nil
 
       end
       
@@ -433,7 +436,7 @@ class PeopleController < ApplicationController
     if create_from_dde_server
 
       person = ANCService.create_patient_from_dde(params)
-      DDEService.create_footprint(person.patient.national_id, Location.find(session[:location_id]).name) rescue nil
+      DDEService.create_footprint(person.patient.national_id, "Maternity") rescue nil
 
     end
    
@@ -555,7 +558,7 @@ class PeopleController < ApplicationController
   def overview
     @types = GlobalProperty.find_by_property("statistics.show_encounter_types").property_value #rescue EncounterType.all.map(&:name).join(",")
     @types = @types.split(/,/)
-    @types.delete_if{|del| del.match(/Refer|Diagnosis/i)} #removing some encounters than are wholistically not very important
+    @types.delete_if{|del| del.match(/Refer|Diagnosis|observations|update\soutcome/i)} #removing some encounters than are wholistically not very important
 
     @me = Encounter.statistics(@types, :conditions =>
         ['DATE(encounter_datetime) = DATE(NOW()) AND encounter.creator = ? AND encounter.location_id = ?',
@@ -569,7 +572,7 @@ class PeopleController < ApplicationController
 
     @ever = Encounter.statistics(@types, :conditions => ['encounter.location_id = ?', session[:location_id]])
 
-    if (CoreService.get_global_property_value("assign_serial_numbers").to_s == "true" rescue false)
+    if false #(CoreService.get_global_property_value("assign_serial_numbers").to_s == "true" rescue false)
 
       @me["BIRTH REPORTS"] = {}
       @me["BIRTH REPORTS"]["SENT"] = BirthReport.unsent_between("sent", Date.today, Date.today, User.current_user.user_id)
@@ -616,13 +619,15 @@ class PeopleController < ApplicationController
     @initial_numbers = SerialNumber.all.size
 
     if ((!params[:start_serial_number].blank? rescue false) && (!params[:end_serial_number].blank? rescue false) &&
-          (params[:start_serial_number].to_i < params[:end_serial_number].to_i) rescue false)
-      (params[:start_serial_number]..params[:end_serial_number]).each do |number|
+          (params[:start_serial_number].to_i <= params[:end_serial_number].to_i) rescue false)
+         
+      (params[:start_serial_number].to_i..params[:end_serial_number].to_i).each do |number|
+     
         snum = SerialNumber.new()
         snum.serial_number = number
         snum.creator = params[:user_id]
         snum.save if (SerialNumber.find(number).nil? rescue true)
-      end
+      end      
       @final_numbers = initial_numbers = SerialNumber.all.size
     else
     end
@@ -736,6 +741,50 @@ class PeopleController < ApplicationController
     @reports << ['/location/new?act=view_districts','View Districts']
     render :layout => false
   end
+
+  def export_birth_reports
+    #@type = file_type
+    require 'rubygems'
+    require 'fastercsv'
+    header  = ["BABY ID", "BABY NAME", "BABY DATE OF BIRTH", "BABY BIRTH WEIGHT", "MOTHER NAME", "MOTHER NATIONAL ID"]
+    csv_string = []
+
+    @encs = Encounter.find_by_sql(["SELECT ob.person_id, ob.value_numeric AS weight FROM encounter enc INNER JOIN obs ob
+      ON (DATE(enc.encounter_datetime) BETWEEN '2013-05-01' AND '2013-08-31') AND ob.encounter_id = enc.encounter_id AND enc.voided = 0 AND enc.encounter_type = ? AND ob.concept_id = ?
+      AND (ob.value_numeric BETWEEN 10 AND 2499.99999 OR ob.value_numeric < 2.4999)",
+        EncounterType.find_by_name("UPDATE OUTCOME"), ConceptName.find_by_name("BIRTH WEIGHT").concept_id])
+
+    header_added = false
+
+    @encs.each do |data|
+
+      csv_string << FasterCSV.generate do |csv|
+
+        unless header_added
+          csv << header
+          header_added = true
+        end
+
+        baby = Patient.find(data.person_id)        
+        mother = Patient.find(baby.mother.person_a) rescue nil
+        next if mother.blank?
+        mother_name = mother.person.name rescue ""        
+        weight = (data.weight.to_i < 10 ? (data.weight.to_i * 1000).to_s : data.weight) rescue data.weight
+        dob = baby.person.birthdate.strftime("%d/%b/%Y") rescue ""
+        mother_id = mother.national_id rescue ""
+
+        csv << [baby.national_id, baby.person.name, dob, weight, mother_name, mother_id]
+      end
+
+    end
+
+    send_data(csv_string.to_s,
+      :type => 'text/csv; unicode;',
+      :stream=> false,
+      :disposition => 'inline',
+      :filename => "babies_data.csv") and return
+  end
+  
   
   protected
   

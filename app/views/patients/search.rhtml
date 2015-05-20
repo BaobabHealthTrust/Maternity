@@ -34,7 +34,7 @@
 
     <script>
       var tt_cancel_destination = "/people/search?patient_id=<%= @patient.id %>&cat=<%= 
-          params[:cat] %>&gender=<%= params[:gender] %>"
+params[:cat] %>&gender=<%= params[:gender] %>"
     </script>
   </head>
   <body>
@@ -74,6 +74,12 @@
           barcodeId = "barcode";
         }
 
+        try{
+          setTimeout("__$('btnNext').innerHTML = '<span>Search or Register New Person</span>'", 100);
+        }catch(ex){
+         
+        }
+        
         barcode_element = document.getElementById(barcodeId)
 
         if (!barcode_element)
@@ -108,10 +114,9 @@
         __$("barcode").focus();
         setTimeout('focusBarcode()', 300);
       }
-
+     
       setTimeout('focusBarcode()', 300);
-
-      setTimeout("__$('btnNext').innerHTML = '<span>Search or Register New Person</span>'", 500);
+     
 
       window.setTimeout("checkForLocalBarcode()", checkForBarcodeTimeout);
       

@@ -12,27 +12,41 @@ class CohortController < ActionController::Base # < ApplicationController
   end
 
   def cohort
+
+    if params[:selQtr].present?
+      
+      day = params[:selQtr].to_s.match(/^min=(.+)&max=(.+)$/)
+			@start_date = (day ? day[1] : Date.today.strftime("%Y-%m-%d"))
+			@end_date = (day ? day[2] : Date.today.strftime("%Y-%m-%d"))
+      params[:start_date] = @start_date
+      params[:end_date] = @end_date   
+      params[:type] = "cohort"
+
+    else
     
-    @selSelect = params[:selSelect] rescue nil
-    @day =  params[:day] rescue nil
-    @selYear = params[:selYear] rescue nil
-    @selWeek = params[:selWeek] rescue nil
-    @selMonth = params[:selMonth] rescue nil
-    @selQtr = "#{params[:selQtr].gsub(/&/, "_")}" rescue nil
+      @selSelect = params[:selSelect] rescue nil
+      @day =  params[:day] rescue nil
+      @selYear = params[:selYear] rescue nil
+      @selWeek = params[:selWeek] rescue nil
+      @selMonth = params[:selMonth] rescue nil
+      @selQtr = "#{params[:selQtr].gsub(/&/, "_")}" rescue nil
 
-    @start_date = params[:start_date] rescue nil
-    @end_date = params[:end_date] rescue nil
+      @start_date = params[:start_date] rescue nil
+      @end_date = params[:end_date] rescue nil
 
-    @start_time = params[:start_time] rescue nil
-    @end_time = params[:end_time] rescue nil
-
-    @reportType = params[:reportType] rescue ""    
-
+      @start_time = params[:start_time] rescue nil
+      @end_time = params[:end_time] rescue nil
+      
+    end
+    
+    @reportType = params[:reportType] rescue ""
+   
+    
     render :layout => "menu"
   end
 
   def cohort_print
-    # raise params.to_yaml
+   
     @location_name = GlobalProperty.find_by_property('facility.name').property_value rescue ""
     
     @reportType = params[:reportType] rescue ""    
@@ -838,7 +852,23 @@ class CohortController < ActionController::Base # < ApplicationController
 
 	
   def matrix_decompose
-		@patients = Patient.find(:all, :conditions => ["patient_id IN (?)", params[:patients].split(",")]).uniq
+		@patients = Patient.find(:all, :conditions => ["patient_id IN (?)", params[:patients].split(",")]).uniq rescue [  ]
+
+    if @patients.blank? && session[:drill_down_data].present? & params[:group].present?
+
+      ids = []
+
+      if session[:drill_down_data]["#{params[:group]}"].class.to_s.match(/Array/i)
+        ids = session[:drill_down_data]["#{params[:group]}"]      
+      elsif params[:key].present?
+        ids = (session[:drill_down_data]["#{params[:group]}"]["#{params[:key].upcase.strip}"] +
+            ((session[:drill_down_data]["#{params[:group]}"]["FE_#{params[:key].gsub(/male\_/i, '').upcase.strip}"] || []) rescue []) +
+            ((session[:drill_down_data]["#{params[:group]}"]["F_#{params[:key].gsub(/male\_/i, '').upcase.strip}"] || []) rescue [])).uniq rescue []
+      end
+      @patients = Patient.find(:all, :conditions => ["patient_id IN (?)", ids]).uniq if ids.present?
+
+    end
+  
 		render :layout => false
   end
 
@@ -2016,6 +2046,238 @@ class CohortController < ActionController::Base # < ApplicationController
     render :text => babies.uniq.to_json
   end
 
+  def birth_cohort
+    
+    @quarter = params[:start_date].match(/\-07\-01/)? "3" : (params[:start_date].match(/\-01\-01/) ? "1" : (params[:end_date].match(/\-12\-31/) ? "4" : "2"))
+    
+    @system_upgrade_date = Relationship.find(:first, :order => ["date_created ASC"], :conditions => ["relationship = ?",
+        RelationshipType.find_by_a_is_to_b_and_b_is_to_a("Mother", "Child")]).date_created.to_date rescue "2013-04-20"
+
+    params[:start_date] = @system_upgrade_date.blank?? params[:start_date] : (@system_upgrade_date > params[:start_date].to_date ? @system_upgrade_date : params[:start_date])
+    
+    @total_admissions = Patient.total_admissions(params[:start_date], params[:end_date]) rescue []
+   
+    @ctotal_admissions = Patient.total_admissions(@system_upgrade_date, params[:end_date]) rescue []
+
+    @total_mothers = Patient.total_mothers_in_range(params[:start_date], params[:end_date],  @total_admissions) rescue []
+
+    @maternal_outcomes = {}
+    @maternal_outcomes["DEAD"] = Patient.deaths(@total_admissions, params[:start_date], params[:end_date])
+    @maternal_outcomes["ALIVE"] = @total_admissions - @maternal_outcomes["DEAD"]
+
+    @cmaternal_outcomes = {}
+    @cmaternal_outcomes["DEAD"] = Patient.deaths(@total_admissions, @system_upgrade_date, params[:end_date])
+    @cmaternal_outcomes["ALIVE"] = @ctotal_admissions - @cmaternal_outcomes["DEAD"]
+
+    
+    @total_delivery_counts = Relationship.twins_pull(@total_admissions, params[:start_date], params[:end_date])
+    @ctotal_delivery_counts = Relationship.twins_pull(@ctotal_admissions, @system_upgrade_date, params[:end_date])
+
+    @twins = {}
+    @twins["1"] = @total_delivery_counts.collect{|mother| mother.patient_id if mother.counter.to_i == 1}.compact.uniq
+    @twins["2"] = @total_delivery_counts.collect{|mother| mother.patient_id if mother.counter.to_i == 2}.compact.uniq
+    @twins["3"] = @total_delivery_counts.collect{|mother| mother.patient_id if mother.counter.to_i == 3}.compact.uniq
+    @twins[">3"] = @total_delivery_counts.collect{|mother| mother.patient_id if mother.counter.to_i > 3}.compact.uniq
+    @twins["Unknown"] =  @total_delivery_counts.collect{|mother| mother.patient_id if mother.counter.blank? || mother.counter.to_i < 1}.compact.uniq
+
+    @ctwins = {}
+    @ctwins["1"] = @ctotal_delivery_counts.collect{|mother| mother.patient_id if mother.counter.to_i == 1}.compact.uniq
+    @ctwins["2"] = @ctotal_delivery_counts.collect{|mother| mother.patient_id if mother.counter.to_i == 2}.compact.uniq
+    @ctwins["3"] = @ctotal_delivery_counts.collect{|mother| mother.patient_id if mother.counter.to_i == 3}.compact.uniq
+    @ctwins[">3"] = @ctotal_delivery_counts.collect{|mother| mother.patient_id if mother.counter.to_i > 3}.compact.uniq
+    @ctwins["Unknown"] = @ctotal_delivery_counts.collect{|mother| mother.patient_id if mother.counter.blank? || mother.counter.to_i < 1}.compact.uniq
+
+    @ctotal_mothers = Patient.total_mothers_in_range(@system_upgrade_date, params[:end_date],  @ctotal_admissions) rescue []
+
+    @total_babies = Relationship.total_babies_in_range(params[:start_date], params[:end_date]) rescue []
+    
+    @ctotal_babies = Relationship.total_babies_in_range(@system_upgrade_date, params[:end_date]) rescue []
+    
+    @total_babies_born = @total_babies.collect{|baby| baby.person_id rescue nil}.compact rescue []
+    @ctotal_babies_born = @ctotal_babies.collect{|baby| baby.person_id rescue nil}.compact rescue []
+  
+    @delivery_weeks = {}
+    @delivery_weeks["PRE_TERM"] = @total_mothers.collect{|mother| mother.patient_id if ((mother.weeks.present? && mother.weeks.to_i < 34 && mother.weeks.to_i > 1)rescue false)}.compact.uniq
+    @delivery_weeks["NEAR_TERM"] = @total_mothers.collect{|mother| mother.patient_id if ((mother.weeks.present? && mother.weeks.to_i >= 34 && mother.weeks.to_i <= 37)rescue false)}.compact.uniq
+    @delivery_weeks["POST_TERM"] = @total_mothers.collect{|mother| mother.patient_id if ((mother.weeks.present? && mother.weeks.to_i > 42)rescue false)}.compact.uniq
+    @delivery_weeks["FULL_TERM"] = @total_mothers.collect{|mother| mother.patient_id if ((mother.weeks.present? && mother.weeks.to_i >= 38 && mother.weeks.to_i <= 42)rescue false)}.compact.uniq
+    @delivery_weeks["UNKNOWN"] = @total_mothers.collect{|mother| mother.patient_id if mother.weeks.blank? || mother.weeks.to_i <= 1}.compact.uniq
+
+    @cdelivery_weeks = {}
+    @cdelivery_weeks["PRE_TERM"] = @ctotal_mothers.collect{|mother| mother.patient_id if ((mother.weeks.present? && mother.weeks.to_i < 34)rescue false)}.compact.uniq
+    @cdelivery_weeks["NEAR_TERM"] = @ctotal_mothers.collect{|mother| mother.patient_id if ((mother.weeks.present? && mother.weeks.to_i >= 34 && mother.weeks.to_i <= 37)rescue false)}.compact.uniq
+    @cdelivery_weeks["POST_TERM"] = @ctotal_mothers.collect{|mother| mother.patient_id if ((mother.weeks.present? && mother.weeks.to_i > 42)rescue false)}.compact.uniq
+    @cdelivery_weeks["FULL_TERM"] = @ctotal_mothers.collect{|mother| mother.patient_id if ((mother.weeks.present? && mother.weeks.to_i >= 38 && mother.weeks.to_i <= 42)rescue false)}.compact.uniq
+    @cdelivery_weeks["UNKNOWN"] = @ctotal_mothers.collect{|mother| mother.patient_id if mother.weeks.blank?}.compact.uniq
+
+
+    @birth_report_status = {}
+    @birth_report_status["SENT"] = @total_babies.collect{|baby| baby.person_id if ((baby.br_status.present? && baby.br_status.match(/SENT/i))rescue false)}.compact.uniq
+    @birth_report_status["PENDING"] = @total_babies.collect{|baby| baby.person_id if ((baby.br_status.present? && baby.br_status.match(/PENDING/i))rescue false)}.compact.uniq
+    @birth_report_status["UNATTEMPTED"] = @total_babies.collect{|baby| baby.person_id if ((baby.br_status.present? && baby.br_status.match(/UNATTEMPTED/i))rescue false)}.compact.uniq
+    @birth_report_status["UNKNOWN"] = @total_babies.collect{|baby| baby.person_id if ((baby.br_status.present? && baby.br_status.match(/UNKNOWN/i))rescue false)}.compact.uniq
+
+    @cbirth_report_status = {}
+    @cbirth_report_status["SENT"] = @ctotal_babies.collect{|baby| baby.person_id if ((baby.br_status.present? && baby.br_status.match(/SENT/i))rescue false)}.compact.uniq
+    @cbirth_report_status["PENDING"] = @ctotal_babies.collect{|baby| baby.person_id if ((baby.br_status.present? && baby.br_status.match(/PENDING/i))rescue false)}.compact.uniq
+    @cbirth_report_status["UNATTEMPTED"] = @ctotal_babies.collect{|baby| baby.person_id if ((baby.br_status.present? && baby.br_status.match(/UNATTEMPTED/i))rescue false)}.compact.uniq
+    @cbirth_report_status["UNKNOWN"] = @ctotal_babies.collect{|baby| baby.person_id if ((baby.br_status.present? && baby.br_status.match(/UNKNOWN/i))rescue false)}.compact.uniq
+
+    @gender = {}
+    @gender["MALES"] = @total_babies.collect{|baby| baby.person_id if !baby.gender.match(/F/i)}.compact.uniq
+    @gender["FEMALES"] = @total_babies.collect{|baby| baby.person_id if baby.gender.match(/F/i)}.compact.uniq
+    @cgender = {}
+    @cgender["MALES"] = @ctotal_babies.collect{|baby| baby.person_id if !baby.gender.match(/F/i)}.compact.uniq
+    @cgender["FEMALES"] = @ctotal_babies.collect{|baby| baby.person_id if baby.gender.match(/F/i)}.compact.uniq
+
+    @apgar1 = {}
+    @apgar2 = {}
+    @capgar1 = {}
+    @capgar2 = {}
+    
+    @apgar1["FE_LOW"] = @total_babies.collect{|baby| baby.person_id if baby.apgar.present? && baby.apgar.to_i <= 3 && baby.gender.match(/F/i)}.compact.uniq
+    @apgar1["FE_FAIRLY_LOW"] = @total_babies.collect{|baby| baby.person_id if baby.apgar.present? && baby.apgar.to_i > 3 && baby.apgar.to_i < 7 && baby.gender.match(/F/i)}.compact.uniq
+    @apgar1["FE_NORMAL"] = @total_babies.collect{|baby| baby.person_id if baby.apgar.present? && baby.apgar.to_i >= 7 && baby.gender.match(/F/i)}.compact.uniq
+    @apgar1["FE_UNKNOWN"] = (@gender["FEMALES"] - (@apgar1["FE_LOW"] + @apgar1["FE_FAIRLY_LOW"] + @apgar1["FE_NORMAL"] ))
+
+    @apgar2["FE_LOW"] = @total_babies.collect{|baby| baby.person_id if  baby.apgar2.present? && baby.apgar2.to_i <= 3 && baby.gender.match(/F/i)}.compact.uniq
+    @apgar2["FE_FAIRLY_LOW"] = @total_babies.collect{|baby| baby.person_id if baby.apgar2.present? && baby.apgar2.to_i > 3 && baby.apgar2.to_i < 7 && baby.gender.match(/F/i)}.compact.uniq
+    @apgar2["FE_NORMAL"] = @total_babies.collect{|baby| baby.person_id if baby.apgar2.present? && baby.apgar2.to_i >= 7 && baby.gender.match(/F/i)}.compact.uniq
+    @apgar2["FE_UNKNOWN"] = (@gender["FEMALES"] - (@apgar2["FE_NORMAL"] + @apgar2["FE_FAIRLY_LOW"] + @apgar2["FE_LOW"]))
+
+    @apgar1["MALE_LOW"] = @total_babies.collect{|baby| baby.person_id if baby.apgar.present? && baby.apgar.to_i <= 3 && !baby.gender.match(/F/i)}.compact.uniq
+    @apgar1["MALE_FAIRLY_LOW"] = @total_babies.collect{|baby| baby.person_id if  baby.apgar.present? && baby.apgar.to_i > 3 && baby.apgar.to_i < 7 && !baby.gender.match(/F/i)}.compact.uniq
+    @apgar1["MALE_NORMAL"] = @total_babies.collect{|baby| baby.person_id if  baby.apgar.present? && baby.apgar.to_i >= 7 && !baby.gender.match(/F/i)}.compact.uniq
+    @apgar1["MALE_UNKNOWN"] = (@gender["MALES"] - (@apgar1["MALE_NORMAL"] + @apgar1["MALE_FAIRLY_LOW"] + @apgar1["MALE_LOW"]))
+
+    @apgar2["MALE_LOW"] = @total_babies.collect{|baby| baby.person_id if baby.apgar2.present? && baby.apgar2.to_i <= 3 && !baby.gender.match(/F/i)}.compact.uniq
+    @apgar2["MALE_FAIRLY_LOW"] = @total_babies.collect{|baby| baby.person_id if baby.apgar2.present? && baby.apgar2.to_i > 3 && baby.apgar2.to_i < 7 && !baby.gender.match(/F/i)}.compact.uniq
+    @apgar2["MALE_NORMAL"] = @total_babies.collect{|baby| baby.person_id if baby.apgar2.present? && baby.apgar2.to_i >= 7 && !baby.gender.match(/F/i)}.compact.uniq
+    @apgar2["MALE_UNKNOWN"] = (@gender["MALES"]  - (@apgar2["MALE_LOW"] + @apgar2["MALE_FAIRLY_LOW"] + @apgar2["MALE_NORMAL"]))
+
+    # for cumulative totals
+    @capgar1["FE_LOW"] = @ctotal_babies.collect{|baby| baby.person_id if baby.apgar.present? && baby.apgar.to_i <= 3 && baby.gender.match(/F/i)}.compact.uniq
+    @capgar1["FE_FAIRLY_LOW"] = @ctotal_babies.collect{|baby| baby.person_id if baby.apgar.present? && baby.apgar.to_i > 3 && baby.apgar.to_i < 7 && baby.gender.match(/F/i)}.compact.uniq
+    @capgar1["FE_NORMAL"] = @ctotal_babies.collect{|baby| baby.person_id if baby.apgar.present? && baby.apgar.to_i >= 7 && baby.gender.match(/F/i)}.compact.uniq
+    @capgar1["FE_UNKNOWN"] = (@cgender["FEMALES"] - (@capgar1["FE_LOW"] + @capgar1["FE_FAIRLY_LOW"] + @capgar1["FE_NORMAL"] ))
+
+    @capgar2["FE_LOW"] = @ctotal_babies.collect{|baby| baby.person_id if  baby.apgar2.present? && baby.apgar2.to_i <= 3 && baby.gender.match(/F/i)}.compact.uniq
+    @capgar2["FE_FAIRLY_LOW"] = @ctotal_babies.collect{|baby| baby.person_id if baby.apgar2.present? && baby.apgar2.to_i > 3 && baby.apgar2.to_i < 7 && baby.gender.match(/F/i)}.compact.uniq
+    @capgar2["FE_NORMAL"] = @ctotal_babies.collect{|baby| baby.person_id if baby.apgar2.present? && baby.apgar2.to_i >= 7 && baby.gender.match(/F/i)}.compact.uniq
+    @capgar2["FE_UNKNOWN"] = (@cgender["FEMALES"] - (@capgar2["FE_NORMAL"] + @capgar2["FE_FAIRLY_LOW"] + @capgar2["FE_LOW"]))
+
+    @capgar1["MALE_LOW"] = @ctotal_babies.collect{|baby| baby.person_id if baby.apgar.present? && baby.apgar.to_i <= 3 && !baby.gender.match(/F/i)}.compact.uniq
+    @capgar1["MALE_FAIRLY_LOW"] = @ctotal_babies.collect{|baby| baby.person_id if  baby.apgar.present? && baby.apgar.to_i > 3 && baby.apgar.to_i < 7 && !baby.gender.match(/F/i)}.compact.uniq
+    @capgar1["MALE_NORMAL"] = @ctotal_babies.collect{|baby| baby.person_id if  baby.apgar.present? && baby.apgar.to_i >= 7 && !baby.gender.match(/F/i)}.compact.uniq
+    @capgar1["MALE_UNKNOWN"] = (@cgender["MALES"] - (@capgar1["MALE_NORMAL"] + @capgar1["MALE_FAIRLY_LOW"] + @capgar1["MALE_LOW"]))
+
+    @capgar2["MALE_LOW"] = @ctotal_babies.collect{|baby| baby.person_id if baby.apgar2.present? && baby.apgar2.to_i <= 3 && !baby.gender.match(/F/i)}.compact.uniq
+    @capgar2["MALE_FAIRLY_LOW"] = @ctotal_babies.collect{|baby| baby.person_id if baby.apgar2.present? && baby.apgar2.to_i > 3 && baby.apgar2.to_i < 7 && !baby.gender.match(/F/i)}.compact.uniq
+    @capgar2["MALE_NORMAL"] = @ctotal_babies.collect{|baby| baby.person_id if baby.apgar2.present? && baby.apgar2.to_i >= 7 && !baby.gender.match(/F/i)}.compact.uniq
+    @capgar2["MALE_UNKNOWN"] = (@cgender["MALES"]  - (@capgar2["MALE_LOW"] + @capgar2["MALE_FAIRLY_LOW"] + @capgar2["MALE_NORMAL"]))
+    
+    @delivery_mode = {}
+    @delivery_mode["MALE_ALIVE"] = @total_babies.collect{|baby| baby.person_id if baby.delivery_outcome.match(/Alive/i) && !baby.gender.match(/F/i)}.compact.uniq
+    @delivery_mode["MALE_NEO"] = @total_babies.collect{|baby| baby.person_id if baby.delivery_outcome.match(/Neonatal death/i) && !baby.gender.match(/F/i)}.compact.uniq
+    @delivery_mode["MALE_FRESH"] = @total_babies.collect{|baby| baby.person_id if baby.delivery_outcome.match(/Fresh still birth/i) && !baby.gender.match(/F/i)}.compact.uniq
+    @delivery_mode["MALE_MAC"] = @total_babies.collect{|baby| baby.person_id if baby.delivery_outcome.match(/Macerated still birth/i) && !baby.gender.match(/F/i)}.compact.uniq
+
+    @delivery_mode["F_ALIVE"] = @total_babies.collect{|baby| baby.person_id if baby.delivery_outcome.match(/Alive/i) && baby.gender.match(/F/i)}.compact.uniq
+    @delivery_mode["F_NEO"] = @total_babies.collect{|baby| baby.person_id if baby.delivery_outcome.match(/Neonatal death/i) && baby.gender.match(/F/i)}.compact.uniq
+    @delivery_mode["F_FRESH"] = @total_babies.collect{|baby| baby.person_id if baby.delivery_outcome.match(/Fresh still birth/i) && baby.gender.match(/F/i)}.compact.uniq
+    @delivery_mode["F_MAC"] = @total_babies.collect{|baby| baby.person_id if baby.delivery_outcome.match(/Macerated still birth/i) && baby.gender.match(/F/i)}.compact.uniq
+
+    #cumulative delivery outcomes
+    @cdelivery_mode = {}
+    @cdelivery_mode["MALE_ALIVE"] = @ctotal_babies.collect{|baby| baby.person_id if baby.delivery_outcome.match(/Alive/i) && !baby.gender.match(/F/i)}.compact.uniq
+    @cdelivery_mode["MALE_NEO"] = @ctotal_babies.collect{|baby| baby.person_id if baby.delivery_outcome.match(/Neonatal death/i) && !baby.gender.match(/F/i)}.compact.uniq
+    @cdelivery_mode["MALE_FRESH"] = @ctotal_babies.collect{|baby| baby.person_id if baby.delivery_outcome.match(/Fresh still birth/i) && !baby.gender.match(/F/i)}.compact.uniq
+    @cdelivery_mode["MALE_MAC"] = @ctotal_babies.collect{|baby| baby.person_id if baby.delivery_outcome.match(/Macerated still birth/i) && !baby.gender.match(/F/i)}.compact.uniq
+
+    @cdelivery_mode["F_ALIVE"] = @ctotal_babies.collect{|baby| baby.person_id if baby.delivery_outcome.match(/Alive/i) && baby.gender.match(/F/i)}.compact.uniq
+    @cdelivery_mode["F_NEO"] = @ctotal_babies.collect{|baby| baby.person_id if baby.delivery_outcome.match(/Neonatal death/i) && baby.gender.match(/F/i)}.compact.uniq
+    @cdelivery_mode["F_FRESH"] = @ctotal_babies.collect{|baby| baby.person_id if baby.delivery_outcome.match(/Fresh still birth/i) && baby.gender.match(/F/i)}.compact.uniq
+    @cdelivery_mode["F_MAC"] = @ctotal_babies.collect{|baby| baby.person_id if baby.delivery_outcome.match(/Macerated still birth/i) && baby.gender.match(/F/i)}.compact.uniq
+
+    
+    @discharge_outcome = {}
+    @discharge_outcome["MALE_ALIVE"] = @total_babies.collect{|baby| baby.person_id if (baby.discharge_outcome.match(/Alive/i) rescue false) && !baby.gender.match(/F/i)}.compact.uniq
+    @discharge_outcome["MALE_DEAD"] = @total_babies.collect{|baby| baby.person_id if (!baby.delivery_outcome.match(/Alive/i)) && !baby.gender.match(/F/i)}.compact.uniq
+    @discharge_outcome["MALE_STILL"] = @delivery_mode["MALE_FRESH"] + @delivery_mode["MALE_MAC"]
+    @discharge_outcome["MALE_NEO"] = @delivery_mode["MALE_NEO"]
+    @discharge_outcome["MALE_NOT_DISCHARGED"] = (@gender["MALES"] - (@discharge_outcome["MALE_ALIVE"] + @discharge_outcome["MALE_DEAD"])).uniq
+    
+    @discharge_outcome["F_ALIVE"] = @total_babies.collect{|baby| baby.person_id if (baby.discharge_outcome.match(/Alive/i) rescue false) && baby.gender.match(/F/i)}.compact.uniq
+    @discharge_outcome["F_DEAD"] = @total_babies.collect{|baby| baby.person_id if (!baby.delivery_outcome.match(/Alive/i)) && baby.gender.match(/F/i)}.compact.uniq
+    @discharge_outcome["F_STILL"] = @delivery_mode["F_FRESH"] + @delivery_mode["F_MAC"]
+    @discharge_outcome["F_NEO"] = @delivery_mode["F_NEO"]
+    @discharge_outcome["F_NOT_DISCHARGED"] = (@gender["FEMALES"] - (@discharge_outcome["F_ALIVE"] + @discharge_outcome["F_DEAD"])).uniq
+
+    #cumulative discharges
+    @cdischarge_outcome = {}
+    @cdischarge_outcome["MALE_ALIVE"] = @ctotal_babies.collect{|baby| baby.person_id if (baby.discharge_outcome.match(/Alive/i) rescue false) && !baby.gender.match(/F/i)}.compact.uniq
+    @cdischarge_outcome["MALE_DEAD"] = @ctotal_babies.collect{|baby| baby.person_id if (!baby.delivery_outcome.match(/Alive/i)) && !baby.gender.match(/F/i)}.compact.uniq
+    @cdischarge_outcome["MALE_STILL"] = @cdelivery_mode["MALE_FRESH"] + @cdelivery_mode["MALE_MAC"]
+    @cdischarge_outcome["MALE_NEO"] = @cdelivery_mode["MALE_NEO"]
+    @cdischarge_outcome["MALE_NOT_DISCHARGED"] = (@cgender["MALES"] - (@cdischarge_outcome["MALE_ALIVE"] + @cdischarge_outcome["MALE_DEAD"])).uniq
+
+    @cdischarge_outcome["F_ALIVE"] = @ctotal_babies.collect{|baby| baby.person_id if (baby.discharge_outcome.match(/Alive/i) rescue false) && baby.gender.match(/F/i)}.compact.uniq
+    @cdischarge_outcome["F_DEAD"] = @ctotal_babies.collect{|baby| baby.person_id if (!baby.delivery_outcome.match(/Alive/i)) && baby.gender.match(/F/i)}.compact.uniq
+    @cdischarge_outcome["F_STILL"] = @cdelivery_mode["F_FRESH"] + @cdelivery_mode["F_MAC"]
+    @cdischarge_outcome["F_NEO"] = @cdelivery_mode["F_NEO"]
+    @cdischarge_outcome["F_NOT_DISCHARGED"] = (@cgender["FEMALES"] - (@cdischarge_outcome["F_ALIVE"] + @cdischarge_outcome["F_DEAD"])).uniq
+    
+    @weights = {}
+    @weights["MALE_LOW"] = @total_babies.collect{|baby| baby.person_id if ((baby.birth_weight.to_i != 0 && baby.birth_weight.to_i < 2500) rescue false) && !baby.gender.match(/F/i)}.compact.uniq
+    @weights["MALE_NORMAL"] = @total_babies.collect{|baby| baby.person_id if ((baby.birth_weight.to_i >= 2500 && baby.birth_weight.to_i <= 4500) rescue false) && !baby.gender.match(/F/i)}.compact.uniq
+    @weights["MALE_HIGH"] = @total_babies.collect{|baby| baby.person_id if ((baby.birth_weight.to_i > 4500) rescue false) && !baby.gender.match(/F/i)}.compact.uniq
+    @weights["MALE_UNKNOWN"] =  (@gender["MALES"] - (@weights["MALE_LOW"] + @weights["MALE_NORMAL"] + @weights["MALE_HIGH"])).uniq
+
+    @weights["FE_LOW"] = @total_babies.collect{|baby| baby.person_id if ((baby.birth_weight.to_i != 0 && baby.birth_weight.to_i < 2500) rescue false) && baby.gender.match(/F/i)}.compact.uniq
+    @weights["FE_NORMAL"] = @total_babies.collect{|baby| baby.person_id if ((baby.birth_weight.to_i >= 2500 && baby.birth_weight.to_i <= 4500) rescue false) && baby.gender.match(/F/i)}.compact.uniq
+    @weights["FE_HIGH"] = @total_babies.collect{|baby| baby.person_id if ((baby.birth_weight.to_i > 4500) rescue false) && baby.gender.match(/F/i)}.compact.uniq
+    @weights["FE_UNKNOWN"] = (@gender["FEMALES"] - (@weights["FE_LOW"] + @weights["FE_NORMAL"] + @weights["FE_HIGH"])).uniq
+
+    #weight for cumulative outcomes
+    @cweights = {}
+    @cweights["MALE_LOW"] = @ctotal_babies.collect{|baby| baby.person_id if ((baby.birth_weight.to_i != 0 && baby.birth_weight.to_i < 2500) rescue false) && !baby.gender.match(/F/i)}.compact.uniq
+    @cweights["MALE_NORMAL"] = @ctotal_babies.collect{|baby| baby.person_id if ((baby.birth_weight.to_i >= 2500 && baby.birth_weight.to_i <= 4500) rescue false) && !baby.gender.match(/F/i)}.compact.uniq
+    @cweights["MALE_HIGH"] = @ctotal_babies.collect{|baby| baby.person_id if ((baby.birth_weight.to_i > 4500) rescue false) && !baby.gender.match(/F/i)}.compact.uniq
+    @cweights["MALE_UNKNOWN"] =  (@cgender["MALES"] - (@cweights["MALE_LOW"] + @cweights["MALE_NORMAL"] + @cweights["MALE_HIGH"])).uniq
+
+    @cweights["FE_LOW"] = @ctotal_babies.collect{|baby| baby.person_id if ((baby.birth_weight.to_i != 0 && baby.birth_weight.to_i < 2500) rescue false) && baby.gender.match(/F/i)}.compact.uniq
+    @cweights["FE_NORMAL"] = @ctotal_babies.collect{|baby| baby.person_id if ((baby.birth_weight.to_i >= 2500 && baby.birth_weight.to_i <= 4500) rescue false) && baby.gender.match(/F/i)}.compact.uniq
+    @cweights["FE_HIGH"] = @ctotal_babies.collect{|baby| baby.person_id if ((baby.birth_weight.to_i > 4500) rescue false) && baby.gender.match(/F/i)}.compact.uniq
+    @cweights["FE_UNKNOWN"] = (@cgender["FEMALES"] - (@cweights["FE_LOW"] + @cweights["FE_NORMAL"] + @cweights["FE_HIGH"])).uniq
+    
+    # for the report drill down
+    result = {}
+    result["discharges"] = @discharge_outcome
+    result["deliveries"] = @delivery_mode
+    result["gender"] = @gender
+    result["admissions"] = @total_admissions
+    result["apgar1"] = @apgar1
+    result["apgar2"] = @apgar2
+    result["total_babies_born"] = @total_babies_born
+    result["birth_report_status"] = @birth_report_status
+    result["delivery_weeks"] = @delivery_weeks
+
+    #cumulative figures
+    result["cdischarges"] = @cdischarge_outcome
+    result["cdeliveries"] = @cdelivery_mode
+    result["cgender"] = @cgender
+    result["cadmissions"] = @ctotal_admissions
+    result["capgar1"] = @capgar1
+    result["capgar2"] = @capgar2
+    result["ctotal_babies_born"] = @ctotal_babies_born
+    result["cbirth_report_status"] = @cbirth_report_status
+    result["cdelivery_weeks"] = @cdelivery_weeks
+
+    session[:drill_down_data] = result
+    
+    render :layout => false
+  end
+
   def print_csv
     
     csv_arr = params["print_string"].split(",,")
@@ -2032,7 +2294,7 @@ class CohortController < ActionController::Base # < ApplicationController
       :type => 'text/csv; charset=utf-8;',
       :stream=> false,
       :disposition => 'inline',
-      :filename => "babies_matrix.csv") and return   
+      :filename => "babies_matrix.csv") and return
   end
 
 end
