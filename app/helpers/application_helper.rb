@@ -51,7 +51,7 @@ module ApplicationHelper
   end
   
   def welcome_message
-    "Enter your user information. <span style='font-size:0.6em;float:right'>(Version: #{MATEME_VERSION}#{' ' + MATEME_SETTINGS['installation'] if MATEME_SETTINGS}, #{File.ctime(File.join(RAILS_ROOT, 'config', 'environment.rb')).strftime('%d-%b-%Y')})</span>"
+    "Enter your user information. <div style='font-size:0.6em;float:right; margin-right: 20px;'>(Version: #{MATEME_VERSION}#{' ' + MATEME_SETTINGS['installation'] if MATEME_SETTINGS}, #{File.ctime(File.join(RAILS_ROOT, 'config', 'environment.rb')).strftime('%d-%b-%Y')})</div>"
   end
 
    def qwerty_or_abc_keyboard

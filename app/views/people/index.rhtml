@@ -5,18 +5,22 @@
 
 <div style="text-align:center;margin:10px;">
   <!--form id='barcodeForm' action="/people/search">
-  <%= text_field_tag :identifier, '', {:id => 'barcode', :class => 'touchscreenTextInput' } %>
+  <%= text_field_tag :identifier, '', {:id => 'barcode', :class => 'touchscreenTextInput'} %>
   <%= submit_tag "Submit", :style => "display:none" %>
       <div style="color:gray">scan a barcode</div>
     </form-->
 
-  <form id = 'home' action=''>
+  <form id='home' action=''>
     <table cellpadding=10>
       <tr>
         <th colspan=2>Home Page</th>
       </tr>
       <h1 id='project_name'>
-        <div style="font-size: 0.6em; margin-top: 12px; color: #6281A7;">maternity</div>
+        <div style="margin-top: 15px; margin-bottom: -15px;">
+          <span style="font-size: 0.6em; color: #6281A7;">maternity</span>
+          <br/>
+          <span style="font-size: 12px; font-style: italic; color: #333;"><%= MATEME_VERSION %></span>
+        </div>
       </h1>
 
       <div id="facility"><%= @facility %></div>
@@ -29,22 +33,22 @@
         <option value='/people/reports'>Reports</option>
 
         <% if session[:user].admin? || session[:user][:username] == "eds" %>
-          <option value='/people/admin'>Administration</option>
-          <option value='/people/serial_numbers' >Serial Numbers</option>
+            <option value='/people/admin'>Administration</option>
+            <option value='/people/serial_numbers'>Serial Numbers</option>
         <% end %>
-          
+
       </select>
       <select id="links">
         <option value='/logout'>Logout</option>
         <option value='/people/search?cat=mother&gender=F' ttSize="320px">Find or Register Client</option>
         <option value='<%= ((session[:datetime].to_date rescue '') != '' ?
-                    "/people/reset_datetime" : "/people/set_datetime") %>'  ttSize="160px">
+                "/people/reset_datetime" : "/people/set_datetime") %>' ttSize="160px">
           <%= ((session[:datetime].to_date rescue '') != '' ? "Reset Date" : "Set Date") %></option>
         <option value='/location?from=people' ttSize="200px">New Location</option>
       </select>
       <tr>
         <td align='center'>
-          <input type='submit' value='Finish' />
+          <input type='submit' value='Finish'/>
         </td>
       </tr>
     </table>
@@ -77,24 +81,24 @@
 
     <button id="set_date_button" class="button green"
             onclick="window.location = '<%= ((session[:datetime].to_date.strftime("%Y-%m-%d") rescue "#{Date.today.strftime("%Y-%m-%d")}") != "#{Date.today.strftime("%Y-%m-%d")}" ?
-      "/people/reset_datetime" : "/people/set_datetime") %>'" style="min-width:480px;">
+        "/people/reset_datetime" : "/people/set_datetime") %>'" style="min-width:480px;">
       <span><%= ((session[:datetime].to_date.strftime("%Y-%m-%d") rescue "#{Date.today.strftime("%Y-%m-%d")}") != "#{Date.today.strftime("%Y-%m-%d")}" ? "Reset Date" : "Set Date") %></span>
     </button>
 
-  <% if @super_user%>
+  <% if @super_user %>
           <button id="admin_button" class="button green"  style="min-width:480px;"
                   onclick="window.location = '/admin'"><span>Administration</span>
           </button>
-  <%end%>
+  <% end %>
   <!-- <button id="find_or_register_by_identifier_button" class="button green" onclick="window.location = '/people/identifiers'"><span>Find patient by identifier</span></button> -->
   <!-- TODO: need to show current date
        TODO: need set date/reset date button
        TODO: need reports button
        TODO: need summary to be adjusted based on visit? -->
   <!--table style="margin-left:50px;margin-top:20px;background:#ddddff;width:380px;">
-  <% Encounter.count_by_type_for_date(Date.today).each do |type,total|
-    type = "Reception - patients seen" if type == "REGISTRATION"
-    type = "patients referred to other clinics" if type == "REFERRED" %>
+  <% Encounter.count_by_type_for_date(Date.today).each do |type, total|
+  type = "Reception - patients seen" if type == "REGISTRATION"
+  type = "patients referred to other clinics" if type == "REFERRED" %>
           <tr>
             <td><%= type.upcase %>:</td>
             <td><strong><%= total %></strong></td>
