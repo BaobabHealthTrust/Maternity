@@ -49,10 +49,13 @@ module CohortHelper
   def age_limit
     Time.now.year - 1890
   end
-  
+
+=begin
   def welcome_message
-    "Enter your user information. <span style='font-size:0.6em;float:right'>(Version: #{MATEME_VERSION}#{' ' + MATEME_SETTINGS['installation'] if MATEME_SETTINGS}, #{File.ctime(File.join(RAILS_ROOT, 'config', 'environment.rb')).strftime('%d-%b-%Y')})&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>"
-  end
+
+    "Enter your user information. <div style='font-size:0.6em;float:right; margin-right: 30px;'>(Version: #{MATEME_VERSION}#{' ' + MATEME_SETTINGS['installation'] if MATEME_SETTINGS}, #{File.ctime(File.join(RAILS_ROOT, 'config', 'environment.rb')).strftime('%d-%b-%Y')})</div>"
+	end
+=end
 
    def qwerty_or_abc_keyboard
     abc = UserProperty.find_by_property_and_user_id('keyboard',session[:user_id]).property_value == 'abc' rescue false
