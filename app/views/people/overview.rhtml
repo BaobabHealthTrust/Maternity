@@ -87,13 +87,13 @@
 
           <%end%>
 
-          <td><%= @me["BIRTH REPORTS"]["#{type.upcase}"].present?? @me["BIRTH REPORTS"]["#{type.upcase}"].to_i : @me[type].to_i %></td>
+          <td><%= @me["BIRTH REPORTS"] and @me["BIRTH REPORTS"]["#{type.upcase}"].present? ? @me["BIRTH REPORTS"]["#{type.upcase}"].to_i : @me[type].to_i %></td>
 
-          <td><%= @today["BIRTH REPORTS"]["#{type.upcase}"].present?? @today["BIRTH REPORTS"]["#{type.upcase}"].to_i : @today[type].to_i %></td>
+          <td><%= @today["BIRTH REPORTS"] and @today["BIRTH REPORTS"]["#{type.upcase}"].present? ? @today["BIRTH REPORTS"]["#{type.upcase}"].to_i : @today[type].to_i %></td>
 
-          <td><%= @year["BIRTH REPORTS"]["#{type.upcase}"].present?? @year["BIRTH REPORTS"]["#{type.upcase}"].to_i : @year[type].to_i %></td>
+          <td><%= @year["BIRTH REPORTS"] and @year["BIRTH REPORTS"]["#{type.upcase}"].present? ? @year["BIRTH REPORTS"]["#{type.upcase}"].to_i : @year[type].to_i %></td>
 
-          <td><%= @ever["BIRTH REPORTS"]["#{type.upcase}"].present?? @ever["BIRTH REPORTS"]["#{type.upcase}"].to_i : @ever[type].to_i %></td>
+          <td><%= @ever["BIRTH REPORTS"] and @ever["BIRTH REPORTS"]["#{type.upcase}"].present? ? @ever["BIRTH REPORTS"]["#{type.upcase}"].to_i : @ever[type].to_i %></td>
 
         </tr>
 

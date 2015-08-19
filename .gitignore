@@ -17,3 +17,4 @@ nbproject
 vendor/plugins/barcode-generator/
 public/images/patient_id.png
 *.lock
+.idea/
