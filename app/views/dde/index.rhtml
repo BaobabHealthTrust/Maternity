@@ -1,0 +1,223 @@
+<html>
+<head>
+  <title>Clinic Index</title>
+  <!--script type="text/javascript" language="javascript" src="/javascripts/dashboard.js" ></script-->
+  <script language="javascript" type="text/javascript" src="/touchscreentoolkit/lib/javascripts/touchScreenToolkit.js" defer></script>
+</head>
+<body>
+<%#= javascript_include_tag "barcode" %>
+<!--script type="text/javascript">
+  tt_cancel_destination = '/logout';  
+</script-->
+
+<div style="text-align:center;margin:10px;">
+  <!--form id='barcodeForm' action="/dde/search">
+  <%= text_field_tag :identifier, '', {:id => 'barcode', :class => 'touchscreenTextInput'} %>
+  <%= submit_tag "Submit", :style => "display:none" %>
+      <div style="color:gray">scan a barcode</div>
+    </form-->
+
+  <form id='home' action=''>
+    <table cellpadding=10>
+      <tr>
+        <th colspan=2>Home Page</th>
+      </tr>
+      <h1 id='project_name'>
+        <div style="margin-top: 15px; margin-bottom: -15px;">
+          <span style="font-size: 0.6em; color: #6281A7;">maternity</span>
+          <br/>
+          <span style="font-size: 12px; font-style: italic; color: #333;"><%= MATEME_VERSION %></span>
+        </div>
+      </h1>
+
+      <div id="facility"><%= @facility %></div>
+      <div id="location"><%= @location %></div>
+      <div id="date"><%= @date %></div>
+      <div id="user"><%= @user %></div>
+
+      <select id="tabs">
+        <option value='/people/overview'>Overview</option>
+        <option value='/people/reports'>Reports</option>
+
+        <% if session[:user].admin? || session[:user][:username] == "eds" %>
+            <option value='/people/admin'>Administration</option>
+            <option value='/people/serial_numbers'>Serial Numbers</option>
+        <% end %>
+
+      </select>
+      <select id="links">
+        <option value='/logout'>Logout</option>
+        <option value='/dde/search?cat=mother&gender=F' ttSize="320px">Find or Register Client</option>
+        <option value='<%= ((session[:datetime].to_date rescue '') != '' ?
+                "/people/reset_datetime" : "/people/set_datetime") %>' ttSize="160px">
+          <%= ((session[:datetime].to_date rescue '') != '' ? "Reset Date" : "Set Date") %></option>
+        <option value='/location?from=people' ttSize="200px">New Location</option>
+      </select>
+      <tr>
+        <td align='center'>
+          <input type='submit' value='Finish'/>
+        </td>
+      </tr>
+    </table>
+  </form>
+
+  <!--div class="centered">
+
+<%# date = session[:datetime] ||= Date.today
+#if @super_user or @regstration_clerk %>
+<%# if !@show_set_date%>
+      <span style="font-size: 16pt">
+<%#="Summary for: #{date.strftime("%d %b %Y") unless session[:datetime].blank?}"%>
+      </span>
+<%# else%>
+      <span style="font-size: 16pt; background-color: red">
+<%#="Summary for: #{date.strftime("%d %b %Y") unless session[:datetime].blank?}"%>
+      </span>
+<%# end%>
+
+
+    <button id="find_or_register_button" class="button green"
+            onclick="window.location = '/dde/search'" style="min-width:480px;">
+      <span>Find or register client by name</span>
+    </button>
+
+    <button id="reports_button" class="button green"
+            onclick="window.location = '/cohort/index'" style="min-width:480px;">
+      <span>Reports</span>
+    </button>
+
+    <button id="set_date_button" class="button green"
+            onclick="window.location = '<%= ((session[:datetime].to_date.strftime("%Y-%m-%d") rescue "#{Date.today.strftime("%Y-%m-%d")}") != "#{Date.today.strftime("%Y-%m-%d")}" ?
+        "/people/reset_datetime" : "/people/set_datetime") %>'" style="min-width:480px;">
+      <span><%= ((session[:datetime].to_date.strftime("%Y-%m-%d") rescue "#{Date.today.strftime("%Y-%m-%d")}") != "#{Date.today.strftime("%Y-%m-%d")}" ? "Reset Date" : "Set Date") %></span>
+    </button>
+
+  <% if @super_user %>
+          <button id="admin_button" class="button green"  style="min-width:480px;"
+                  onclick="window.location = '/admin'"><span>Administration</span>
+          </button>
+  <% end %>
+  <!-- <button id="find_or_register_by_identifier_button" class="button green" onclick="window.location = '/people/identifiers'"><span>Find patient by identifier</span></button> -->
+  <!-- TODO: need to show current date
+       TODO: need set date/reset date button
+       TODO: need reports button
+       TODO: need summary to be adjusted based on visit? -->
+  <!--table style="margin-left:50px;margin-top:20px;background:#ddddff;width:380px;">
+  <% Encounter.count_by_type_for_date(Date.today).each do |type, total|
+  type = "Reception - patients seen" if type == "REGISTRATION"
+  type = "patients referred to other clinics" if type == "REFERRED" %>
+          <tr>
+            <td><%= type.upcase %>:</td>
+            <td><strong><%= total %></strong></td>
+          </tr>
+  <% end %>
+  </table>
+</div>  
+</div-->
+
+</div>
+<% form_tag("/dde/process_scan_data", "method" => 'post', "enctype" => 'multipart/form-data',
+            "id" => 'dde-home', "class" => "form-horizontal", "autocomplete" => "off", "role" => "form", "novalidate" => "novalidate") do %>
+
+    <textarea id="person" name="person" style="display: none;" condition="false"></textarea>
+
+<% end %>
+
+<script type="text/javascript">
+    <!--
+
+    var helpLinks = {
+        "Find Patient": "<%= @settings["help_base_url"] rescue "" %>find_patient",
+        "Register Patient": "<%= @settings["help_base_url"] rescue "" %>new_patient"/*,
+         "Cancel": "<%= @settings["help_base_url"] rescue "" %>cancel",
+         "New Person": "<%= @settings["help_base_url"] rescue "" %>add_patient",
+         "Select Person": "<%= @settings["help_base_url"] rescue "" %>select_patient"*/
+    };
+
+    var json = <%= {
+              "national_id" => nil,
+              "application" => "#{@settings["application_name"]}",
+              "site_code" => "#{@settings["site_code"]}",
+              "return_path" => "http://#{request.host_with_port}/process_result",
+              "names" =>
+              {
+                  "family_name" => nil,
+                  "given_name" => nil,
+                  "middle_name" => nil,
+                  "maiden_name" => nil
+              },
+              "gender" => "#{params["gender"]}",
+              "attributes" => {
+                  "occupation" => nil,
+                  "cell_phone_number" => nil,
+                  "home_phone_number" => nil,
+                  "office_phone_number" => nil,
+                  "citizenship" => nil,
+                  "country_of_residence" => nil,
+                  "race" => nil
+              },
+              "birthdate" => nil,
+              "patient" => {
+                  "identifiers" => []
+              },
+              "birthdate_estimated" => nil,
+              "addresses" => {
+                  "current_residence" => nil,
+                  "current_village" => nil,
+                  "current_ta" => nil,
+                  "current_district" => nil,
+                  "home_village" => nil,
+                  "home_ta" => nil,
+                  "home_district" => nil
+              }
+            }.to_json %>;
+
+    <% if !@settings["dde_username"].blank? %>
+
+    function barcodeScanAction(){
+        if(__$("barcode")){
+
+            var npid = __$("barcode").value.replace("$", "");
+
+            ajaxRequest(npid);
+
+        }
+    }
+
+    function ajaxRequest(id){
+        var url = "/process_data/" + id;
+
+        var httpRequest = new XMLHttpRequest();
+        httpRequest.onreadystatechange = function() {
+            handleAjaxRequest(httpRequest);
+        };
+        try {
+            httpRequest.open("GET", url, true);
+            httpRequest.send(null);
+        } catch(e){
+        }
+    }
+
+    function handleAjaxRequest(aXMLHttpRequest){
+        if (!aXMLHttpRequest) return;
+
+        if (aXMLHttpRequest.readyState == 4 && (aXMLHttpRequest.status == 200 ||
+                aXMLHttpRequest.status == 304)) {
+
+            var result = aXMLHttpRequest.responseText;
+
+            __$("person").innerHTML = result;
+
+            document.getElementById("dde-home").submit();
+
+        }
+    }
+
+    <% end %>
+
+    //-->
+</script>
+
+<script src="/javascripts/bht-help.js" defer></script>
+</body>
+</html>
