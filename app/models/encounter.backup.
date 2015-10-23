@@ -112,7 +112,7 @@ class Encounter < ActiveRecord::Base
   end
 
   def after_save
-		current_visit = self.patient.current_visit
+    current_visit = self.patient.current_visit
     if (current_visit.nil? or current_visit.end_date != nil )
       visit = Visit.new({:patient_id => self.patient_id, :start_date => self.encounter_datetime})
       visit.save
@@ -123,26 +123,6 @@ class Encounter < ActiveRecord::Base
     visit_encounter = VisitEncounter.new({:visit_id => current_visit.visit_id, :encounter_id => self.encounter_id})
     visit_encounter.save
 
-		#self.add_location_obs
-        
-    settings = YAML.load_file("#{Rails.root}/config/dde_connection.yml")[Rails.env] rescue {}
-        
-    identifier = self.patient.patient_identifiers.find_by_identifier_type(PatientIdentifierType.find_by_name("National id").id).identifier rescue nil
-    
-    if secure?
-       url = "https://#{settings["dde_username"]}:#{settings["dde_password"]}@#{settings["dde_server"]}/ajax_log"
-    else
-       url = "http://#{settings["dde_username"]}:#{settings["dde_password"]}@#{settings["dde_server"]}/ajax_log"
-    end
-    
-    result = RestClient.post(url, {"person"=>{"national_id"=>"#{identifier}","application"=>"#{settings["application_name"]}","site_code"=>"#{settings["site_code"]}"}}, {:accept => :json}) if !identifier.blank?
-   
-  end
-
-
-  def secure?
-    @settings = YAML.load_file("#{Rails.root}/config/dde_connection.yml")[Rails.env]
-    secure = @settings["secure_connection"] rescue false
   end
 
   def to_print
