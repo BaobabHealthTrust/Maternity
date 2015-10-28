@@ -296,7 +296,8 @@ module MaternityService
           ["(COALESCE(babies, 0) + COALESCE(bba_babies, 0)) babies"]).collect{|c| c.babies}.sum
     end
 
-    def create_baby(params)
+    def create_baby(params, return_ip="")
+
 
       if !params["DATE OF DELIVERY"].blank? && !params["GENDER OF CONTACT"].blank?    
 				last_name = PersonName.find_by_person_id(self.husband.person_b).family_name  rescue nil        
@@ -313,41 +314,67 @@ module MaternityService
 					first_name = first_name +"_"+ Date.today.year.to_s + "/" + Date.today.month.to_s + "/" + Date.today.day.to_s
 				end
 
-        baby = {
-          "patient"=>{
-            "identifiers"=>{
-              "diabetes_number"=> ""             
-            }
-          },
-          "names"=>{
-            "family_name"=>last_name,
-            "given_name"=> first_name
-          },
-          "addresses"=>{
-            "city_village"=>nil,
-            "county_district"=>nil,
-            "neighborhood_cell"=>nil,
-            "address2"=>nil,
-            "address1"=>nil,
-            "subregion"=>nil
-          },
-          "gender"=>(params["GENDER OF CONTACT"].upcase == "MALE" ? "M" :
-              (params["GENDER OF CONTACT"].upcase == "FEMALE" ? "F" : nil)),
-          "birthdate_estimated"=>0,
-          "birthdate"=>params["DATE OF DELIVERY"],
-          "birth_year"=>(params["DATE OF DELIVERY"].to_date rescue Date.today).year,
-          "birth_month"=>(params["DATE OF DELIVERY"].to_date rescue Date.today).month,
-          "birth_day"=>(params["DATE OF DELIVERY"].to_date rescue Date.today).day
+        @settings = YAML.load_file("#{Rails.root}/config/dde_connection.yml")[Rails.env] rescue {}
+
+
+        baby =  {
+            "print_barcode"=>true,
+            "return_path"=>"http://#{return_ip}/process_result",
+            "site_code"=> "#{@settings["site_code"]}",
+            "gender"=>(params["GENDER OF CONTACT"].upcase == "MALE" ? "M" :
+                (params["GENDER OF CONTACT"].upcase == "FEMALE" ? "F" : nil)),
+            "names"=>{
+                "middle_name"=>"",
+                "family_name"=>last_name,
+                "gender"=>(params["GENDER OF CONTACT"].upcase == "MALE" ? "M" :
+                    (params["GENDER OF CONTACT"].upcase == "FEMALE" ? "F" : nil)),
+                "given_name"=>first_name,
+                "maiden_name"=>""
+            },
+            "birthdate_estimated"=>false,
+            "addresses"=>{
+                "current_ta"=>"",
+                "home_ta"=>"",
+                "home_village"=>"",
+                "landmark"=>"Market",
+                "current_district"=>"",
+                "current_village"=>"",
+                "home_district"=>"",
+                "current_residence"=>""
+            },
+            "patient"=>{
+                "identifiers"=>[]
+            },
+            "person_attributes"=>{
+                "citizenship"=>"",
+                "office_phone_number"=>"",
+                "cell_phone_number"=>"",
+                "occupation"=>"Business",
+                "country_of_residence"=>"",
+                "home_phone_number"=>"",
+                "race"=>nil
+            },
+            "national_id"=>nil,
+            "application"=>"#{@settings['application_name']}",
+            "birthdate"=>params["DATE OF DELIVERY"]
         }
-			  create_from_dde_server = CoreService.get_global_property_value('create.from.dde.server').to_s == "true" rescue false
-        
-        person = ANCService.create_patient_from_dde_baby(baby) if create_from_dde_server
-        if person.blank?
-          person = Person.create_from_form(baby)
+
+
+        if secure?
+          url = "https://#{@settings["dde_username"]}:#{@settings["dde_password"]}@#{@settings["dde_server"]}/process_confirmation"
+        else
+          url = "http://#{@settings["dde_username"]}:#{@settings["dde_password"]}@#{@settings["dde_server"]}/process_confirmation"
         end
-				
-				#Just Check in case the baby is no more
-        if params["BABY OUTCOME"].downcase == "alive"
+
+        @results = RestClient.post(url, {:person => baby.to_json, :target => 'create'}, {:accept => :json})
+
+        # Create in DDE
+        person = DDE.search_and_or_create(@results)
+
+        #Create local
+        person = Person.find(person) rescue person
+
+			  if params["BABY OUTCOME"].downcase == "alive"
 					person.dead = false
 				else
 					person.dead = true
@@ -398,6 +425,11 @@ module MaternityService
         
       end
       
+    end
+
+    def secure?
+      @settings = YAML.load_file("#{Rails.root}/config/dde_connection.yml")[Rails.env]
+      secure = @settings["secure_connection"] rescue false
     end
 
     def mother
