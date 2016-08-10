@@ -155,6 +155,7 @@ end
 
               <% end %>
 
+
             </select>
             <select id="links">
               <%if @patient.person.age > 10%>
@@ -171,21 +172,11 @@ end
             </select>
             <select id="navigation_links">
 
-              <%
-              assign_serial_numbers = CoreService.get_global_property_value("assign_serial_numbers").to_s == "true" rescue false
-              unless   @registration || !assign_serial_numbers %>
-                <option link='/patients/general_demographics?patient_id=<%= @patient.id %>'>
+                <option link="/patients/general_demographics?patient_id=<%= @patient.id %>"/>
                   Demographics
                 </option>
-              <%else%>
-                <option link='/patients/demographics?patient_id=<%= @patient.id %>&person_id=<%= @patient.id %>&reg=true'>
-                  Demographics
-                </option>
-              <%end%>
-<!--option link='/patients/demographics?patient_id=<%= @patient.id %>&person_id=<%= @patient.person.id %>'>
-Full Demographics
-</option-->
-              <option link='/patients/print_registration?patient_id=<%= @patient.id %>'>Print Registration</option>
+
+                <option link='/patients/print_registration?patient_id=<%= @patient.id %>'>Print Registration</option>
 
             </select>
             <tr>

@@ -385,7 +385,7 @@ module MaternityService
 
         end
         
-        person.patient.national_id_label
+        #person.patient.national_id_label
 
         child_type = RelationshipType.find_by_a_is_to_b("Mother").relationship_type_id
 				

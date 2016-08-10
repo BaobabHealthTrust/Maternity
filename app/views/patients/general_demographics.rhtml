@@ -210,9 +210,7 @@
                           &nbsp;
                         </td>
                         <td>
-                          <button style="min-width: 300px;" onclick="window.location='/patients/birth_report?person_id=<%=
-                                  (@maternity_patient.live_kids.length >= baby ? 
-                                      @maternity_patient.live_kids[baby - 1].person_b : "") %>&patient_id=<%= @patient.id %>'">
+                          <button class="gray" style="min-width: 300px;" onclick="">
                             <span>
                               <%= "#{baby}#{prefixes[baby]}" %> Baby
                             </span>
