@@ -8154,4 +8154,86 @@ Changes not staged for commit:
 	[31mdeleted:    vendor/cache/rmagick-2.13.2.gem[m
 	[31mdeleted:    vendor/cache/rqrcode-0.4.2.gem[m
 
-]0;taona@
+]0;taona@mango: /var/www/Maternitytaona@mango:/var/www/Maternity$ git commit -am "dde_integration[C3_integration[C[C[C[C[C[C[C[C[C[C[C[C"
+[dde_integration a78562a] dde3_integration
+ 126 files changed, 25445 insertions(+), 195 deletions(-)
+ create mode 100644 .ruby-version
+ create mode 100644 config/initializers/dde3_user.rb
+ create mode 100644 console
+ create mode 100644 lib/dde3_service.rb
+ delete mode 100644 lib/tasks/rspec.rake
+ create mode 100644 s/README
+ create mode 100644 s/Rakefile
+ create mode 100644 s/app/controllers/application_controller.rb
+ create mode 100644 s/app/helpers/application_helper.rb
+ create mode 100644 s/config/boot.rb
+ create mode 100644 s/config/environment.rb
+ create mode 100644 s/config/environments/development.rb
+ create mode 100644 s/config/environments/production.rb
+ create mode 100644 s/config/environments/test.rb
+ create mode 100644 s/config/initializers/backtrace_silencers.rb
+ create mode 100644 s/config/initializers/inflections.rb
+ create mode 100644 s/config/initializers/mime_types.rb
+ create mode 100644 s/config/initializers/new_rails_defaults.rb
+ create mode 100644 s/config/initializers/session_store.rb
+ create mode 100644 s/config/routes.rb
+ create mode 100644 s/db/seeds.rb
+ create mode 100644 s/public/404.html
+ create mode 100644 s/public/422.html
+ create mode 100644 s/public/500.html
+ create mode 100644 s/public/favicon.ico
+ create mode 100644 s/public/images/rails.png
+ create mode 100644 s/public/index.html
+ create mode 100644 s/public/javascripts/application.js
+ create mode 100644 s/public/javascripts/controls.js
+ create mode 100644 s/public/javascripts/dragdrop.js
+ create mode 100644 s/public/javascripts/effects.js
+ create mode 100644 s/public/javascripts/prototype.js
+ create mode 100644 s/public/robots.txt
+ create mode 100755 s/script/about
+ create mode 100755 s/script/console
+ create mode 100755 s/script/dbconsole
+ create mode 100755 s/script/destroy
+ create mode 100755 s/script/generate
+ create mode 100755 s/script/performance/benchmarker
+ create mode 100755 s/script/performance/profiler
+ create mode 100755 s/script/plugin
+ create mode 100755 s/script/runner
+ create mode 100755 s/script/server
+ create mode 100644 s/test/performance/browsing_test.rb
+ create mode 100644 s/test/test_helper.rb
+ create mode 100644 server
+ create mode 100644 start/README
+ create mode 100644 start/Rakefile
+ create mode 100644 start/app/controllers/application_controller.rb
+ create mode 100644 start/app/helpers/application_helper.rb
+ create mode 100644 start/config/boot.rb
+ create mode 100644 start/config/environment.rb
+ create mode 100644 start/config/environments/development.rb
+ create mode 100644 start/config/environments/production.rb
+ create mode 100644 start/config/environments/test.rb
+ create mode 100644 start/config/initializers/backtrace_silencers.rb
+ create mode 100644 start/config/initializers/inflections.rb
+ create mode 100644 start/config/initializers/mime_types.rb
+ create mode 100644 start/config/initializers/new_rails_defaults.rb
+ create mode 100644 start/config/initializers/session_store.rb
+ create mode 100644 start/config/routes.rb
+ create mode 100644 start/db/seeds.rb
+ create mode 100644 start/public/404.html
+ create mode 100644 start/public/422.html
+ create mode 100644 start/public/500.html
+ create mode 100644 start/public/favicon.ico
+ create mode 100644 start/public/images/rails.png
+ create mode 100644 start/public/index.html
+ create mode 100644 start/public/javascripts/application.js
+ create mode 100644 start/public/javascripts/controls.js
+ create mode 100644 start/public/javascripts/dragdrop.js
+ create mode 100644 start/public/javascripts/effects.js
+ create mode 100644 start/public/javascripts/prototype.js
+ create mode 100644 start/public/robots.txt
+ create mode 100755 start/script/about
+ create mode 100755 start/script/console
+ create mode 100755 start/script/dbconsole
+ create mode 100755 start/script/destroy
+ create mode 100755 start/script/generate
+ create mode 10
