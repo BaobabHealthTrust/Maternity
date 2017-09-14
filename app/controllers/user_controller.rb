@@ -114,9 +114,9 @@ class UserController < ApplicationController
 
     if (params[:user][:password] != params[:user_confirm][:password])
       flash[:notice] = 'Password Mismatch'
-      #  flash[:notice] = nil
+  
       @user_first_name = params[:person_name][:given_name]
-      #      @user_middle_name = params[:user][:middle_name]
+      
       @user_last_name = params[:person_name][:family_name]
       @user_role = params[:user_role][:role_id]
       @user_admin_role = params[:user_role_admin][:role]
@@ -133,16 +133,7 @@ class UserController < ApplicationController
     @user.date_created = Time.now()
     @user.creator = session[:user_id]
     if @user.save
-      # if params[:user_role_admin][:role] == "Yes"
-      #  @roles = Array.new.push params[:user_role][:role_id] 
-      # @roles << "superuser"
-      # @roles.each{|role|
-      # user_role=UserRole.new
-      # user_role.role_id = Role.find_by_role(role).role_id
-      # user_role.user_id=@user.user_id
-      # user_role.save
-      #}
-      #else
+      
       user_role=UserRole.new
       user_role.role = Role.find_by_role(params[:user_role][:role_id])
       user_role.user_id=@user.user_id
@@ -276,5 +267,6 @@ class UserController < ApplicationController
     User.save_property(user_id, params[:property], params[:property_value]) if user_id
     render :text => ''
   end
-  
-end
+
+
+  end

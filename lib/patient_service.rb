@@ -1566,7 +1566,8 @@ people = Person.find(:all, :include => [{:names => [:person_name_code]}, :patien
   end
 
   def self.get_national_id(patient, force = true)
-    id = patient.patient_identifiers.find_by_identifier_type(PatientIdentifierType.find_by_name("National id").id).identifier rescue nil
+    id = patient.patient_identifiers.find_by_identifier_type(3).identifier rescue nil
+    #id = patient.patient_identifiers.find_by_identifier_type(PatientIdentifierType.find_by_name("National id").id).identifier rescue nil
     return id unless force
     id ||= PatientIdentifierType.find_by_name("National id").next_identifier(:patient => patient).identifier
     id
