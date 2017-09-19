@@ -128,10 +128,8 @@ class PeopleController < ApplicationController
     
     found_person = nil
     if params[:identifier]
-
-     #local_results_set = Person.search_by_identifier(params[:identifier])
+   
      local_results_set = DDE3Service.search_all_by_identifier(params[:identifier])
-
 
       if local_results_set.length > 1
         redirect_to :action => 'duplicates' ,:search_params => params
@@ -146,14 +144,15 @@ class PeopleController < ApplicationController
             return
           elsif (p.blank? || p.count == 0) && local_results_set.count == 1
             patient_bean = PatientService.get_patient(local_results_set.first)
+
+           # raise patient_bean.inspect
             DDE3Service.push_to_dde3(patient_bean)
           end
         end
       end
   
         found_person = local_results_set.first
-          
-      else
+        else
         # TODO - figure out how to write a test for this
         # This is sloppy - creating something as the result of a GET
         found_person_data = Person.find_remote_by_identifier(params[:identifier])
@@ -186,7 +185,7 @@ class PeopleController < ApplicationController
           print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", next_task(found_person.patient))  and return
         end
 
-=begin          patient = DDE3Service::Patient.new(found_person.patient)
+=begin          patient = DDEService::Patient.new(found_person.patient)
  
 	        national_id_replaced = patient.check_old_national_id(params[:identifier]) if found_person.patient.national_id_with_dashes.length != 6
 			    if national_id_replaced.to_s == "true" || params[:identifier] != found_person.patient.national_id_with_dashes
@@ -207,17 +206,14 @@ class PeopleController < ApplicationController
 
         end
       end
-   
-    
+       
     @relation = params[:relation] if params[:relation]
     @search_results = {}
     @patients = []
     
 		@people = Person.person_search(params)
 
-    #create_from_dde_server = CoreService.get_global_property_value('create.from.dde.server') rescue false
-
-     remote_results = []
+    remote_results = []
     if create_from_dde_server
       remote_results = DDE3Service.search_from_dde3(params) if !params[:given_name].blank?
     end
@@ -283,6 +279,25 @@ class PeopleController < ApplicationController
     end
 
   
+   def duplicates
+    @duplicates = []
+    people = PatientService.person_search(params[:search_params])
+    people.each do |person|
+      @duplicates << PatientService.get_patient(person)
+    end unless people == "found duplicate identifiers"
+
+    if create_from_dde_server
+      @remote_duplicates = []
+      PatientService.search_from_dde_by_identifier(params[:search_params][:identifier]).each do |person|
+        @remote_duplicates << PatientService.get_dde_person(person)
+      end
+    end
+
+    @selected_identifier = params[:search_params][:identifier]
+    render :layout => 'menu'
+  end
+
+
 
   end
  

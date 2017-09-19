@@ -132,6 +132,26 @@ def self.search_by_identifier(npid)
     end
 end
 
+def self.search_from_dde3(params)
+    return [] if params['given_name'].blank? ||  params['family_name'].blank? ||
+        params['gender'].blank?
+
+
+    url = "#{self.dde3_url_with_auth}/v1/search_by_name_and_gender"
+    params = {'given_name' => params['given_name'],
+              'family_name' => params['family_name'],
+              'gender' => ({'F' => 'Female', 'M' => 'Male'}[params['gender']] || params['gender'])
+    }
+
+    response = JSON.parse(RestClient.post(url, params.to_json, :content_type => 'application/json')) rescue nil
+
+    if response.present?
+      return response['data']['hits']
+    else
+      return false
+    end
+  end
+
 
 def self.search_all_by_identifier(npid)
     identifier = npid.gsub(/\-/, '').strip
