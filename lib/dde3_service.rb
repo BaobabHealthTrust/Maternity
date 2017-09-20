@@ -59,14 +59,10 @@
     url = "#{self.dde3_url}/v1/add_user"
     url = url.gsub(/\/\//, "//admin:admin@")
     response = RestClient.put(url,{
-                  "username" => dde_user_username,
-                  "password" => dde_user_password,
-                  "application" => dde3_configs["application_name"], 
-                  "site_code" => dde3_configs["site_code"],
-                  "token" => token,
-                  "description" => "Martenity"
+                  "username" => dde3_configs["dde_username"],  "password" => dde3_configs["dde_password"],
+                  "application" => dde3_configs["application_name"], "site_code" => dde3_configs["site_code"],
+                  "description" => "Maternity Clinic"
               }.to_json, :content_type => 'application/json')
-   
 
       if response['status'] == 201
         return response['data']
@@ -90,39 +86,10 @@
       return self.authenticate
     end
   end
-=begin
-def self.strip(hash)
-    result = hash
-    result['birthdate'] = result['birthdate'].to_date.strftime("%Y-%m-%d") rescue  result['birthdate']
-    (result['attributes'] || {}).each do |k, v|
-      if v.blank? || v.match(/^N\/A$|^null$|^undefined$|^nil$/i)
-        result['attributes'].delete(k)  unless [true, false].include?(v)
-      end
-    end
-
-    (result['identifiers'] || {}).each do |k, v|
-      if v.blank? || v.match(/^N\/A$|^null$|^undefined$|^nil$/i)
-        result['identifiers'].delete(k)  unless [true, false].include?(v)
-      end
-    end
-
-    result.each do |k, v|
-      if v.blank? || v.to_s.match(/^null$|^undefined$|^nil$/i)
-        result.delete(k) unless [true, false].include?(v)
-      end
-    end
-    result
-  end
-=end
-
-
 
 def self.search_by_identifier(npid)
-
-
-    
+      
     url = "#{self.dde3_url}/v1/search_by_identifier/#{npid.strip}/#{self.token}"
-
     response = JSON.parse(RestClient.get(url)) rescue nil
 
     if response.present? && [200, 204].include?(response['status'])
@@ -130,6 +97,7 @@ def self.search_by_identifier(npid)
     else
       return []
     end
+
 end
 
 def self.search_from_dde3(params)
@@ -228,11 +196,15 @@ def self.search_all_by_identifier(npid)
 
 end
 
+def self.update_local_demographics(data)
+    data
+  end
+
 def self.push_to_dde3(patient_bean)
-     #raise (patient_bean.national_id_with_dashes).inspect
+  
+   
     from_dde3 = self.search_by_identifier(patient_bean.national_id_with_dashes)
-       
-      
+              
     if from_dde3.length > 0 && !patient_bean.national_id_with_dashes.strip.match(/^P\d+$/)
       return self.update_local_demographics(from_dde3[0])
     else
@@ -280,6 +252,8 @@ def self.push_to_dde3(patient_bean)
 
       data = self.create_from_dde3(result)
 
+     
+
       if data.present? && data['return_path']
         data = self.force_create_from_dde3(result, data['return_path'])
       end
@@ -291,20 +265,20 @@ def self.push_to_dde3(patient_bean)
           
         npid.update_attributes(
             :voided => true,
-            :voided_by => User.current.id,
+            :voided_by => User.id,
             :void_reason => 'Reassigned NPID',
             :date_voided => Time.now
         )
         PatientIdentifier.create(
             :patient_id => npid.patient_id,
-            :creator => User.current.id,
+            :creator => User.id,
             :identifier => npid.identifier,
             :identifier_type => PatientIdentifierType.find_by_name('Old Identification Number').id
         )
 
         PatientIdentifier.create(
             :patient_id => npid.patient_id,
-            :creator => User.current.id,
+            :creator => User.id,
             :identifier =>  data['npid'],
             :identifier_type => npid_type
         )
@@ -346,15 +320,6 @@ def self.create_from_dde3(params)
     }
     data
   end
-
-
-def self.update_local_demographics(data)
-    data
-  end
-
-   
-
-
 
 end
 

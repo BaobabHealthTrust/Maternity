@@ -136,17 +136,16 @@ class PeopleController < ApplicationController
         return	
         #@people = Person.search(params)
       elsif local_results_set.length <= 1
+
         if create_from_dde_server
           p = DDE3Service.search_by_identifier(params[:identifier])
-             
-          if p.count > 1
+
+            if p.count > 1
             redirect_to :action => 'duplicates' ,:search_params => params
             return
           elsif (p.blank? || p.count == 0) && local_results_set.count == 1
             patient_bean = PatientService.get_patient(local_results_set.first)
-
-           # raise patient_bean.inspect
-            DDE3Service.push_to_dde3(patient_bean)
+            #DDE3Service.push_to_dde3(patient_bean)
           end
         end
       end
@@ -315,10 +314,33 @@ class PeopleController < ApplicationController
     
       if !related_person.blank?
         
-        DDEService.create_footprint(related_person.national_id, "Maternity") rescue nil
+        #DDEService.create_footprint(related_person.national_id, "Maternity") rescue nil
 
         if params[:identifier].length != 6 and create_from_dde_server
-          dde_patient = DDEService::Patient.new(related_person)
+          #dde_patient = DDEService::Patient.new(related_person)
+
+          person= DDE3Service.search_all_by_identifier(params[:identifier])
+
+          if params[:person][:id] != '0'
+           person = Person.find(params[:person][:id]) if person.blank?
+           patient_bean = PatientService.get_patient(person.first)
+           old_npid = (patient_bean.national_id_with_dashes).gsub(/\-/, '')
+
+           result = DDE3Service.push_to_dde3(patient_bean)
+
+            if !result.blank? && !result['npid'].blank? && result['npid'].strip != old_npid.strip
+             print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", next_task(person))
+           end
+          end
+          else
+        redirect_to next_task(person)
+      end
+      else
+      redirect_to "/"
+      end
+      end
+   
+=begin
 		
           national_id_replaced = dde_patient.check_old_national_id(related_person.national_id)
 			
@@ -364,8 +386,31 @@ class PeopleController < ApplicationController
           :cat => params[:cat]
       end
 		end
+=end    
   end
- 
+
+
+  def search_complete_url(found_person_id, primary_person_id)
+    unless (primary_person_id.blank?)
+      # Notice this swaps them!
+      new_relationship_url(:patient_id => primary_person_id, :relation => found_person_id)
+    else
+      #
+      # Hack reversed to continue testing overnight
+      #
+      # TODO: This needs to be redesigned!!!!!!!!!!!
+      #
+      #url_for(:controller => :encounters, :action => :new, :patient_id => found_person_id)
+      patient = Person.find(found_person_id).patient
+      show_confirmation = CoreService.get_global_property_value('show.patient.confirmation').to_s == "true" rescue false
+      if show_confirmation
+        url_for(:controller => :people, :action => :confirm , :found_person_id =>found_person_id)
+      else
+        next_task(patient)
+      end
+    end
+  end
+
   def created
 
     remote_parent_server = GlobalProperty.find(:first, :conditions => {:property => "remote_servers.parent"}).property_value
