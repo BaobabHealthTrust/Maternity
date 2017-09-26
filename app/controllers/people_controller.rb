@@ -128,97 +128,113 @@ class PeopleController < ApplicationController
     
     found_person = nil
     if params[:identifier]
-   
-     local_results_set = DDE3Service.search_all_by_identifier(params[:identifier])
-
-      if local_results_set.length > 1
+      #local_result_set = Person.search_by_identifier(params[:identifier])
+      local_result_set = DDE3Service.search_all_by_identifier(params[:identifier])
+       
+       
+      #raise local_result_set.inspect
+      # raise local_results.to_yaml
+      ids_list = []
+      local_results = []
+      local_result_set.each{|persn|
+        next if persn.to_s == "found duplicate identifiers"
+        local_results << persn if !ids_list.include?(persn.person_id)
+        ids_list << persn.id if !ids_list.include?(persn.person_id)        
+      }  
+     
+      if local_result_set.length > 1
         redirect_to :action => 'duplicates' ,:search_params => params
-        return	
+        return  
         #@people = Person.search(params)
-      elsif local_results_set.length <= 1
-
+      elsif local_results.length <= 1
         if create_from_dde_server
-          p = DDE3Service.search_by_identifier(params[:identifier])
 
-            if p.count > 1
+          p = DDE3Service.search_by_identifier(params[:identifier])
+          
+=begin          
+          dde_server = CoreService.get_global_property_value("dde_server_ip") rescue ""
+          dde_server_username = CoreService.get_global_property_value("dde_server_username") rescue ""
+          dde_server_password = CoreService.get_global_property_value("dde_server_password") rescue ""
+          uri = "http://#{dde_server_username}:#{dde_server_password}@#{dde_server}/people/find.json"
+          uri += "?value=#{params[:identifier]}"
+          output = RestClient.get(uri)
+          p = JSON.parse(output)
+=end          
+          if p.count > 1
             redirect_to :action => 'duplicates' ,:search_params => params
             return
-          elsif (p.blank? || p.count == 0) && local_results_set.count == 1
-            patient_bean = PatientService.get_patient(local_results_set.first)
-            #DDE3Service.push_to_dde3(patient_bean)
+            elsif (p.blank? || p.count == 0) && local_result_set.count == 1
+            patient_bean = PatientService.get_patient(local_result_set.first)
+            
+            DDE3Service.push_to_dde3(patient_bean)
           end
         end
-      end
-  
-        found_person = local_results_set.first
-        else
+        found_person = local_results.first
+
+      else
         # TODO - figure out how to write a test for this
         # This is sloppy - creating something as the result of a GET
         found_person_data = Person.find_remote_by_identifier(params[:identifier])
+
         if found_person_data.to_s ==  'timeout' || found_person_data.to_s == 'creationfailed'
           
           flash[:error] = "Could not create patient due to loss of connection to server" if found_person_data.to_s == 'timeout'
           flash[:error] = "Was unable to create patient with the given details" if found_person_data.to_s == 'creationfailed'
           redirect_to :action => "index" and return
         else
+
+          # raise found_person_data.to_yaml
+          
           found_person = Person.create_from_form(found_person_data) unless found_person_data.nil?
         end
-      end
-
-      found_person = local_results_set.first if !found_person.blank?
-      gender = found_person.gender rescue nil
-      gender = found_person['gender'] if gender.blank? && found_person.class == {}.class
-
-      if gender == "M"
-        redirect_to "/clinic/no_males" and return
       end
 
       if found_person
 
         if create_from_dde_server
+         # patient = DDEService::Patient.new(found_person.patient) Commented out 21/09/17
+          #ddepatient = DDE3Service::Patient.new(found_person.patient)
           patient = found_person.patient
           old_npid = params[:identifier].gsub(/\-/, '').upcase.strip
           new_npid = patient.national_id.gsub(/\-/, '').upcase.strip
-         
-        if old_npid != new_npid
-          print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", next_task(found_person.patient))  and return
-        end
-
-=begin          patient = DDEService::Patient.new(found_person.patient)
- 
-	        national_id_replaced = patient.check_old_national_id(params[:identifier]) if found_person.patient.national_id_with_dashes.length != 6
-			    if national_id_replaced.to_s == "true" || params[:identifier] != found_person.patient.national_id_with_dashes
-						if params[:cat] && (params[:cat].downcase rescue "") != "mother" && params[:patient_id]	
-							print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{found_person.id }&cat=#{params[:cat]}") and return
-						end
+          
+          if old_npid != new_npid
+             
+         # national_id_replaced = patient.check_old_national_id(params[:identifier]) if found_person.patient.national_id.length != 6 #commented out 21/09/17
+         # if national_id_replaced.to_s == "true" || params[:identifier] != found_person.patient.national_id
+           
+            if params[:cat] && (params[:cat].downcase rescue "") != "mother" && params[:patient_id] 
+              print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{found_person.id }&cat=#{params[:cat]}") and return
+            end
             print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", next_task(found_person.patient))  and return
           end
         end
-				if params[:cat] && (params[:cat].downcase rescue "") != "mother" && params[:patient_id]
+        if params[:cat] && (params[:cat].downcase rescue "") != "mother" && params[:patient_id]
 
           redirect_to "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{found_person.id
             }&cat=#{params[:cat]}" and return
-=end
-				else
+
+        else
 
           redirect_to :controller => :encounters, :action => :new, :patient_id => found_person.id and return
 
         end
       end
-       
+    end
     @relation = params[:relation] if params[:relation]
     @search_results = {}
     @patients = []
     
-		@people = Person.person_search(params)
-
-    remote_results = []
+    @people = Person.person_search(params)
+ 
+    remote_results = [] 
     if create_from_dde_server
       remote_results = DDE3Service.search_from_dde3(params) if !params[:given_name].blank?
     end
-       
-      (remote_results || []).each do |data|
-	 		national_id = data["person"]["data"]["patient"]["identifiers"]["National id"] rescue nil
+   # create_from_dde_server = CoreService.get_global_property_value('create.from.dde.server') rescue false
+      #(Person.search_from_remote(params) || []).each do |data|
+     (remote_results || []).each do |data|
+      national_id = data["person"]["data"]["patient"]["identifiers"]["National id"] rescue nil
       national_id = data["person"]["value"] if national_id.blank? rescue nil
       national_id = data["npid"]["value"] if national_id.blank? rescue nil
       national_id = data["person"]["data"]["patient"]["identifiers"]["old_identification_number"] if national_id.blank? rescue nil
@@ -246,13 +262,13 @@ class PeopleController < ApplicationController
       results.age = cul_age(results.birthdate.to_date , results.birthdate_estimated)
       @search_results[results.national_id] = results
 
-    end     if create_from_dde_server 
+    end if create_from_dde_server 
 
 
-		(@people || []).each do | person |
-			patient = Person.get_patient(person) rescue nil
+    (@people || []).each do | person |
+      patient = Person.get_patient(person) rescue nil
       next if patient.blank?
-			results = PersonSearch.new(patient.national_id || patient.patient_id)
+      results = PersonSearch.new(patient.national_id || patient.patient_id)
       results.national_id = patient.national_id
       results.birth_date = patient.birth_date
       results.current_residence = patient.current_residence
@@ -271,12 +287,14 @@ class PeopleController < ApplicationController
       results.age = patient.age || person.age
       @search_results.delete_if{|x,y| x == results.national_id }
       @patients << results
-		end
+    end
 
-		(@search_results || {}).each do |npid , data |
+    (@search_results || {}).each do |npid , data |
       @patients << data
     end
 
+
+end
   
    def duplicates
     @duplicates = []
@@ -296,56 +314,45 @@ class PeopleController < ApplicationController
     render :layout => 'menu'
   end
 
-
-
-  end
+ 
  
   # This method is just to allow the select box to submit, we could probably do this better
   def select
  
     if params[:person] && params[:person][:id] != '0' && (Person.find(params[:person][:id]).dead == 1 rescue false)
 
-			redirect_to :controller => :patients, :action => :show, :id => params[:person]
-		else
+      redirect_to :controller => :patients, :action => :show, :id => params[:person]
+    else
       related_person = Person.search_by_identifier(params[:identifier]).first.patient rescue nil     
       related_person = ANCService.search_by_identifier(params[:identifier]).first.patient rescue nil if related_person.nil? and !params[:identifier].blank?
-			params[:person] = Hash.new if !params[:person]
+      params[:person] = Hash.new if !params[:person]
       params[:person][:id] = related_person.patient_id if related_person
     
       if !related_person.blank?
-        
-        #DDEService.create_footprint(related_person.national_id, "Maternity") rescue nil
-
-        if params[:identifier].length != 6 and create_from_dde_server
-          #dde_patient = DDEService::Patient.new(related_person)
+        if create_from_dde_server
 
           person= DDE3Service.search_all_by_identifier(params[:identifier])
+        #DDEService.create_footprint(related_person.national_id, "Maternity") rescue nil commented 21/09/17
 
-          if params[:person][:id] != '0'
-           person = Person.find(params[:person][:id]) if person.blank?
+       # if params[:identifier].length != 6 and create_from_dde_server
+          #added 21/09/17
+         # dde_patient = DDEService::Patient.new(related_person)
+          person = Person.find(params[:person][:id]) if person.blank?
            patient_bean = PatientService.get_patient(person.first)
            old_npid = (patient_bean.national_id_with_dashes).gsub(/\-/, '')
 
            result = DDE3Service.push_to_dde3(patient_bean)
 
-            if !result.blank? && !result['npid'].blank? && result['npid'].strip != old_npid.strip
-             print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", next_task(person))
-           end
-          end
-          else
-        redirect_to next_task(person)
-      end
-      else
-      redirect_to "/"
-      end
-      end
-   
-=begin
-		
-          national_id_replaced = dde_patient.check_old_national_id(related_person.national_id)
-			
-          if national_id_replaced.to_s == "true" || params[:identifier] != related_person.national_id
 
+          
+        if !result.blank? && !result['npid'].blank? && result['npid'].strip != old_npid.strip
+          
+=begin        dde_patient = DDEService::Patient.new(related_person)
+    
+          national_id_replaced = dde_patient.check_old_national_id(related_person.national_id)
+      
+          if national_id_replaced.to_s == "true" || params[:identifier] != related_person.national_id
+=end
             print_and_redirect("/patients/national_id_label?patient_id=#{related_person.id}",
               "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{related_person.id}&cat=#{params[:cat]}") and return if params[:cat] != 'mother'
 
@@ -358,7 +365,7 @@ class PeopleController < ApplicationController
         end
       end
 
-			redirect_to "/patients/show/#{params[:person][:id]}" and return if (!params[:person][:id].blank? &&
+      redirect_to "/patients/show/#{params[:person][:id]}" and return if (!params[:person][:id].blank? &&
           params[:person][:id] != '0') && (params[:cat] and !params[:cat].blank? and params[:cat] == "mother")
 
       redirect_to "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{params[:person][:id]
@@ -385,11 +392,8 @@ class PeopleController < ApplicationController
           :patient_id => params[:patient_id],
           :cat => params[:cat]
       end
-		end
-=end    
-  end
-
-
+    end
+end
   def search_complete_url(found_person_id, primary_person_id)
     unless (primary_person_id.blank?)
       # Notice this swaps them!
@@ -461,7 +465,6 @@ class PeopleController < ApplicationController
   
   end
 
-
   def create
 
     if !params[:identifier].empty?
@@ -488,18 +491,17 @@ class PeopleController < ApplicationController
       end
       if params[:encounter]
         encounter = Encounter.new(params[:encounter])
-	   		encounter.patient_id = person.id
+        encounter.patient_id = person.id
         encounter.encounter_datetime = session[:datetime] unless session[:datetime].blank?
         encounter.save
       end
 
 
-			print_and_redirect("/patients/national_id_label/?patient_id=#{person.patient.id}&cat=#{params[:cat]}", "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{person.id}&cat=#{params[:cat]}") and return if !(params[:patient_id] rescue "").blank? and
+      print_and_redirect("/patients/national_id_label/?patient_id=#{person.patient.id}&cat=#{params[:cat]}", "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{person.id}&cat=#{params[:cat]}") and return if !(params[:patient_id] rescue "").blank? and
         (params[:cat].downcase rescue "") != "mother"
 
       if create_from_dde_server
-        
-        DDEService.create_footprint(person.patient.national_id, "Maternity") rescue nil
+        #DDEService.create_footprint(person.patient.national_id, "Maternity") rescue nil
 
       end
       
@@ -510,19 +512,18 @@ class PeopleController < ApplicationController
 
     if create_from_dde_server
 
-      person = ANCService.create_patient_from_dde(params)
-      DDEService.create_footprint(person.patient.national_id, "Maternity") rescue nil
-
+      #person = ANCService.create_patient_from_dde(params)
+     # DDEService.create_footprint(person.patient.national_id, "Maternity") rescue nil
+      formatted_demographics = DDE3Service.format_params(params, Person.session_datetime)
+      person = DDE3Service.create_from_dde3(formatted_demographics)
     end
    
     if !person.blank?
-
-      found_person = person
-
-      if found_person
-
-        found_person.patient.national_id_label
         
+      found_person = person
+      if found_person
+          
+        found_person.patient.national_id_label
         if params[:next_url]
           if (params[:cat].downcase rescue "") == "mother"
             print_and_redirect("/patients/national_id_label/?patient_id=#{found_person.patient.id}",
@@ -559,8 +560,8 @@ class PeopleController < ApplicationController
       end
     end
 
-  end
- 
+end
+  
   # TODO refactor so this is restful and in the right controller.
   def set_datetime
     if request.post?

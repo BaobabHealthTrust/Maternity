@@ -123,6 +123,7 @@ def self.search_from_dde3(params)
 
 def self.search_all_by_identifier(npid)
     identifier = npid.gsub(/\-/, '').strip
+
     people = PatientIdentifier.find_all_by_identifier_and_identifier_type(identifier, 3).map{|id|
       id.patient.person
     } unless identifier.blank?
@@ -201,9 +202,10 @@ def self.update_local_demographics(data)
   end
 
 def self.push_to_dde3(patient_bean)
-  
+     
    
     from_dde3 = self.search_by_identifier(patient_bean.national_id_with_dashes)
+    
               
     if from_dde3.length > 0 && !patient_bean.national_id_with_dashes.strip.match(/^P\d+$/)
       return self.update_local_demographics(from_dde3[0])
@@ -320,6 +322,101 @@ def self.create_from_dde3(params)
     }
     data
   end
+
+def self.format_params(params, date)
+gender = (params['person']['gender'].match(/F/i)) ? "Female" : "Male"
+
+    birthdate = nil
+    if params['person']['age_estimate'].present?
+      birthdate = Date.new(date.to_date.year - params['person']['age_estimate'].to_i, 7, 1).strftime("%Y-%m-%d")
+    else
+      params['person']['birth_month'] = params['person']['birth_month'].rjust(2, '0')
+      params['person']['birth_day'] = params['person']['birth_day'].rjust(2, '0')
+      birthdate = "#{params['person']['birth_year']}-#{params['person']['birth_month']}-#{params['person']['birth_day']}"
+    end
+
+    citizenship = params['person']['race']
+    country_of_residence = params['person']['country_of_residence']
+    ids = params['identifier'].present?  ? {
+        'National id' => params['identifier']
+    } : {}
+
+    result = {
+        "family_name"=> params['person']['names']['family_name'],
+        "given_name"=> params['person']['names']['given_name'],
+        "middle_name"=> (params['person']['names']['middle_name'] || "N/A"),
+        "gender"=> gender,
+        "attributes"=> {
+          "occupation"=> params['person']['occupation'],
+          "cell_phone_number"=> params['person']['cell_phone_number'],
+          "citizenship" => citizenship,
+          "country_of_residence" => country_of_residence
+        },
+        "birthdate"=> birthdate,
+        "birthdate_estimated" => (params['person']['age_estimate'].blank? ? false : true),
+        "identifiers"=> ids,
+        "current_residence"=> params['person']['addresses']['address1'],
+        "current_village" => params['person']['addresses']['city_village'],
+        "current_ta"=> (params['filter']['t_a']),
+        "current_district"=> params['person']['addresses']['state_province'],
+        "home_village"=> params['person']['addresses']['neighborhood_cell'],
+        "home_ta"=> params['person']['addresses']['county_district'],
+        "home_district"=> params['person']['addresses']['address2']
+    }
+
+    result['attributes'].each do |k, v|
+      if v.blank? || v.match(/^N\/A$|^null$|^undefined$|^nil$/i)
+        result['attributes'].delete(k)  unless [true, false].include?(v)
+      end
+    end
+
+    result['identifiers'].each do |k, v|
+      if v.blank? || v.match(/^N\/A$|^null$|^undefined$|^nil$/i)
+        result['identifiers'].delete(k)  unless [true, false].include?(v)
+      end
+    end
+
+    result.each do |k, v|
+      if v.blank? || v.to_s.match(/^null$|^undefined$|^nil$/i)
+        result.delete(k) unless [true, false].include?(v)
+      end
+    end
+
+    if !result['attributes']['country_of_residence'].blank? && !result['attributes']['country_of_residence'].match(/Malawi/i)
+      result['current_district'] = 'Other'
+      result['current_ta'] = 'Other'
+      result['current_village'] = 'Other'
+    end
+
+    if !result['attributes']['citizenship'].blank? && !result['attributes']['citizenship'].match(/Malawi/i)
+      result['home_district'] = 'Other'
+      result['home_ta'] = 'Other'
+      result['home_village'] = 'Other'
+    end
+
+    result
+  end
+
+   def self.is_valid?(params)
+    valid = true
+    ['family_name', 'given_name', 'gender', 'birthdate', 'home_district'].each do |key|
+      if params[key].blank? || params[key].to_s.strip.match(/^N\/A$|^null$|^undefined$|^nil$/i)
+        valid = false
+      end
+    end
+    if valid && !params['birthdate'].match(/\d{4}-\d{1,2}-\d{1,2}/)
+      valid = false
+    end
+
+    if valid && !['Female', 'Male'].include?(params['gender'])
+      valid = false
+    end
+
+    valid
+  end
+
+
+
 
 end
 
