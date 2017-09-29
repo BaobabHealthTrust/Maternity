@@ -1,7 +1,7 @@
 source 'http://rubygems.org'
 
 gem 'rails' , '2.3.5'
-gem 'passenger'
+gem 'passenger', '4.0.53'
 gem 'warden', '0.10.7'
 gem 'devise', '1.0.11'
 gem 'json'
