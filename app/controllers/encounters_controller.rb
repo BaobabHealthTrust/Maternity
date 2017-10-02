@@ -767,7 +767,6 @@ class EncountersController < ApplicationController
 
   def referral
     @patient = Patient.find(params[:patient_id])
-
     @roles = User.find(session[:user_id]).user_roles.collect{|r| r.role} # rescue []
   end
 

@@ -7,7 +7,7 @@ class PatientsController < ApplicationController
    
     @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil
     identifier = PatientIdentifier.find(:last, :conditions => ["patient_id = ? AND identifier_type = ?", @patient.id, PatientIdentifierType.find_by_name("National id")]).identifier rescue ""
- 
+=begin 
     if((CoreService.get_global_property_value("create.from.dde.server") == true) && !@patient.nil? && identifier.length != 6)
 			dde_patient = DDEService::Patient.new(@patient)
       identifier = dde_patient.get_full_identifier("National id").identifier rescue nil
@@ -16,7 +16,7 @@ class PatientsController < ApplicationController
         print_and_redirect("/patients/national_id_label?patient_id=#{@patient.id}", "/patients/show?patient_id=#{@patient.id}") and return
       end
     end
-
+=end
     last_visit = Visit.find(:last, :conditions => ["patient_id = ?", @patient.id])
     @maternity_patient = ANCService::ANC.new(@patient)
 

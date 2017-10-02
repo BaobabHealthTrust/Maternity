@@ -118,7 +118,7 @@ class PeopleController < ApplicationController
     render :text => result.to_json
   end
  
-  def search
+ def search
     #synthesize gender values using :cat
     if params[:cat] && params[:cat].downcase == "mother"
       params[:gender] = "F"
@@ -278,21 +278,21 @@ class PeopleController < ApplicationController
 end
 
   def conflicts
-    response = DDE3Service.create_from_dde3(params[:local_data]) if params[:local_data].present?
-
+    response = DDE3Service.create_from_dde3(params[:search_params]) if params[:search_params].present?
+      #raise response.inspect
     if params[:identifier].present?
       response = DDE3Service.search_by_identifier(params['identifier'])
     end
 
     @return_path = response[:return_path] rescue nil
-    @local_duplicates = ([params[:local_data]] rescue []).compact
+    @local_duplicates = ([params[:search_params]] rescue []).compact
     @remote_duplicates = response['data'] rescue []
 
     (@local_duplicates || []).each do |r|
       r['return_path'] = response['return_path']
     end
 
-    d = params[:local_data]
+    d = params[:search_params]
       if d.blank?
         @local_found = PatientIdentifier.find_by_sql("SELECT *, patient_id AS person_id FROM patient_identifier
                         WHERE identifier = '#{params[:identifier]}' AND identifier_type = 3 AND voided = 0")
@@ -359,6 +359,7 @@ end
  
  
   # This method is just to allow the select box to submit, we could probably do this better
+ # This method is just to allow the select box to submit, we could probably do this better
   def select
  
     if params[:person] && params[:person][:id] != '0' && (Person.find(params[:person][:id]).dead == 1 rescue false)
@@ -421,7 +422,6 @@ end
       end
     end
 end
-
   def search_complete_url(found_person_id, primary_person_id)
     unless (primary_person_id.blank?)
       # Notice this swaps them!
@@ -491,7 +491,7 @@ end
   
   end
 
-  def create
+   def create
 
     if !params[:identifier].empty?
       if params[:identifier].length == 6
@@ -609,7 +609,7 @@ end
     end
 
 end
-  
+
   # TODO refactor so this is restful and in the right controller.
   def set_datetime
     if request.post?
