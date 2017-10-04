@@ -130,7 +130,7 @@ class PeopleController < ApplicationController
     if params[:identifier]
       params[:identifier] = params[:identifier].strip
       local_results = DDE3Service.search_all_by_identifier(params[:identifier])
-      
+
       if local_results.length > 1
         redirect_to :action => 'conflicts' ,:identifier => params['identifier']
         return
@@ -143,8 +143,8 @@ class PeopleController < ApplicationController
             return
           elsif (p.blank? || p.count == 0) && local_results.count == 1
             patient_bean = PatientService.get_patient(local_results.first)
+          
             DDE3Service.push_to_dde3(patient_bean)
-                
           end
         end
            
@@ -347,15 +347,13 @@ end
     if params[:person] && params[:person][:id] != '0' && (Person.find(params[:person][:id]).dead == 1 rescue false)
       redirect_to :controller => :patients, :action => :show, :id => params[:person]
     else
-      #related_person = Person.search_by_identifier(params[:identifier]).first.patient rescue nil     
-      #related_person = ANCService.search_by_identifier(params[:identifier]).first.patient rescue nil if related_person.nil? and !params[:identifier].blank?
-      related_person = DDE3Service.search_by_identifier(params[:identifier]).first.patient rescue nil if related_person.nil? and !params[:identifier].blank?
-      
-      #raise related_person.inspect
+      related_person = Person.search_by_identifier(params[:identifier]).first.patient rescue nil     
+      related_person = ANCService.search_by_identifier(params[:identifier]).first.patient rescue nil if related_person.nil? and !params[:identifier].blank?
+      dde_person = DDE3Service.search_by_identifier(params[:identifier]).first.patient rescue nil if related_person.nil? and !params[:identifier].blank?
       params[:person] = Hash.new if !params[:person]
       params[:person][:id] = related_person.patient_id if related_person
 
-      if !related_person.blank?
+      if !related_person.blank? && dde_person.blank?
          #DDEService.create_footprint(related_person.national_id, "Maternity") rescue nil commented 21/09/17
         if params[:identifier].length != 6 and create_from_dde_server
            person = Person.find(params[:person][:id])
@@ -363,6 +361,7 @@ end
            patient_bean = PatientService.get_patient(person)
            old_npid = (patient_bean.national_id_with_dashes).gsub(/\-/, '')
            result = DDE3Service.push_to_dde3(patient_bean)
+
 
         if !result.blank? && !result['npid'].blank? && result['npid'].strip != old_npid.strip
             print_and_redirect("/patients/national_id_label?patient_id=#{related_person.id}",
