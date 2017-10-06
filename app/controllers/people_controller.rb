@@ -348,8 +348,9 @@ end
       redirect_to :controller => :patients, :action => :show, :id => params[:person]
     else
       related_person = Person.search_by_identifier(params[:identifier]).first.patient rescue nil     
-      related_person = ANCService.search_by_identifier(params[:identifier]).first.patient rescue nil if related_person.nil? and !params[:identifier].blank?
-      dde_person = DDE3Service.search_by_identifier(params[:identifier]).first.patient rescue nil if related_person.nil? and !params[:identifier].blank?
+      #related_person = ANCService.search_by_identifier(params[:identifier]).first.patient rescue nil if related_person.nil? and !params[:identifier].blank?
+      dde_person = DDE3Service.search_all_by_identifier(params[:identifier]).first.patient rescue nil if related_person.nil? and !params[:identifier].blank?
+      
       params[:person] = Hash.new if !params[:person]
       params[:person][:id] = related_person.patient_id if related_person
 
@@ -357,11 +358,16 @@ end
          #DDEService.create_footprint(related_person.national_id, "Maternity") rescue nil commented 21/09/17
         if params[:identifier].length != 6 and create_from_dde_server
            person = Person.find(params[:person][:id])
-           #patient_bean = PatientService.get_patient(related_person.first)
            patient_bean = PatientService.get_patient(person)
-           old_npid = (patient_bean.national_id_with_dashes).gsub(/\-/, '')
+           old_npid = (related_person.national_id).gsub(/\-/, '')
            result = DDE3Service.push_to_dde3(patient_bean)
-
+          #assign new npid to the paient
+           npid = PatientIdentifier.new()
+           npid.patient_id = related_person.id
+           new_npid = result["npid"]
+           npid.identifier_type = PatientIdentifierType.find_by_name('National ID').id
+           npid.identifier = new_npid
+           npid.save
 
         if !result.blank? && !result['npid'].blank? && result['npid'].strip != old_npid.strip
             print_and_redirect("/patients/national_id_label?patient_id=#{related_person.id}",
@@ -536,8 +542,11 @@ end
           redirect_to :action => 'duplicates', :local_data => formatted_demographics and return
      end
      person = DDE3Service.create_from_dde3(formatted_demographics) 
+     if !person.blank? && !person['status'].blank? && !person['return_path'].blank? && person['status'] == 409
+          redirect_to :action => 'conflicts', :local_data => formatted_demographics and return
+        end
      end 
-    end
+    
      
    if !person.blank? && person["npid"]
       local_person = ANCService.create_from_form(params[:person])
@@ -549,7 +558,7 @@ end
           patient_identifier.save!
         end
      end
-
+  end
     if !person.blank?
         
       found_person = person
