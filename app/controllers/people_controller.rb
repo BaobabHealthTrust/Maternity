@@ -143,10 +143,9 @@ class PeopleController < ApplicationController
             return
           elsif (p.blank? || p.count == 0) && local_results.count == 1
             patient_bean = PatientService.get_patient(local_results.first)
-          
-            DDE3Service.push_to_dde3(patient_bean)
+            result = DDE3Service.push_to_dde3(patient_bean)
           end
-        end
+       end
            
         found_person = local_results.first
        else
@@ -168,7 +167,7 @@ class PeopleController < ApplicationController
           patient = found_person.patient
           old_npid = params[:identifier].gsub(/\-/, '').upcase.strip
           new_npid = patient.national_id.gsub(/\-/, '').upcase.strip
-                
+                         
           if old_npid != new_npid
             if params[:cat] && (params[:cat].downcase rescue "") != "mother" && params[:patient_id] 
               print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{found_person.id }&cat=#{params[:cat]}") and return
@@ -361,7 +360,7 @@ end
            patient_bean = PatientService.get_patient(person)
            old_npid = (related_person.national_id).gsub(/\-/, '')
            result = DDE3Service.push_to_dde3(patient_bean)
-          #assign new npid to the paient
+          #assign new npid to the patient
            npid = PatientIdentifier.new()
            npid.patient_id = related_person.id
            new_npid = result["npid"]
@@ -514,22 +513,22 @@ end
 
       print_and_redirect("/patients/national_id_label/?patient_id=#{person.patient.id}&cat=#{params[:cat]}", "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{person.id}&cat=#{params[:cat]}") and return if !(params[:patient_id] rescue "").blank? and
         (params[:cat].downcase rescue "") != "mother"
-
+=begin
       if create_from_dde_server
         #DDEService.create_footprint(person.patient.national_id, "Maternity") rescue nil
       end
-      
+=end      
       print_and_redirect("/patients/national_id_label/?patient_id=#{person.patient.id}&cat=#{params[:cat]}", "/patients/show?patient_id=#{person.id}?cat=#{params[:cat]}") and return if !person.nil?
 
       redirect_to "/patients/show?patient_id=#{person.id}}" and return if !person.nil?
     end
 
-    if create_from_dde_server
+  if create_from_dde_server
 
       #person = ANCService.create_patient_from_dde(params)
      # DDEService.create_footprint(person.patient.national_id, "Maternity") rescue nil
       formatted_demographics = DDE3Service.format_params(params, Person.session_datetime)
-      if DDE3Service.is_valid?(formatted_demographics)
+    if DDE3Service.is_valid?(formatted_demographics)
        d = formatted_demographics
        local_duplicates = Person.find_by_sql("SELECT * from person p
                                    INNER JOIN person_name pn on pn.person_id = p.person_id AND pn.voided != 1
@@ -538,16 +537,33 @@ end
                                     AND pd.address2 = '#{d['home_district']}'
                                     AND p.gender = 'F' AND p.birthdate = #{d['birthdate'].to_date.strftime('%Y-%m-%d')}
                          ")
-     if local_duplicates.length > 0
-          redirect_to :action => 'duplicates', :local_data => formatted_demographics and return
-     end
-     person = DDE3Service.create_from_dde3(formatted_demographics) 
-     if !person.blank? && !person['status'].blank? && !person['return_path'].blank? && person['status'] == 409
+      if local_duplicates.length > 0
+          redirect_to :action => 'conflicts', :local_data => formatted_demographics and return
+      end
+      response = DDE3Service.create_from_dde3(formatted_demographics) 
+        if !response.blank? && !response['status'].blank? && !response['return_path'].blank? && response['status'] == 409
           redirect_to :action => 'conflicts', :local_data => formatted_demographics and return
         end
+
+      if !response.blank? && response['npid']
+
+          person = ANCService.create_from_form(params[:person])
+
+          PatientIdentifier.create(:identifier =>  response['npid'],
+                                   :patient_id => person.person_id,
+                                   :location_id => session[:location_id],
+                                   :identifier_type => PatientIdentifierType.find_by_name("National id").id
+          )
+        end
+
+       success = true
+      else
+        flash[:error] = "Invalid demographics format"
+        redirect_to "/" and return
+      end
      end 
-    
-     
+=begin    
+   #Change the national id 
    if !person.blank? && person["npid"]
       local_person = ANCService.create_from_form(params[:person])
          if !local_person.nil?
@@ -558,21 +574,22 @@ end
           patient_identifier.save!
         end
      end
-  end
+=end     
+  
+
     if !person.blank?
-        
       found_person = person
-      #raise found_person["npid"].inspect
-      if found_person            
+      if found_person    
+         #found_person.patient.national_id_label?        
         if params[:next_url]
           if (params[:cat].downcase rescue "") == "mother"
-            print_and_redirect("/patients/national_id_label/?patient_id=#{found_person["npid"]}",
-              params[:next_url] + "?patient_id=#{ found_person["npid"] }") and return
+            print_and_redirect("/patients/national_id_label/?patient_id=#{person.person_id}",
+              params[:next_url] + "?patient_id=#{ person.person_id}") and return
           else
             redirect_to params[:next_url] + found_person["npid"].to_s and return
           end
         else
-          print_and_redirect("/patients/national_id_label/?patient_id=#{found_person["npid"]}", next_task(found_person.patient))
+          print_and_redirect("/patients/national_id_label/?patient_id=#{person.person_id}", next_task(found_person.patient))
         end
 
       else
@@ -586,15 +603,15 @@ end
 
       if params[:next_url]
         if (params[:cat].downcase rescue "") == "mother"
-          print_and_redirect("/patients/national_id_label/?patient_id=#{person.patient.id}",
-            params[:next_url] + "?patient_id=#{ person.patient.id }") and return
+          print_and_redirect("/patients/national_id_label/?patient_id=#{person.person_id}",
+            params[:next_url] + "?patient_id=#{ person.person_id}") and return
         else
           redirect_to params[:next_url] + person.patient.id.to_s and return
         end
 
       elsif params[:person][:patient]
         person.patient.national_id_label
-        print_and_redirect("/patients/national_id_label/?patient_id=#{person.patient.id}", next_task(person.patient))
+        print_and_redirect("/patients/national_id_label/?patient_id=#{person.person_id}", next_task(person.patient))
       else
         redirect_to :action => "index"
       end

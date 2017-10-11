@@ -7,16 +7,12 @@ class EncountersController < ApplicationController
   def create
 	  @patient = Patient.find(params[:encounter][:patient_id])
     identifier = PatientIdentifier.find(:last, :conditions => ["patient_id = ? AND identifier_type = ?", @patient.id, PatientIdentifierType.find_by_name("National id")]).identifier rescue ""
- 
-    if((CoreService.get_global_property_value("create.from.dde.server") == true) && !@patient.nil? && identifier.length != 6)
-      dde_patient = DDEService::Patient.new(@patient)
-      identifier = dde_patient.get_full_identifier("National id").identifier rescue nil
-      national_id_replaced = dde_patient.check_old_national_id(identifier) rescue nil
-      if national_id_replaced.to_s == "true"
-        print_and_redirect("/patients/national_id_label?patient_id=#{@patient.id}", "/patients/show?patient_id=#{@patient.id}") and return
-      end
+    
+    if create_from_dde_server
+      dde_patient = DDE3Service.search_all_by_identifier(params[:encounter][:patient_id])
+      print_and_redirect("/patients/national_id_label?patient_id=#{@patient.id}", "/patients/show?patient_id=#{@patient.id}") and return
     end
-		
+
     if (params["encounter"]["encounter_type_name"].upcase rescue "") == "UPDATE OUTCOME"
 				
       params["observations"].each do |obs|
@@ -762,11 +758,9 @@ class EncountersController < ApplicationController
     else
       redirect_to next_task(@patient)
     end
-
   end
 
   def referral
-    
     @patient = Patient.find(params[:patient_id])
     @roles = User.find(session[:user_id]).user_roles.collect{|r| r.role} # rescue []
   end

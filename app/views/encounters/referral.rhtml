@@ -17,6 +17,7 @@
 </style>
 <form id='referral' action="/encounters/create" method='post'>
 
+   
   <%= hidden_field_tag "encounter[encounter_type_name]", "IS PATIENT REFERRED?" %>
   <%= hidden_field_tag "encounter[patient_id]", @patient.id %>
   <%= hidden_field_tag "encounter[encounter_datetime]", (session[:datetime] ? session[:datetime].to_time : DateTime.now()).strftime("%Y-%m-%d %H:%M") %>

@@ -4,19 +4,14 @@ class PatientsController < ApplicationController
   before_filter :find_patient, :except => [:void]
   
   def show
-   
+  
     @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil
     identifier = PatientIdentifier.find(:last, :conditions => ["patient_id = ? AND identifier_type = ?", @patient.id, PatientIdentifierType.find_by_name("National id")]).identifier rescue ""
-=begin 
-    if((CoreService.get_global_property_value("create.from.dde.server") == true) && !@patient.nil? && identifier.length != 6)
-			dde_patient = DDEService::Patient.new(@patient)
-      identifier = dde_patient.get_full_identifier("National id").identifier rescue nil
-      national_id_replaced = dde_patient.check_old_national_id(identifier) rescue nil
-      if national_id_replaced.to_s == "true"
-        print_and_redirect("/patients/national_id_label?patient_id=#{@patient.id}", "/patients/show?patient_id=#{@patient.id}") and return
-      end
+    
+    if create_from_dde_server
+      #dde_patient = DDE3Service.search_all_by_identifier(params[:encounter][:patient_id])
+      #print_and_redirect("/patients/national_id_label?patient_id=#{@patient.id}", "/patients/show?patient_id=#{@patient.id}") and return
     end
-=end
     last_visit = Visit.find(:last, :conditions => ["patient_id = ?", @patient.id])
     @maternity_patient = ANCService::ANC.new(@patient)
 
