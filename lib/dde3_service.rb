@@ -203,7 +203,7 @@ def self.update_local_demographics(data)
 
 def self.push_to_dde3(patient_bean)
      
-   
+  
     from_dde3 = self.search_by_identifier(patient_bean.national_id_with_dashes)
     
               
@@ -254,36 +254,35 @@ def self.push_to_dde3(patient_bean)
 
       data = self.create_from_dde3(result)
 
-     
-
-      if data.present? && data['return_path']
+        if data.present? && data['return_path']
         data = self.force_create_from_dde3(result, data['return_path'])
       end
-
+        
       if !data.blank?
+
         npid_type = PatientIdentifierType.find_by_name('National id').id
-        npid = PatientIdentifier.find_by_identifier_and_identifier_type_and_patient_id(patient_bean.national_id_with_dashes,
-                npid_type, patient_bean.patient_id)
-          
-        npid.update_attributes(
-            :voided => true,
-            :voided_by => User.id,
-            :void_reason => 'Reassigned NPID',
-            :date_voided => Time.now
-        )
+        npid = PatientIdentifier.find(:first,:conditions => ["patient_id = ? AND voided = 0 AND
+                        identifier_type = ?",patient_bean.patient_id , npid_type])
+                  
         PatientIdentifier.create(
             :patient_id => npid.patient_id,
             :creator => User.id,
             :identifier => npid.identifier,
             :identifier_type => PatientIdentifierType.find_by_name('Old Identification Number').id
         )
-
         PatientIdentifier.create(
             :patient_id => npid.patient_id,
             :creator => User.id,
             :identifier =>  data['npid'],
             :identifier_type => npid_type
         )
+
+         npid.voided = true
+         npid.voided_by = 1
+         npid.void_reason = 'Reassigned NPID'
+         npid.date_voided =  Time.now()
+         npid.save!
+
       end
 
       data

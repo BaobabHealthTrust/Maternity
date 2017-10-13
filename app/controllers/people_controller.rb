@@ -126,32 +126,45 @@ class PeopleController < ApplicationController
       params[:gender] = "M"
     end
 
-    found_person = nil
-    if params[:identifier]
-      params[:identifier] = params[:identifier].strip
-      local_results = DDE3Service.search_all_by_identifier(params[:identifier])
+      found_person = nil
+     if params[:identifier]
+       #local_result_set = Person.search_by_identifier(params[:identifier])
+       local_result_set = DDE3Service.search_all_by_identifier(params[:identifier])
+    
+       ids_list = []
+       local_results = []
+       local_result_set.each{|persn|
+         next if persn.to_s == "found duplicate identifiers"
+         local_results << persn if !ids_list.include?(persn.person_id)
+         ids_list << persn.id if !ids_list.include?(persn.person_id)  
+       }
 
-      if local_results.length > 1
-        redirect_to :action => 'conflicts' ,:identifier => params['identifier']
+        if local_result_set.length > 1
+         redirect_to :action => 'conflicts' ,:identifier => params['identifier']
         return
-      elsif local_results.length <= 1
+
+       elsif local_results.length <= 1
         if create_from_dde_server
+          
           p = DDE3Service.search_by_identifier(params[:identifier])
 
-          if p.count > 1
-            redirect_to :action => 'conflicts' ,:identifier => params['identifier']
-            return
-          elsif (p.blank? || p.count == 0) && local_results.count == 1
-            patient_bean = PatientService.get_patient(local_results.first)
-            result = DDE3Service.push_to_dde3(patient_bean)
-          end
-       end
-           
-        found_person = local_results.first
+           if p.count > 1
+            redirect_to :action => 'conflicts' ,:search_params => params
+             return
+           elsif (p.blank? || p.count == 0) && local_result_set.count == 1
+             patient_bean = PatientService.get_patient(local_result_set.first)
+              
+             DDE3Service.push_to_dde3(patient_bean)
+           end
+         end
+         found_person = local_results.first
+
+ 
        else
         # TODO - figure out how to write a test for this
         # This is sloppy - creating something as the result of a GET
         found_person_data = Person.find_remote_by_identifier(params[:identifier])
+
         if found_person_data.to_s ==  'timeout' || found_person_data.to_s == 'creationfailed'
           flash[:error] = "Could not create patient due to loss of connection to server" if found_person_data.to_s == 'timeout'
           flash[:error] = "Was unable to create patient with the given details" if found_person_data.to_s == 'creationfailed'
@@ -161,13 +174,13 @@ class PeopleController < ApplicationController
           found_person = Person.create_from_form(found_person_data) unless found_person_data.nil?
         end
       end
-
+         
       if found_person
         if create_from_dde_server
           patient = found_person.patient
           old_npid = params[:identifier].gsub(/\-/, '').upcase.strip
           new_npid = patient.national_id.gsub(/\-/, '').upcase.strip
-                         
+                
           if old_npid != new_npid
             if params[:cat] && (params[:cat].downcase rescue "") != "mother" && params[:patient_id] 
               print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", "/relationships/new?patient_id=#{params[:patient_id]}&relation=#{found_person.id }&cat=#{params[:cat]}") and return
@@ -360,13 +373,7 @@ end
            patient_bean = PatientService.get_patient(person)
            old_npid = (related_person.national_id).gsub(/\-/, '')
            result = DDE3Service.push_to_dde3(patient_bean)
-          #assign new npid to the patient
-           npid = PatientIdentifier.new()
-           npid.patient_id = related_person.id
-           new_npid = result["npid"]
-           npid.identifier_type = PatientIdentifierType.find_by_name('National ID').id
-           npid.identifier = new_npid
-           npid.save
+          
 
         if !result.blank? && !result['npid'].blank? && result['npid'].strip != old_npid.strip
             print_and_redirect("/patients/national_id_label?patient_id=#{related_person.id}",
