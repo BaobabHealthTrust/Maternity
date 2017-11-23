@@ -126,40 +126,28 @@ class PeopleController < ApplicationController
       params[:gender] = "M"
     end
 
-      found_person = nil
-     if params[:identifier]
-       #local_result_set = Person.search_by_identifier(params[:identifier])
-       local_result_set = DDE3Service.search_all_by_identifier(params[:identifier])
-    
-       ids_list = []
-       local_results = []
-       local_result_set.each{|persn|
-         next if persn.to_s == "found duplicate identifiers"
-         local_results << persn if !ids_list.include?(persn.person_id)
-         ids_list << persn.id if !ids_list.include?(persn.person_id)  
-       }
-
-        if local_result_set.length > 1
-         redirect_to :action => 'conflicts' ,:identifier => params['identifier']
+       found_person = nil
+    if params[:identifier]
+      params[:identifier] = params[:identifier].strip
+      local_results = DDE3Service.search_all_by_identifier(params[:identifier])
+      if local_results.length > 1
+        redirect_to :action => 'conflicts' ,:identifier => params['identifier']
         return
+      elsif local_results.length <= 1
 
-       elsif local_results.length <= 1
         if create_from_dde_server
-          
           p = DDE3Service.search_by_identifier(params[:identifier])
 
-           if p.count > 1
-            redirect_to :action => 'conflicts' ,:search_params => params
-             return
-           elsif (p.blank? || p.count == 0) && local_result_set.count == 1
-             patient_bean = PatientService.get_patient(local_result_set.first)
-              
-             DDE3Service.push_to_dde3(patient_bean)
-           end
-         end
-         found_person = local_results.first
+          if p.count > 1
+            redirect_to :action => 'conflicts' ,:identifier => params['identifier']
+            return
+          elsif (p.blank? || p.count == 0) && local_results.count == 1
+            patient_bean = PatientService.get_patient(local_results.first)
+            DDE3Service.push_to_dde3(patient_bean)
+          end
+        end
 
- 
+        found_person = local_results.first
        else
         # TODO - figure out how to write a test for this
         # This is sloppy - creating something as the result of a GET

@@ -49,3 +49,28 @@ In public/data/missing_ta
     Navigate to the application folder and run the following command
 
             script/runner  script/missing_ta.rb
+#########################
+
+To connect maternity with DDE3
+
+In config/dde_connection
+
+
+    1. Set application name to be Maternity
+           application_name: Maternity
+    2. Set dde_server to be 
+           dde_server: 192.168.18.243:3009
+    3. Create a dde username and password by supplying the following e.g
+           dde_username: my_dde_username
+           dde_password: my_dde_password
+    4. Supply the site code e.g
+           site_code: MPC
+    
+    5. After the configurations,
+          navigate to folder where there is dde, 
+          Run dde by using the following command: NODE_ENV=development node app.js 
+
+    6. Run Maternity by using passenger start
+
+
+

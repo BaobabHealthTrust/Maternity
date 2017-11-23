@@ -1,0 +1,21 @@
+default: &default
+  application_name: Maternity
+  dde_server: 192.168.18.243:3009
+  dde_username: matadmin
+  dde_password: matadmin
+  #dde_user_username: matadmin
+  #dde_user_password: matadmin
+  site_code: MPC
+  secure_connection: false
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default
+
+
+
