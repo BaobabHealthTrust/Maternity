@@ -522,7 +522,8 @@ end
 
       #person = ANCService.create_patient_from_dde(params)
      # DDEService.create_footprint(person.patient.national_id, "Maternity") rescue nil
-      formatted_demographics = DDE3Service.format_params(params, Person.session_datetime)
+     #raise (DateTime.now).inspect
+      formatted_demographics = DDE3Service.format_params(params, DateTime.now)
     if DDE3Service.is_valid?(formatted_demographics)
        d = formatted_demographics
        local_duplicates = Person.find_by_sql("SELECT * from person p

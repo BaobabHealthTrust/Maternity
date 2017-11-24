@@ -323,7 +323,10 @@ def self.create_from_dde3(params)
   end
 
 def self.format_params(params, date)
-gender = (params['person']['gender'].match(/F/i)) ? "Female" : "Male"
+
+
+   
+   gender = (params['person']['gender'].match(/F/i)) ? "Female" : "Male"
 
     birthdate = nil
     if params['person']['age_estimate'].present?
